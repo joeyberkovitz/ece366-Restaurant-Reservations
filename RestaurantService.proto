@@ -1,0 +1,42 @@
+service RestaurantService {
+	rpc createRestaurant (Restaurant) returns (Restaurant);
+	rpc setCapacity (CapacityRequest) returns
+	rpc setRTime (RTimeRequest) returns
+}
+
+message Restaurant {
+	uint32 id = 1;
+	Address address = 2;
+	Contact contact = 3;
+	uint32 category = 4;
+}
+
+message Address {
+	uint32 id = 1;
+	string name = 2;
+	float latitude = 3;
+	float longitude = 4;
+	string line1 = 5;
+	string line2 = 6;
+	string city = 7;
+	string state = 8;
+	string zip = 9;
+}
+
+message Contact {
+	uint32 id = 1;
+	uint32 phone = 2;
+	string email = 3;
+}
+
+message CapacityRequest {
+	Restaurant target = 1;
+	int capacity = 2;
+}
+
+message RTimeRequest {
+	Restaurant target = 1;
+	int rtime = 2;
+}
+
+
