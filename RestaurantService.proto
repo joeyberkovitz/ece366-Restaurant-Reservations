@@ -1,7 +1,9 @@
 service RestaurantService {
-	rpc createRestaurant (Restaurant) returns (Restaurant); // send address, contact, and category, returns id
-	// if sending address and contact with IDs, use those
-	// otherwise, create them on the backend and return the ids for those, too
+	rpc createRestaurant (Restaurant) returns (Restaurant); // Will accept a restaurant either with
+	// A) no id, address w/ no id, contact w/ no id, category and returns restaurant w/ id, address w/ just id, contact w/ just id
+	// B) no id, address w/ id, contact w/ no id, category and returns resaurant w/ id, contact w/ just id
+	// C) no id, address w/ no id, contact w/ id, category and returns restaurant w/ id, address w/ just id
+	// D) no id, address w/ id, contact w/ id, category and returns restaurant w/ id
 	rpc getRestaurant (Restaurant) returns (Restaurant); // send id, get whole thing
 	rpc setRestaurant (Restaurant) returns (Restaurant); // send info desired to change, returns result
 	rpc setCapacity (CapacityRequest) returns (CapacityResponse); 
