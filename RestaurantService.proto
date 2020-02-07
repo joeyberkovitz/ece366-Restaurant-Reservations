@@ -1,3 +1,5 @@
+syntax = "proto3";
+
 service RestaurantService {
 	rpc createRestaurant (Restaurant) returns (Restaurant); // Will accept a restaurant either with
 	// A) no id, address w/ no id, contact w/ no id, category and returns restaurant w/ id, address w/ just id, contact w/ just id
@@ -8,15 +10,44 @@ service RestaurantService {
 	rpc setRestaurant (Restaurant) returns (Restaurant); // send info desired to change, returns result
 	rpc setCapacity (CapacityRequest) returns (CapacityResponse); 
 	rpc setRTime (RTimeRequest) returns (RTimeResponse);
-	rpc deleteRestaurant (Restaurant) (DeleteResponse);
-	
+	rpc deleteRestaurant (Restaurant) returns (DeleteRestaurantResponse);
+	rpc searchByCategory (Category) returns (stream Restaurant);
+
+	rpc createTable(CreateTableRequest) returns (Table); // returns just id
+	rpc getTablesByRestaurant (Restaurant) returns (stream Table);
+	rpc getTableById (Table) returns (Table);
+	rpc setTable (Table) returns (Table);
+	rpc deleteTable (Table) returns (DeleteTableResponse);
+
+	rpc createUser (User) returns (User);
+	rpc getUser (User) returns (User);
+	rpc setUser (User) returns (User); // for name and contact; A and B depending on if contact had ID or info
+
+	rpc getRestaurantsByUser (User) returns (stream Relationship);
+	rpc getUsersByRestaurant (Restaurant) returns (stream Relationship);
+	rpc setRelationship (Relationship) returns (RelationshipResponse);
+
+	rpc createReservation (Reservation) returns (Reservation);
+	rpc inviteReservation (stream InviteMessage) returns (InviteResponse);
+	rpc listReservationUsers (Reservation) returns (stream User);
+	rpc getReservation (Reservation) returns (Reservation);
+	rpc setReservation (Reservation) returns (Reservation); // status or num people or points
+	rpc getReservationsByUser (User) returns (stream Reservation);
+	rpc getReservationsByRestaurant (Restaurant) returns (stream Reservation);
+	rpc getReservationTables (Reservation) returns (stream Table);
+	rpc getReservationUsers (Reservation) returns (stream User); // first one passed is the primary user
 }
 
 message Restaurant {
 	uint32 id = 1;
 	Address address = 2;
 	Contact contact = 3;
-	uint32 category = 4;
+	Category category = 4;
+}
+
+message Category {
+	uint32 category = 1;
+	string name = 2;
 }
 
 message Address {
@@ -37,21 +68,77 @@ message Contact {
 	string email = 3;
 }
 
+message Table {
+	uint32 id = 1;
+	uint32 capacity = 2;
+	string label = 3;
+}
+
+message User {
+	uint32 id = 1;
+	string fname = 4;
+	string lname = 5;
+	Contact contact = 6;
+	int32 points = 7;
+}
+
+message Reservation {
+	uint32 id = 1;
+	uint64 startTime = 2;
+	Restaurant restaurant = 3; // just ID
+	uint32 numPeople = 4;
+	uint32 points = 5;
+	enum status {
+		DEFAULT = 0;
+		CANCELLED = 1;
+		// will the restaurant mark as completed?
+	}
+}
+
+message CreateTableRequest {
+	Restaurant target = 1; // just ID
+	Table table = 2; // no ID
+}
+
 message CapacityRequest {
-	Restaurant target = 1;
-	int capacity = 2;
+	Restaurant target = 1; // just ID
+	uint32 capacity = 2;
 }
 
 message CapacityResponse {
 }
 
 message RTimeRequest {
-	Restaurant target = 1;
-	int rtime = 2;
+	Restaurant target = 1; // just ID
+	uint32 rtime = 2;
 }
 
 message RTimeResponse {
 }
 
-message DeleteResponse {
+message Relationship {
+	Restaurant resaurant = 1;
+	enum role {
+		CUSTOMER = 0;
+		MANAGER = 1;
+		ADMIN = 2;
+	}
+	User user = 3; // for setting
+}
+
+message RelationshipResponse {
+}
+
+message InviteMessage {
+	Reservation reservation = 1;
+	User user = 2;
+}
+
+message InviteResponse {
+}
+
+message DeleteRestaurantResponse {
+}
+
+message DeleteTableResponse {
 }
