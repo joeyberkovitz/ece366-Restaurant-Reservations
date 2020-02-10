@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+option java_package = "edu.cooper.ece366.restaurantReservation";
+
 service RestaurantService {
 	rpc createRestaurant (Restaurant) returns (Restaurant); // Will accept a restaurant either with
 	// A) no id, address w/ no id, contact w/ no id, category and returns restaurant w/ id, address w/ just id, contact w/ just id
