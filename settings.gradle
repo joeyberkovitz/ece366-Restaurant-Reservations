@@ -1,0 +1,3 @@
+rootProject.name = 'seng'
+
+include 'spring'
