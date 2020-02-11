@@ -76,7 +76,7 @@ protobuf {
 startScripts.enabled = false
 
 task restaurantServer(type: CreateStartScripts) {
-    mainClassName = 'edu.cooper.ece366.restaurantReservation.RestaurantServer'
+    mainClassName = 'edu.cooper.ece366.restaurantReservation.grpc.RestaurantServer'
     applicationName = 'restaurant-server'
     outputDir = new File(project.buildDir, 'tmp')
     classpath = startScripts.classpath

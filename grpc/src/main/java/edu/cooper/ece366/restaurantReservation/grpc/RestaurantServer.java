@@ -1,4 +1,4 @@
-package edu.cooper.ece366.restaurantReservation;
+package edu.cooper.ece366.restaurantReservation.grpc;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;

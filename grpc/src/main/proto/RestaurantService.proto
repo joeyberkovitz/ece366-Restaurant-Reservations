@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option java_package = "edu.cooper.ece366.restaurantReservation";
+option java_package = "edu.cooper.ece366.restaurantReservation.grpc";
 
 service RestaurantService {
 	rpc createRestaurant (Restaurant) returns (Restaurant); // Will accept a restaurant either with
@@ -10,7 +10,7 @@ service RestaurantService {
 	// D) no id, address w/ id, contact w/ id, category and returns restaurant w/ id
 	rpc getRestaurant (Restaurant) returns (Restaurant); // send id, get whole thing
 	rpc setRestaurant (Restaurant) returns (Restaurant); // send info desired to change, returns result
-	rpc setCapacity (CapacityRequest) returns (CapacityResponse); 
+	rpc setCapacity (CapacityRequest) returns (CapacityResponse);
 	rpc setRTime (RTimeRequest) returns (RTimeResponse);
 	rpc deleteRestaurant (Restaurant) returns (DeleteRestaurantResponse);
 	rpc searchByCategory (Category) returns (stream Restaurant);
