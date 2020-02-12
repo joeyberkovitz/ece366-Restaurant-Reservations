@@ -15,20 +15,24 @@ service RestaurantService {
 	rpc deleteRestaurant (Restaurant) returns (DeleteRestaurantResponse);
 	rpc searchByCategory (Category) returns (stream Restaurant);
 
-	rpc createTable(CreateTableRequest) returns (Table); // returns just id
+	rpc createTable (CreateTableRequest) returns (Table); // returns just id
 	rpc getTablesByRestaurant (Restaurant) returns (stream Table);
 	rpc getTableById (Table) returns (Table);
 	rpc setTable (Table) returns (Table);
 	rpc deleteTable (Table) returns (DeleteTableResponse);
 
-	rpc createUser (User) returns (User);
-	rpc getUser (User) returns (User);
-	rpc setUser (User) returns (User); // for name and contact; A and B depending on if contact had ID or info
-
 	rpc getRestaurantsByUser (User) returns (stream Relationship);
 	rpc getUsersByRestaurant (Restaurant) returns (stream Relationship);
 	rpc setRelationship (Relationship) returns (RelationshipResponse);
+}
 
+service UserService {
+	rpc createUser (User) returns (User);
+	rpc getUser (User) returns (User);
+	rpc setUser (User) returns (User); // for name and contact; A and B depending on if contact had ID or info
+}
+
+service ReservationService {
 	rpc createReservation (Reservation) returns (Reservation);
 	rpc inviteReservation (stream InviteMessage) returns (InviteResponse);
 	rpc listReservationUsers (Reservation) returns (stream User);
@@ -119,7 +123,7 @@ message RTimeResponse {
 }
 
 message Relationship {
-	Restaurant resaurant = 1;
+	Restaurant restaurant = 1;
 	enum role {
 		CUSTOMER = 0;
 		MANAGER = 1;

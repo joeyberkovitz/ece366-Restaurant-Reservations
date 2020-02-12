@@ -18,8 +18,12 @@ public class RestaurantServer {
   private void start() throws IOException {
     /* The port on which the server should run */
     int port = 50051;
+
+    //Todo: Add interceptor to services
     server = ServerBuilder.forPort(port)
         .addService(new RestaurantServiceImpl())
+        .addService(new ReservationServiceImpl())
+        .addService(new UserServiceImpl())
         .build()
         .start();
     logger.info("Server started, listening on " + port);
@@ -71,4 +75,7 @@ public class RestaurantServer {
       responseObserver.onCompleted();
     }
   }
+
+  static class ReservationServiceImpl extends ReservationServiceGrpc.ReservationServiceImplBase {}
+  static class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {}
 }
