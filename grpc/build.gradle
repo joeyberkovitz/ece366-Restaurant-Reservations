@@ -27,6 +27,7 @@ dependencies {
   compile "com.google.protobuf:protobuf-java:${protobufVersion}"
   compile "io.grpc:grpc-stub:${grpcVersion}"
   compile "io.grpc:grpc-protobuf:${grpcVersion}"
+  compile "io.grpc:grpc-services:${grpcVersion}"
   if (JavaVersion.current().isJava9Compatible()) {
     // Workaround for @javax.annotation.Generated
     // see: https://github.com/grpc/grpc-java/issues/3633
@@ -39,7 +40,11 @@ dependencies {
   protobuf files("ext/")
   */
   //JDBI Plugin
+  compile "org.jdbi:jdbi3-core:3.2.0"
   compile "org.jdbi:jdbi3-sqlobject:3.2.0"
+
+  compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.15'
+  runtime "mysql:mysql-connector-java:8.0.15"
 
   runtimeOnly "io.grpc:grpc-netty-shaded:${grpcVersion}"
 
@@ -87,4 +92,8 @@ task restaurantServer(type: CreateStartScripts) {
 applicationDistribution.into('bin') {
     from(restaurantServer)
     fileMode = 0755
+}
+
+compileJava {
+  options.compilerArgs << '-parameters'
 }

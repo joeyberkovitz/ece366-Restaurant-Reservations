@@ -1,9 +1,18 @@
 package edu.cooper.ece366.restaurantReservation.grpc;
 
+import com.mysql.cj.jdbc.MysqlDataSource;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.protobuf.services.ProtoReflectionService;
 import io.grpc.stub.StreamObserver;
+import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.sqlobject.SqlObjectPlugin;
+
+import javax.sql.DataSource;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -11,71 +20,92 @@ import java.util.logging.Logger;
  * Server that manages startup/shutdown of a {@code Greeter} server.
  */
 public class RestaurantServer {
-  private static final Logger logger = Logger.getLogger(RestaurantServer.class.getName());
+	private static final Logger logger = Logger.getLogger(RestaurantServer.class.getName());
 
-  private Server server;
+	private Server server;
+	private static Jdbi jdbi;
+	Properties prop = new Properties();
+	String propFileName = "config.properties";
 
-  private void start() throws IOException {
-    /* The port on which the server should run */
-    int port = 50051;
+	private void start() throws IOException {
+		InputStream inputStream = getClass().getClassLoader().getResourceAsStream(propFileName);
+		if (inputStream != null) {
+			prop.load(inputStream);
+		} else {
+			throw new FileNotFoundException("property file '" + propFileName + "' not found in the classpath");
+		}
 
-    //Todo: Add interceptor to services
-    server = ServerBuilder.forPort(port)
-        .addService(new RestaurantServiceImpl())
-        .addService(new ReservationServiceImpl())
-        .addService(new UserServiceImpl())
-        .build()
-        .start();
-    logger.info("Server started, listening on " + port);
-    Runtime.getRuntime().addShutdownHook(new Thread() {
-      @Override
-      public void run() {
-        // Use stderr here since the logger may have been reset by its JVM shutdown hook.
-        System.err.println("*** shutting down gRPC server since JVM is shutting down");
-        try {
-          RestaurantServer.this.stop();
-        } catch (InterruptedException e) {
-          e.printStackTrace(System.err);
-        }
-        System.err.println("*** server shut down");
-      }
-    });
-  }
+		MysqlDataSource ds = new MysqlDataSource();
+		ds.setUrl(prop.getProperty("db.connString"));
+		ds.setUser(prop.getProperty("db.user"));
+		ds.setPassword(prop.getProperty("db.pass"));
+		jdbi = Jdbi.create(ds).installPlugin(new SqlObjectPlugin());
+		/* The port on which the server should run */
+		int port = 50051;
 
-  private void stop() throws InterruptedException {
-    if (server != null) {
-      server.shutdown().awaitTermination(30, TimeUnit.SECONDS);
-    }
-  }
+		//Todo: Add interceptor to services
+		server = ServerBuilder.forPort(port)
+				.addService(ProtoReflectionService.newInstance())
+				.addService(new RestaurantServiceImpl())
+				.addService(new ReservationServiceImpl())
+				.addService(new UserServiceImpl())
+				.build()
+				.start();
+		logger.info("Server started, listening on " + port);
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				// Use stderr here since the logger may have been reset by its JVM shutdown hook.
+				System.err.println("*** shutting down gRPC server since JVM is shutting down");
+				try {
+					RestaurantServer.this.stop();
+				} catch (InterruptedException e) {
+					e.printStackTrace(System.err);
+				}
+				System.err.println("*** server shut down");
+			}
+		});
+	}
 
-  /**
-   * Await termination on the main thread since the grpc library uses daemon threads.
-   */
-  private void blockUntilShutdown() throws InterruptedException {
-    if (server != null) {
-      server.awaitTermination();
-    }
-  }
+	private void stop() throws InterruptedException {
+		if (server != null) {
+			server.shutdown().awaitTermination(30, TimeUnit.SECONDS);
+		}
+	}
 
-  /**
-   * Main launches the server from the command line.
-   */
-  public static void main(String[] args) throws IOException, InterruptedException {
-    final RestaurantServer server = new RestaurantServer();
-    server.start();
-    server.blockUntilShutdown();
-  }
+	/**
+	 * Await termination on the main thread since the grpc library uses daemon threads.
+	 */
+	private void blockUntilShutdown() throws InterruptedException {
+		if (server != null) {
+			server.awaitTermination();
+		}
+	}
 
-  static class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServiceImplBase {
+	/**
+	 * Main launches the server from the command line.
+	 */
+	public static void main(String[] args) throws IOException, InterruptedException {
+		final RestaurantServer server = new RestaurantServer();
+		server.start();
+		server.blockUntilShutdown();
+	}
 
-    @Override
-    public void createRestaurant(RestaurantServiceOuterClass.Restaurant req, StreamObserver<RestaurantServiceOuterClass.Restaurant> responseObserver) {
-      RestaurantServiceOuterClass.Restaurant reply = RestaurantServiceOuterClass.Restaurant.newBuilder().setId(1).build();
-      responseObserver.onNext(reply);
-      responseObserver.onCompleted();
-    }
-  }
+	static class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServiceImplBase {
 
-  static class ReservationServiceImpl extends ReservationServiceGrpc.ReservationServiceImplBase {}
-  static class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {}
+		@Override
+		public void createRestaurant(RestaurantServiceOuterClass.Restaurant req, StreamObserver<RestaurantServiceOuterClass.Restaurant> responseObserver) {
+			int restId = jdbi.withExtension(RestaurantDao.class, dao -> {
+				return dao.insertBean(req);
+			});
+
+			RestaurantServiceOuterClass.Restaurant reply =
+					RestaurantServiceOuterClass.Restaurant.newBuilder().setId(restId).build();
+			responseObserver.onNext(reply);
+			responseObserver.onCompleted();
+		}
+	}
+
+	static class ReservationServiceImpl extends ReservationServiceGrpc.ReservationServiceImplBase {}
+	static class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {}
 }

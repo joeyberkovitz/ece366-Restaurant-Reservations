@@ -39,3 +39,5 @@ gradle-app.setting
 
 .gradle/*
 grpc/.gradle
+
+grpc/src/main/resources/config.properties

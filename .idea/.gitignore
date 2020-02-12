@@ -2,3 +2,8 @@
 /workspace.xml
 codeStyles/*
 gradle.xml
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+dataSources.xml
+dataSources.local.xml

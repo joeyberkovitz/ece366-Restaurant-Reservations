@@ -49,6 +49,7 @@ message Restaurant {
 	Address address = 2;
 	Contact contact = 3;
 	Category category = 4;
+	string name = 5;
 }
 
 message Category {
