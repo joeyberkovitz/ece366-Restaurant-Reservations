@@ -38,6 +38,8 @@ dependencies {
   protobuf files("lib/protos.tar.gz")
   protobuf files("ext/")
   */
+  //JDBI Plugin
+  compile "org.jdbi:jdbi3-sqlobject:3.2.0"
 
   runtimeOnly "io.grpc:grpc-netty-shaded:${grpcVersion}"
 
