@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 option java_package = "edu.cooper.ece366.restaurantReservation.grpc";
+option java_multiple_files = true;
 
 service AuthService {
 	rpc createUser (CreateUserRequest) returns (User);

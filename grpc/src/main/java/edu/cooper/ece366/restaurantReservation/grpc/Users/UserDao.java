@@ -1,6 +1,6 @@
-package edu.cooper.ece366.restaurantReservation.grpc.User;
+package edu.cooper.ece366.restaurantReservation.grpc.Users;
 
-import edu.cooper.ece366.restaurantReservation.grpc.RestaurantServiceOuterClass;
+import edu.cooper.ece366.restaurantReservation.grpc.CreateUserRequest;
 import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
@@ -9,7 +9,7 @@ public interface UserDao {
     @GetGeneratedKeys("id")
     int insertUser(String username, String password, String fname, String lname, int contact_id, int role_id, int rewards_points);
 
-    default int insertUserDriver(RestaurantServiceOuterClass.CreateUserRequest userRequest, int roleId) {
+    default int insertUserDriver(CreateUserRequest userRequest, int roleId) {
         return insertUser(userRequest.getUser().getUsername(), userRequest.getPassword(), userRequest.getUser().getFname(), userRequest.getUser().getLname(), userRequest.getUser().getContact().getId(), roleId, userRequest.getUser().getPoints());
     }
 }

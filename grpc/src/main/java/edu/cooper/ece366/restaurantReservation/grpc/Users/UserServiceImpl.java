@@ -1,4 +1,4 @@
-package edu.cooper.ece366.restaurantReservation.grpc.User;
+package edu.cooper.ece366.restaurantReservation.grpc.Users;
 
 import edu.cooper.ece366.restaurantReservation.grpc.UserServiceGrpc;
 import org.jdbi.v3.core.Jdbi;

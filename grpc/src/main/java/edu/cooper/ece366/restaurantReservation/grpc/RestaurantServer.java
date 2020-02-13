@@ -2,8 +2,8 @@ package edu.cooper.ece366.restaurantReservation.grpc;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
 import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthServiceImpl;
-import edu.cooper.ece366.restaurantReservation.grpc.Restaurant.RestaurantDao;
-import edu.cooper.ece366.restaurantReservation.grpc.User.UserServiceImpl;
+import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantDao;
+import edu.cooper.ece366.restaurantReservation.grpc.Users.UserServiceImpl;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.protobuf.services.ProtoReflectionService;
@@ -97,13 +97,13 @@ public class RestaurantServer {
 	static class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServiceImplBase {
 
 		@Override
-		public void createRestaurant(RestaurantServiceOuterClass.Restaurant req, StreamObserver<RestaurantServiceOuterClass.Restaurant> responseObserver) {
+		public void createRestaurant(Restaurant req, StreamObserver<Restaurant> responseObserver) {
 			int restId = jdbi.withExtension(RestaurantDao.class, dao -> {
 				return dao.insertBean(req);
 			});
 
-			RestaurantServiceOuterClass.Restaurant reply =
-					RestaurantServiceOuterClass.Restaurant.newBuilder().setId(restId).build();
+			Restaurant reply =
+					Restaurant.newBuilder().setId(restId).build();
 			responseObserver.onNext(reply);
 			responseObserver.onCompleted();
 		}

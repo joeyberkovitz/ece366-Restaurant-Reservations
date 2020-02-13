@@ -1,7 +1,8 @@
-package edu.cooper.ece366.restaurantReservation.grpc.User;
+package edu.cooper.ece366.restaurantReservation.grpc.Users;
 
-import edu.cooper.ece366.restaurantReservation.grpc.Contact.ContactManager;
-import edu.cooper.ece366.restaurantReservation.grpc.RestaurantServiceOuterClass;
+import edu.cooper.ece366.restaurantReservation.grpc.Contact;
+import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
+import edu.cooper.ece366.restaurantReservation.grpc.User;
 import org.jdbi.v3.core.Jdbi;
 
 public class UserManager {
@@ -12,7 +13,7 @@ public class UserManager {
         this.db = db;
     }
 
-    public int checkUser(RestaurantServiceOuterClass.User user) throws InvalidUsernameException, InvalidNameException, ContactManager.InvalidContactIdException, ContactManager.InvalidPhoneException, ContactManager.InvalidEmailException {
+    public int checkUser(User user) throws InvalidUsernameException, InvalidNameException, ContactManager.InvalidContactIdException, ContactManager.InvalidPhoneException, ContactManager.InvalidEmailException {
         checkUsername(user.getUsername());
         checkName(user.getFname(),"First");
         checkName(user.getLname(),"Last");
@@ -22,6 +23,7 @@ public class UserManager {
     }
 
     public void checkUsername(String username) throws InvalidUsernameException {
+        //Todo: make sure username doesn't exist
         if (!username.matches("^[a-zA-Z0-9]*$")) {
             throw new InvalidUsernameException("Username must only include alphanumeric characters.");
         }
@@ -42,7 +44,7 @@ public class UserManager {
     The best solution seems to be instantiating a new manager here and then deleting it after the function call.
     However, this needs to be thought through with regards to the number of total instances.
      */
-    public int checkUserContact(RestaurantServiceOuterClass.Contact contact) throws ContactManager.InvalidContactIdException, ContactManager.InvalidPhoneException, ContactManager.InvalidEmailException {
+    public int checkUserContact(Contact contact) throws ContactManager.InvalidContactIdException, ContactManager.InvalidPhoneException, ContactManager.InvalidEmailException {
         ContactManager cm = new ContactManager(db);
         return cm.checkContact(contact);
     }

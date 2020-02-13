@@ -1,6 +1,6 @@
-package edu.cooper.ece366.restaurantReservation.grpc.Contact;
+package edu.cooper.ece366.restaurantReservation.grpc.Contacts;
 
-import edu.cooper.ece366.restaurantReservation.grpc.RestaurantServiceOuterClass;
+import edu.cooper.ece366.restaurantReservation.grpc.Contact;
 import org.jdbi.v3.core.Jdbi;
 
 import java.util.Optional;
@@ -15,7 +15,7 @@ public class ContactManager {
 
     // todo setContact
 
-    public int checkContact(RestaurantServiceOuterClass.Contact contact) throws InvalidPhoneException, InvalidEmailException, InvalidContactIdException {
+    public int checkContact(Contact contact) throws InvalidPhoneException, InvalidEmailException, InvalidContactIdException {
         int contId;
         if (contact.getId() == 0) {
             // throw exceptions
@@ -47,7 +47,7 @@ public class ContactManager {
     }
 
     private void checkEmail(String email) throws InvalidEmailException {
-        if (!email.matches("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$")) {
+        if (!email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
             throw new InvalidEmailException("Valid email must be provided.");
         }
     }

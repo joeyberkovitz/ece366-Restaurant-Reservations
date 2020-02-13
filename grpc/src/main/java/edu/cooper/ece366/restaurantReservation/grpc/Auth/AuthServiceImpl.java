@@ -1,11 +1,9 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Auth;
 
-import edu.cooper.ece366.restaurantReservation.grpc.AuthServiceGrpc;
-import edu.cooper.ece366.restaurantReservation.grpc.Contact.ContactManager;
-import edu.cooper.ece366.restaurantReservation.grpc.RestaurantServiceOuterClass;
-import edu.cooper.ece366.restaurantReservation.grpc.RoleDao;
-import edu.cooper.ece366.restaurantReservation.grpc.User.UserDao;
-import edu.cooper.ece366.restaurantReservation.grpc.User.UserManager;
+import edu.cooper.ece366.restaurantReservation.grpc.*;
+import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
+import edu.cooper.ece366.restaurantReservation.grpc.Users.UserDao;
+import edu.cooper.ece366.restaurantReservation.grpc.Users.UserManager;
 import io.grpc.stub.StreamObserver;
 import org.jdbi.v3.core.Jdbi;
 
@@ -17,27 +15,35 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
     }
 
     @Override
-    public void createUser(RestaurantServiceOuterClass.CreateUserRequest request, StreamObserver<RestaurantServiceOuterClass.User> responseObserver) throws UserManager.InvalidUsernameException, UserManager.InvalidNameException, ContactManager.InvalidEmailException, ContactManager.InvalidPhoneException, ContactManager.InvalidContactIdException {
+    public void createUser(CreateUserRequest request, StreamObserver<User> responseObserver){
 
-        RestaurantServiceOuterClass.User tempUser = RestaurantServiceOuterClass.User.newBuilder().mergeFrom(request.getUser()).setPoints(0).build();
+        User tempUser = User.newBuilder().mergeFrom(request.getUser()).setPoints(0).build();
 
         UserManager um = new UserManager(db);
-        int contId = um.checkUser(tempUser);
+        int contId = 0;
+        try {
+            contId = um.checkUser(tempUser);
+        } catch (UserManager.InvalidUsernameException | UserManager.InvalidNameException | ContactManager.InvalidContactIdException | ContactManager.InvalidPhoneException | ContactManager.InvalidEmailException e) {
+            e.printStackTrace();
+            //Todo: On error, return it to gRPC
+            return;
+        }
 
-        RestaurantServiceOuterClass.Contact newContact = RestaurantServiceOuterClass.Contact.newBuilder().setId(contId).build();
-        tempUser = RestaurantServiceOuterClass.User.newBuilder().mergeFrom(tempUser).setContact(newContact).build();
+        Contact newContact = Contact.newBuilder().setId(contId).build();
+        tempUser = User.newBuilder().mergeFrom(tempUser).setContact(newContact).build();
 
         int roleId = db.withExtension(RoleDao.class, dao -> {
-            return dao.getRoleIdByName("CUSTOMER");
+            return dao.getRoleIdByName("Customer");
         });
 
-        RestaurantServiceOuterClass.CreateUserRequest tempRequest = RestaurantServiceOuterClass.CreateUserRequest.newBuilder().mergeFrom(request).setUser(tempUser).build();
+        //Todo: hash pw
+        CreateUserRequest tempRequest = CreateUserRequest.newBuilder().mergeFrom(request).setUser(tempUser).build();
         int userId = db.withExtension(UserDao.class, dao -> {
             return dao.insertUserDriver(tempRequest, roleId);
         });
 
-        RestaurantServiceOuterClass.User reply =
-                RestaurantServiceOuterClass.User.newBuilder().mergeFrom(tempRequest).setId(userId).build();
+        User reply =
+                User.newBuilder().setId(userId).build();
         responseObserver.onNext(reply);
         responseObserver.onCompleted();
     }
