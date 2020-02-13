@@ -1,6 +1,9 @@
 package edu.cooper.ece366.restaurantReservation.grpc;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
+import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthServiceImpl;
+import edu.cooper.ece366.restaurantReservation.grpc.Restaurant.RestaurantDao;
+import edu.cooper.ece366.restaurantReservation.grpc.User.UserServiceImpl;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.protobuf.services.ProtoReflectionService;
@@ -8,7 +11,6 @@ import io.grpc.stub.StreamObserver;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
-import javax.sql.DataSource;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,7 +50,8 @@ public class RestaurantServer {
 				.addService(ProtoReflectionService.newInstance())
 				.addService(new RestaurantServiceImpl())
 				.addService(new ReservationServiceImpl())
-				.addService(new UserServiceImpl())
+				.addService(new UserServiceImpl(jdbi))
+				.addService(new AuthServiceImpl(jdbi))
 				.build()
 				.start();
 		logger.info("Server started, listening on " + port);
@@ -107,5 +110,4 @@ public class RestaurantServer {
 	}
 
 	static class ReservationServiceImpl extends ReservationServiceGrpc.ReservationServiceImplBase {}
-	static class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {}
 }

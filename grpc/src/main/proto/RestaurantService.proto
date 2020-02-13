@@ -2,10 +2,14 @@ syntax = "proto3";
 
 option java_package = "edu.cooper.ece366.restaurantReservation.grpc";
 
+service AuthService {
+	rpc createUser (CreateUserRequest) returns (User);
+}
+
 service RestaurantService {
 	rpc createRestaurant (Restaurant) returns (Restaurant); // Will accept a restaurant either with
 	// A) no id, address w/ no id, contact w/ no id, category and returns restaurant w/ id, address w/ just id, contact w/ just id
-	// B) no id, address w/ id, contact w/ no id, category and returns resaurant w/ id, contact w/ just id
+	// B) no id, address w/ id, contact w/ no id, category and returns restaurant w/ id, contact w/ just id
 	// C) no id, address w/ no id, contact w/ id, category and returns restaurant w/ id, address w/ just id
 	// D) no id, address w/ id, contact w/ id, category and returns restaurant w/ id
 	rpc getRestaurant (Restaurant) returns (Restaurant); // send id, get whole thing
@@ -27,7 +31,6 @@ service RestaurantService {
 }
 
 service UserService {
-	rpc createUser (User) returns (User);
 	rpc getUser (User) returns (User);
 	rpc setUser (User) returns (User); // for name and contact; A and B depending on if contact had ID or info
 }
@@ -83,10 +86,16 @@ message Table {
 
 message User {
 	uint32 id = 1;
+	string username = 2;
 	string fname = 4;
 	string lname = 5;
 	Contact contact = 6;
 	int32 points = 7;
+}
+
+message CreateUserRequest {
+	string password = 1;
+	User user = 2;
 }
 
 message Reservation {

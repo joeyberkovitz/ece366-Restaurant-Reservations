@@ -1,6 +1,6 @@
-package edu.cooper.ece366.restaurantReservation.grpc;
+package edu.cooper.ece366.restaurantReservation.grpc.Restaurant;
 
-import org.jdbi.v3.sqlobject.config.RegisterBeanMapper;
+import edu.cooper.ece366.restaurantReservation.grpc.RestaurantServiceOuterClass;
 import org.jdbi.v3.sqlobject.customizer.BindBean;
 import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
