@@ -31,7 +31,10 @@ CREATE TABLE IF NOT EXISTS `address` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table ece366restaurant.address: ~0 rows (approximately)
+DELETE FROM `address`;
+/*!40000 ALTER TABLE `address` DISABLE KEYS */;
+/*!40000 ALTER TABLE `address` ENABLE KEYS */;
 
 -- Dumping structure for table ece366restaurant.category
 CREATE TABLE IF NOT EXISTS `category` (
@@ -39,19 +42,148 @@ CREATE TABLE IF NOT EXISTS `category` (
   `name` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name_UNIQUE` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=123 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table ece366restaurant.category: ~0 rows (approximately)
+DELETE FROM `category`;
+/*!40000 ALTER TABLE `category` DISABLE KEYS */;
+INSERT INTO `category` (`id`, `name`) VALUES
+	(1, 'Afghan'),
+	(2, 'African'),
+	(3, 'American (New)'),
+	(4, 'American (Traditional)'),
+	(5, 'Arabian'),
+	(6, 'Argentine'),
+	(7, 'Armenian'),
+	(8, 'Asian Fusion'),
+	(9, 'Australian'),
+	(10, 'Austrian'),
+	(11, 'Bangladeshi'),
+	(12, 'Barbeque'),
+	(13, 'Basque'),
+	(14, 'Belgian'),
+	(15, 'Brasseries'),
+	(16, 'Brazilian'),
+	(17, 'Breakfast & Brunch'),
+	(18, 'British'),
+	(19, 'Buffets'),
+	(20, 'Burgers'),
+	(21, 'Burmese'),
+	(22, 'Cafes'),
+	(23, 'Cafeteria'),
+	(24, 'Cajun/Creole'),
+	(25, 'Cambodian'),
+	(26, 'Caribbean'),
+	(27, 'Catalan'),
+	(28, 'Cheesesteaks'),
+	(29, 'Chicken Shop'),
+	(30, 'Chicken Wings'),
+	(31, 'Chinese'),
+	(32, 'Comfort Food'),
+	(33, 'Creperies'),
+	(34, 'Cuban'),
+	(35, 'Czech'),
+	(36, 'Delis'),
+	(37, 'Diners'),
+	(38, 'Dinner Theater'),
+	(39, 'Ethiopian'),
+	(40, 'Fast Food'),
+	(41, 'Filipino'),
+	(42, 'Fish & Chips'),
+	(43, 'Fondue'),
+	(44, 'Food Court'),
+	(45, 'Food Stands'),
+	(46, 'French'),
+	(47, 'Game Meat'),
+	(48, 'Gastropubs'),
+	(49, 'German'),
+	(50, 'Gluten-Free'),
+	(51, 'Greek'),
+	(52, 'Guamanian'),
+	(53, 'Halal'),
+	(54, 'Hawaiian'),
+	(55, 'Himalayan/Nepalese'),
+	(56, 'Honduran'),
+	(57, 'Hong Kong Style Cafe'),
+	(58, 'Hot Dogs'),
+	(59, 'Hot Pot'),
+	(60, 'Hungarian'),
+	(61, 'Iberian'),
+	(62, 'Indian'),
+	(63, 'Indonesian'),
+	(64, 'Irish'),
+	(65, 'Italian'),
+	(66, 'Japanese'),
+	(67, 'Kebab'),
+	(68, 'Korean'),
+	(69, 'Kosher'),
+	(70, 'Laotian'),
+	(71, 'Latin American'),
+	(72, 'Live/Raw Food'),
+	(73, 'Malaysian'),
+	(74, 'Mediterranean'),
+	(75, 'Mexican'),
+	(76, 'Middle Eastern'),
+	(77, 'Modern European'),
+	(78, 'Mongolian'),
+	(79, 'Moroccan'),
+	(80, 'New Mexican Cuisine'),
+	(81, 'Nicaraguan'),
+	(82, 'Noodles'),
+	(83, 'Pakistani'),
+	(84, 'Pan Asia'),
+	(85, 'Persian/Iranian'),
+	(86, 'Peruvian'),
+	(87, 'Pizza'),
+	(88, 'Polish'),
+	(89, 'Polynesian'),
+	(90, 'Pop-Up Restaurants'),
+	(91, 'Portuguese'),
+	(92, 'Poutineries'),
+	(93, 'Russian'),
+	(94, 'Salad'),
+	(95, 'Sandwiches'),
+	(96, 'Scandinavian'),
+	(97, 'Scottish'),
+	(98, 'Seafood'),
+	(99, 'Singaporean'),
+	(100, 'Slovakian'),
+	(101, 'Soul Food'),
+	(102, 'Soup'),
+	(103, 'Southern'),
+	(104, 'Spanish'),
+	(105, 'Sri Lankan'),
+	(106, 'Steakhouses'),
+	(107, 'Supper Clubs'),
+	(108, 'Sushi Bars'),
+	(109, 'Syrian'),
+	(110, 'Taiwanese'),
+	(111, 'Tapas Bars'),
+	(112, 'Tapas/Small Plates'),
+	(113, 'Tex-Mex'),
+	(114, 'Thai'),
+	(115, 'Turkish'),
+	(116, 'Ukrainian'),
+	(117, 'Uzbek'),
+	(118, 'Vegan'),
+	(119, 'Vegetarian'),
+	(120, 'Vietnamese'),
+	(121, 'Waffles'),
+	(122, 'Wraps');
+/*!40000 ALTER TABLE `category` ENABLE KEYS */;
 
 -- Dumping structure for table ece366restaurant.contact
 CREATE TABLE IF NOT EXISTS `contact` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `phone` int unsigned DEFAULT NULL,
+  `phone` varchar(20) COLLATE utf8_unicode_ci DEFAULT NULL,
   `email` varchar(320) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table ece366restaurant.contact: ~0 rows (approximately)
+DELETE FROM `contact`;
+/*!40000 ALTER TABLE `contact` DISABLE KEYS */;
+/*!40000 ALTER TABLE `contact` ENABLE KEYS */;
 
 -- Dumping structure for table ece366restaurant.reservation
 CREATE TABLE IF NOT EXISTS `reservation` (
@@ -69,7 +201,10 @@ CREATE TABLE IF NOT EXISTS `reservation` (
   CONSTRAINT `reservation_status_fk` FOREIGN KEY (`status_id`) REFERENCES `status` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table ece366restaurant.reservation: ~0 rows (approximately)
+DELETE FROM `reservation`;
+/*!40000 ALTER TABLE `reservation` DISABLE KEYS */;
+/*!40000 ALTER TABLE `reservation` ENABLE KEYS */;
 
 -- Dumping structure for table ece366restaurant.reservation_table
 CREATE TABLE IF NOT EXISTS `reservation_table` (
@@ -82,7 +217,10 @@ CREATE TABLE IF NOT EXISTS `reservation_table` (
   CONSTRAINT `reservationtable_table_fk` FOREIGN KEY (`table_id`) REFERENCES `table` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table ece366restaurant.reservation_table: ~0 rows (approximately)
+DELETE FROM `reservation_table`;
+/*!40000 ALTER TABLE `reservation_table` DISABLE KEYS */;
+/*!40000 ALTER TABLE `reservation_table` ENABLE KEYS */;
 
 -- Dumping structure for table ece366restaurant.reservation_user
 CREATE TABLE IF NOT EXISTS `reservation_user` (
@@ -94,7 +232,10 @@ CREATE TABLE IF NOT EXISTS `reservation_user` (
   CONSTRAINT `reservationuser_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table ece366restaurant.reservation_user: ~0 rows (approximately)
+DELETE FROM `reservation_user`;
+/*!40000 ALTER TABLE `reservation_user` DISABLE KEYS */;
+/*!40000 ALTER TABLE `reservation_user` ENABLE KEYS */;
 
 -- Dumping structure for table ece366restaurant.restaurant
 CREATE TABLE IF NOT EXISTS `restaurant` (
@@ -114,7 +255,10 @@ CREATE TABLE IF NOT EXISTS `restaurant` (
   CONSTRAINT `restaurant_contact_fk` FOREIGN KEY (`contact_id`) REFERENCES `contact` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table ece366restaurant.restaurant: ~0 rows (approximately)
+DELETE FROM `restaurant`;
+/*!40000 ALTER TABLE `restaurant` DISABLE KEYS */;
+/*!40000 ALTER TABLE `restaurant` ENABLE KEYS */;
 
 -- Dumping structure for table ece366restaurant.restaurant_user
 CREATE TABLE IF NOT EXISTS `restaurant_user` (
@@ -130,7 +274,10 @@ CREATE TABLE IF NOT EXISTS `restaurant_user` (
   CONSTRAINT `restaurantuser_user_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table ece366restaurant.restaurant_user: ~0 rows (approximately)
+DELETE FROM `restaurant_user`;
+/*!40000 ALTER TABLE `restaurant_user` DISABLE KEYS */;
+/*!40000 ALTER TABLE `restaurant_user` ENABLE KEYS */;
 
 -- Dumping structure for table ece366restaurant.role
 CREATE TABLE IF NOT EXISTS `role` (
@@ -138,9 +285,16 @@ CREATE TABLE IF NOT EXISTS `role` (
   `name` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name_UNIQUE` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table ece366restaurant.role: ~0 rows (approximately)
+DELETE FROM `role`;
+/*!40000 ALTER TABLE `role` DISABLE KEYS */;
+INSERT INTO `role` (`id`, `name`) VALUES
+	(2, 'Admin'),
+	(1, 'Customer'),
+	(3, 'Manager');
+/*!40000 ALTER TABLE `role` ENABLE KEYS */;
 
 -- Dumping structure for table ece366restaurant.status
 CREATE TABLE IF NOT EXISTS `status` (
@@ -148,9 +302,15 @@ CREATE TABLE IF NOT EXISTS `status` (
   `name` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name_UNIQUE` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table ece366restaurant.status: ~0 rows (approximately)
+DELETE FROM `status`;
+/*!40000 ALTER TABLE `status` DISABLE KEYS */;
+INSERT INTO `status` (`id`, `name`) VALUES
+	(2, 'Cancelled'),
+	(1, 'Opened');
+/*!40000 ALTER TABLE `status` ENABLE KEYS */;
 
 -- Dumping structure for table ece366restaurant.table
 CREATE TABLE IF NOT EXISTS `table` (
@@ -163,13 +323,16 @@ CREATE TABLE IF NOT EXISTS `table` (
   CONSTRAINT `table_restaurant_fk` FOREIGN KEY (`restaurant_id`) REFERENCES `restaurant` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table ece366restaurant.table: ~0 rows (approximately)
+DELETE FROM `table`;
+/*!40000 ALTER TABLE `table` DISABLE KEYS */;
+/*!40000 ALTER TABLE `table` ENABLE KEYS */;
 
 -- Dumping structure for table ece366restaurant.user
 CREATE TABLE IF NOT EXISTS `user` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `username` varchar(320) COLLATE utf8_unicode_ci NOT NULL,
-  `password` varchar(60) COLLATE utf8_unicode_ci NOT NULL,
+  `password` varchar(200) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `fname` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
   `lname` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
   `contact_id` int unsigned NOT NULL,
@@ -183,7 +346,10 @@ CREATE TABLE IF NOT EXISTS `user` (
   CONSTRAINT `user_role_fk` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table ece366restaurant.user: ~0 rows (approximately)
+DELETE FROM `user`;
+/*!40000 ALTER TABLE `user` DISABLE KEYS */;
+/*!40000 ALTER TABLE `user` ENABLE KEYS */;
 
 -- Dumping structure for table ece366restaurant.user_login
 CREATE TABLE IF NOT EXISTS `user_login` (
@@ -198,7 +364,10 @@ CREATE TABLE IF NOT EXISTS `user_login` (
   CONSTRAINT `user_login_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table ece366restaurant.user_login: ~0 rows (approximately)
+DELETE FROM `user_login`;
+/*!40000 ALTER TABLE `user_login` DISABLE KEYS */;
+/*!40000 ALTER TABLE `user_login` ENABLE KEYS */;
 
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IF(@OLD_FOREIGN_KEY_CHECKS IS NULL, 1, @OLD_FOREIGN_KEY_CHECKS) */;
