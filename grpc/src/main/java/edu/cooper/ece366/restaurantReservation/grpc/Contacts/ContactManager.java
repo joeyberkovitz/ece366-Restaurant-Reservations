@@ -15,7 +15,7 @@ public class ContactManager {
 
     // todo setContact
 
-    public int checkContact(Contact contact) throws InvalidPhoneException, InvalidEmailException, InvalidContactIdException {
+    public int checkAndInsertContact(Contact contact) throws InvalidPhoneException, InvalidEmailException, InvalidContactIdException {
         int contId;
         if (contact.getId() == 0) {
             // throw exceptions
@@ -31,8 +31,8 @@ public class ContactManager {
             Optional<Integer> valContId = db.withExtension(ContactDao.class, dao -> {
                 return dao.checkContact(contact.getId());
             });
-            if (!valContId.isPresent()) {
-                throw new InvalidContactIdException("Contact Id does not exist.");
+            if (valContId.isEmpty()) {
+                throw new InvalidContactIdException("Contact ID does not exist.");
             }
             contId = contact.getId();
         }
@@ -40,8 +40,8 @@ public class ContactManager {
         return contId;
     }
 
-    private void checkPhone(int phone) throws InvalidPhoneException{
-        if (phone == 0) {
+    private void checkPhone(String phone) throws InvalidPhoneException{
+        if (phone.isBlank()) {
             throw new InvalidPhoneException("Phone number field must be filled.");
         }
     }

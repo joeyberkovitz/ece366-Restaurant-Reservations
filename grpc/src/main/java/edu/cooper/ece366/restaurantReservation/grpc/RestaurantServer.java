@@ -51,7 +51,7 @@ public class RestaurantServer {
 				.addService(new RestaurantServiceImpl())
 				.addService(new ReservationServiceImpl())
 				.addService(new UserServiceImpl(jdbi))
-				.addService(new AuthServiceImpl(jdbi))
+				.addService(new AuthServiceImpl(jdbi, prop))
 				.build()
 				.start();
 		logger.info("Server started, listening on " + port);

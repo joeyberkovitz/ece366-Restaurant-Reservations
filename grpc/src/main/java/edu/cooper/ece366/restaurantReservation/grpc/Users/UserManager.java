@@ -13,19 +13,23 @@ public class UserManager {
         this.db = db;
     }
 
-    public int checkUser(User user) throws InvalidUsernameException, InvalidNameException, ContactManager.InvalidContactIdException, ContactManager.InvalidPhoneException, ContactManager.InvalidEmailException {
+    public int checkAndInsertUser(User user) throws InvalidUsernameException, InvalidNameException,
+            ContactManager.InvalidContactIdException, ContactManager.InvalidPhoneException, ContactManager.InvalidEmailException {
         checkUsername(user.getUsername());
         checkName(user.getFname(),"First");
         checkName(user.getLname(),"Last");
-        int contId = checkUserContact(user.getContact());
+        int contId = checkAndInsertContact(user.getContact());
 
         return contId;
     }
 
     public void checkUsername(String username) throws InvalidUsernameException {
-        //Todo: make sure username doesn't exist
         if (!username.matches("^[a-zA-Z0-9]*$")) {
             throw new InvalidUsernameException("Username must only include alphanumeric characters.");
+        }
+
+        if(db.withExtension(UserDao.class, d -> d.userExists(username))){
+            throw new InvalidUsernameException("Username exists");
         }
     }
 
@@ -44,9 +48,9 @@ public class UserManager {
     The best solution seems to be instantiating a new manager here and then deleting it after the function call.
     However, this needs to be thought through with regards to the number of total instances.
      */
-    public int checkUserContact(Contact contact) throws ContactManager.InvalidContactIdException, ContactManager.InvalidPhoneException, ContactManager.InvalidEmailException {
+    public int checkAndInsertContact(Contact contact) throws ContactManager.InvalidContactIdException, ContactManager.InvalidPhoneException, ContactManager.InvalidEmailException {
         ContactManager cm = new ContactManager(db);
-        return cm.checkContact(contact);
+        return cm.checkAndInsertContact(contact);
     }
 
     public static class InvalidUsernameException extends Exception {
