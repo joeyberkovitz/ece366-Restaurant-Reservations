@@ -5,6 +5,7 @@ option java_multiple_files = true;
 
 service AuthService {
 	rpc createUser (CreateUserRequest) returns (User);
+	rpc authenticate(AuthRequest) returns (AuthResponse);
 }
 
 service RestaurantService {
@@ -75,7 +76,7 @@ message Address {
 
 message Contact {
 	uint32 id = 1;
-	uint32 phone = 2;
+	string phone = 2;
 	string email = 3;
 }
 
@@ -99,17 +100,29 @@ message CreateUserRequest {
 	User user = 2;
 }
 
+message AuthRequest {
+	string username = 1;
+	string password = 2;
+	string userAgent = 3;
+}
+
+message AuthResponse {
+	string authToken = 1;
+	string refreshToken = 2;
+}
+
 message Reservation {
 	uint32 id = 1;
 	uint64 startTime = 2;
 	Restaurant restaurant = 3; // just ID
 	uint32 numPeople = 4;
 	uint32 points = 5;
-	enum status {
+	enum ReservationStatus {
 		DEFAULT = 0;
 		CANCELLED = 1;
 		// will the restaurant mark as completed?
 	}
+	ReservationStatus status = 6;
 }
 
 message CreateTableRequest {
@@ -135,11 +148,12 @@ message RTimeResponse {
 
 message Relationship {
 	Restaurant restaurant = 1;
-	enum role {
+	enum UserRole {
 		CUSTOMER = 0;
 		MANAGER = 1;
 		ADMIN = 2;
 	}
+	UserRole role = 2;
 	User user = 3; // for setting
 }
 

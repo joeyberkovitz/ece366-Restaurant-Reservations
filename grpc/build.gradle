@@ -24,6 +24,7 @@ def protobufVersion = '3.11.0'
 def protocVersion = protobufVersion
 
 dependencies {
+  compile "org.slf4j:slf4j-nop:1.7.25"
   compile "com.google.protobuf:protobuf-java:${protobufVersion}"
   compile "io.grpc:grpc-stub:${grpcVersion}"
   compile "io.grpc:grpc-protobuf:${grpcVersion}"
@@ -43,8 +44,15 @@ dependencies {
   compile "org.jdbi:jdbi3-core:3.2.0"
   compile "org.jdbi:jdbi3-sqlobject:3.2.0"
 
+  //MySQL Plugin
   compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.15'
   runtime "mysql:mysql-connector-java:8.0.15"
+
+  //Argon2
+  compile 'de.mkammerer:argon2-jvm:2.6'
+
+  //JWT Plugin
+  implementation 'com.auth0:java-jwt:3.9.0'
 
   runtimeOnly "io.grpc:grpc-netty-shaded:${grpcVersion}"
 
@@ -89,8 +97,19 @@ task restaurantServer(type: CreateStartScripts) {
     classpath = startScripts.classpath
 }
 
+task argonParams(type: CreateStartScripts) {
+    mainClassName = 'edu.cooper.ece366.restaurantReservation.grpc.ComputeArgonParams'
+    applicationName = 'argon-params'
+    outputDir = new File(project.buildDir, 'tmp')
+    classpath = startScripts.classpath
+}
+
+application {
+  mainClassName = 'edu.cooper.ece366.restaurantReservation.grpc.RestaurantServer'
+}
 applicationDistribution.into('bin') {
     from(restaurantServer)
+    from(argonParams)
     fileMode = 0755
 }
 
