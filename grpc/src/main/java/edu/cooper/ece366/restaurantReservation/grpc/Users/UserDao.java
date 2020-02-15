@@ -1,8 +1,11 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Users;
 
+import edu.cooper.ece366.restaurantReservation.grpc.User;
 import edu.cooper.ece366.restaurantReservation.grpc.Auth.DBHashResponse;
 import edu.cooper.ece366.restaurantReservation.grpc.CreateUserRequest;
 import org.jdbi.v3.sqlobject.config.RegisterBeanMapper;
+import org.jdbi.v3.sqlobject.customizer.BindBean;
+import org.jdbi.v3.sqlobject.customizer.Bind;
 import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
@@ -12,12 +15,7 @@ import java.util.Optional;
 public interface UserDao {
     @SqlUpdate("INSERT INTO user(username, password, fname, lname, contact_id, role_id, rewards_points) VALUES (:username, :password, :fname, :lname, :contact_id, :role_id, :rewards_points)")
     @GetGeneratedKeys("id")
-    int insertUser(String username, String password, String fname, String lname, int contact_id, int role_id, int rewards_points);
-
-    default int insertUserDriver(CreateUserRequest userRequest, int roleId) {
-        return insertUser(userRequest.getUser().getUsername(), userRequest.getPassword(), userRequest.getUser().getFname(), userRequest.getUser().getLname(), userRequest.getUser().getContact().getId(), roleId, userRequest.getUser().getPoints());
-    }
-
+    int insertUser(@Bind("password") String password, @Bind("contact_id") int contact_id, @BindBean User user, @Bind("role_id") int role_id);
 
     /**
      * @param name Username

@@ -34,35 +34,25 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 	@Override
 	public void createUser(CreateUserRequest request, StreamObserver<User> responseObserver){
 
-		User tempUser = User.newBuilder().mergeFrom(request.getUser()).setPoints(0).build();
-
 		UserManager um = new UserManager(db);
-		int contId = 0;
+		final int contId;
 		try {
-			contId = um.checkAndInsertUser(tempUser);
+			contId = um.checkAndInsertUser(request.getUser());
 		} catch (UserManager.InvalidUsernameException | UserManager.InvalidNameException | ContactManager.InvalidContactIdException | ContactManager.InvalidPhoneException | ContactManager.InvalidEmailException e) {
 			e.printStackTrace();
 			//Todo: On error, return it to gRPC
 			return;
 		}
 
-		Contact newContact = Contact.newBuilder().setId(contId).build();
-		tempUser = User.newBuilder().mergeFrom(tempUser).setContact(newContact).build();
-
 		int roleId = db.withExtension(RoleDao.class, dao -> {
 			return dao.getRoleIdByName("Customer");
 		});
 
-		CreateUserRequest tempRequest = CreateUserRequest.newBuilder()
-				.setPassword(hashPassword(request.getPassword()))
-				.setUser(tempUser)
-				.build();
 		int userId = db.withExtension(UserDao.class, dao -> {
-			return dao.insertUserDriver(tempRequest, roleId);
+			return dao.insertUser(hashPassword(request.getPassword()), contId, request.getUser(), roleId);
 		});
 
-		User reply =
-				User.newBuilder().setId(userId).build();
+		User reply = User.newBuilder().setId(userId).build();
 		responseObserver.onNext(reply);
 		responseObserver.onCompleted();
 	}
