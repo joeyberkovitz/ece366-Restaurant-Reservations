@@ -13,9 +13,9 @@ import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 import java.util.Optional;
 
 public interface UserDao {
-    @SqlUpdate("INSERT INTO user(username, password, fname, lname, contact_id, role_id, rewards_points) VALUES (:username, :password, :fname, :lname, :contact_id, :role_id, :rewards_points)")
+    @SqlUpdate("INSERT INTO user(username, password, fname, lname, contact_id, role_id) VALUES (:username, :password, :fname, :lname, :contact_id, :role_id)")
     @GetGeneratedKeys("id")
-    int insertUser(@Bind("password") String password, @Bind("contact_id") int contact_id, @BindBean User user, @Bind("role_id") int role_id);
+    int insertUser(String password, int contact_id, @BindBean User user, int role_id);
 
     /**
      * @param name Username
