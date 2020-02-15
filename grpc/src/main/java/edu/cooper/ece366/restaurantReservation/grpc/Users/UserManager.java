@@ -18,7 +18,8 @@ public class UserManager {
         checkUsername(user.getUsername());
         checkName(user.getFname(),"First");
         checkName(user.getLname(),"Last");
-        int contId = checkAndInsertContact(user.getContact());
+        ContactManager cm = new ContactManager(db);
+        int contId = cm.checkAndInsertContact(user.getContact());
 
         return contId;
     }
@@ -37,20 +38,6 @@ public class UserManager {
         if (!name.matches("^[a-zA-Z]*$")) {
             throw new InvalidNameException(type + " name must only include alphabet characters.");
         }
-    }
-
-    /* Todo we need an instance of contact manager for use here,
-    however we cant instantiate it because that would imply we would have to instantiate one of every kind of
-    manager within each manager all with the same "db".
-    The other approach, instantiating them from main, and passing them all to constructors is impossible because
-    we would have to instantiate them at the same time.
-    We cant make them all static because we cant hardcode a jdbi object.
-    The best solution seems to be instantiating a new manager here and then deleting it after the function call.
-    However, this needs to be thought through with regards to the number of total instances.
-     */
-    public int checkAndInsertContact(Contact contact) throws ContactManager.InvalidContactIdException, ContactManager.InvalidPhoneException, ContactManager.InvalidEmailException {
-        ContactManager cm = new ContactManager(db);
-        return cm.checkAndInsertContact(contact);
     }
 
     public static class InvalidUsernameException extends Exception {
