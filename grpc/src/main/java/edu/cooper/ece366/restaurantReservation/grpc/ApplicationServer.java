@@ -42,11 +42,11 @@ public class ApplicationServer {
 		ds.setUser(prop.getProperty("db.user"));
 		ds.setPassword(prop.getProperty("db.pass"));
 		jdbi = Jdbi.create(ds).installPlugin(new SqlObjectPlugin());
-		/* The port on which the server should run */
-		int port = 50051;
+		/* The port on which the RPC server should run */
+		int rpcPort = 50051;
 
 		//Todo: Add interceptor to services
-		server = ServerBuilder.forPort(port)
+		server = ServerBuilder.forPort(rpcPort)
 				.addService(ProtoReflectionService.newInstance())
 				.addService(new RestaurantServiceImpl(jdbi))
 				.addService(new ReservationServiceImpl())
@@ -54,7 +54,7 @@ public class ApplicationServer {
 				.addService(new AuthServiceImpl(jdbi, prop))
 				.build()
 				.start();
-		logger.info("Server started, listening on " + port);
+		logger.info("Server started, listening on " + rpcPort);
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
