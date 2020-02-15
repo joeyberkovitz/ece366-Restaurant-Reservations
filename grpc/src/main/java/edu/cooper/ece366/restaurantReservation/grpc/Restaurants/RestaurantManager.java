@@ -1,6 +1,7 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Restaurants;
 
 import edu.cooper.ece366.restaurantReservation.grpc.Restaurant;
+import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantDao;
 import edu.cooper.ece366.restaurantReservation.grpc.Addresses.AddressManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Category;
@@ -23,6 +24,8 @@ public class RestaurantManager {
 		AddressManager am = new AddressManager(db);
 		int addrId = am.checkAndInsertAddress(restaurant.getAddress());
 
-		return contId;
+		return db.withExtension(RestaurantDao.class, dao -> {
+			return dao.insertRestaurant(addrId, contId, restaurant);
+		});
 	}
 }
