@@ -2,7 +2,7 @@ package edu.cooper.ece366.restaurantReservation.grpc;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
 import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthServiceImpl;
-import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantDao;
+import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantServiceImpl;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserServiceImpl;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -48,7 +48,7 @@ public class RestaurantServer {
 		//Todo: Add interceptor to services
 		server = ServerBuilder.forPort(port)
 				.addService(ProtoReflectionService.newInstance())
-				.addService(new RestaurantServiceImpl())
+				.addService(new RestaurantServiceImpl(jdbi))
 				.addService(new ReservationServiceImpl())
 				.addService(new UserServiceImpl(jdbi))
 				.addService(new AuthServiceImpl(jdbi, prop))
@@ -92,21 +92,6 @@ public class RestaurantServer {
 		final RestaurantServer server = new RestaurantServer();
 		server.start();
 		server.blockUntilShutdown();
-	}
-
-	static class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServiceImplBase {
-
-		@Override
-		public void createRestaurant(Restaurant req, StreamObserver<Restaurant> responseObserver) {
-			int restId = jdbi.withExtension(RestaurantDao.class, dao -> {
-				return dao.insertBean(req);
-			});
-
-			Restaurant reply =
-					Restaurant.newBuilder().setId(restId).build();
-			responseObserver.onNext(reply);
-			responseObserver.onCompleted();
-		}
 	}
 
 	static class ReservationServiceImpl extends ReservationServiceGrpc.ReservationServiceImplBase {}
