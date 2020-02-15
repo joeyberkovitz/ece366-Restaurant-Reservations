@@ -40,4 +40,8 @@ gradle-app.setting
 .gradle/*
 grpc/.gradle
 
+gradlew
+gradlew.bat
+gradle/
+
 grpc/src/main/resources/config.properties
