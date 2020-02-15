@@ -21,8 +21,8 @@ import java.util.logging.Logger;
 /**
  * Server that manages startup/shutdown of a {@code Greeter} server.
  */
-public class RestaurantServer {
-	private static final Logger logger = Logger.getLogger(RestaurantServer.class.getName());
+public class ApplicationServer {
+	private static final Logger logger = Logger.getLogger(ApplicationServer.class.getName());
 
 	private Server server;
 	private static Jdbi jdbi;
@@ -61,7 +61,7 @@ public class RestaurantServer {
 				// Use stderr here since the logger may have been reset by its JVM shutdown hook.
 				System.err.println("*** shutting down gRPC server since JVM is shutting down");
 				try {
-					RestaurantServer.this.stop();
+					ApplicationServer.this.stop();
 				} catch (InterruptedException e) {
 					e.printStackTrace(System.err);
 				}
@@ -89,7 +89,7 @@ public class RestaurantServer {
 	 * Main launches the server from the command line.
 	 */
 	public static void main(String[] args) throws IOException, InterruptedException {
-		final RestaurantServer server = new RestaurantServer();
+		final ApplicationServer server = new ApplicationServer();
 		server.start();
 		server.blockUntilShutdown();
 	}

@@ -90,9 +90,9 @@ protobuf {
 
 startScripts.enabled = false
 
-task restaurantServer(type: CreateStartScripts) {
-    mainClassName = 'edu.cooper.ece366.restaurantReservation.grpc.RestaurantServer'
-    applicationName = 'restaurant-server'
+task applicationServer(type: CreateStartScripts) {
+    mainClassName = 'edu.cooper.ece366.restaurantReservation.grpc.ApplicationServer'
+    applicationName = 'application-server'
     outputDir = new File(project.buildDir, 'tmp')
     classpath = startScripts.classpath
 }
@@ -105,10 +105,10 @@ task argonParams(type: CreateStartScripts) {
 }
 
 application {
-  mainClassName = 'edu.cooper.ece366.restaurantReservation.grpc.RestaurantServer'
+  mainClassName = 'edu.cooper.ece366.restaurantReservation.grpc.ApplicationServer'
 }
 applicationDistribution.into('bin') {
-    from(restaurantServer)
+    from(applicationServer)
     from(argonParams)
     fileMode = 0755
 }
