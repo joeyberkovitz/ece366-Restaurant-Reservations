@@ -9,6 +9,8 @@ import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
+import javax.swing.text.html.Option;
+import java.util.Date;
 import java.util.Optional;
 
 public interface UserDao {
@@ -35,4 +37,12 @@ public interface UserDao {
             " WHERE u.id = :id")
     @RegisterRowMapper(UserMapper.class)
     User getUser(int id);
+
+    @SqlUpdate("INSERT INTO user_login(user_id, refresh_token, user_agent, expiration_date) " +
+            "VALUES(:id, :token, :userAgent, :expirationDate)")
+    void insertUserToken(int id, String token, String userAgent, Date expirationDate);
+
+
+    @SqlQuery("SELECT user_id FROM user_login WHERE refresh_token = :token AND revoked = 0")
+    Optional<Integer> checkRefreshToken(String token);
 }

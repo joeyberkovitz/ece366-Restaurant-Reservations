@@ -2,8 +2,7 @@ package edu.cooper.ece366.restaurantReservation.grpc.Auth;
 
 import edu.cooper.ece366.restaurantReservation.grpc.User;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserDao;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import org.jdbi.v3.core.Jdbi;
 
@@ -28,6 +27,7 @@ public class AuthManager {
 	public AuthManager(Properties properties, Jdbi db){
 		this.prop = properties;
 		this.db = db;
+		//Todo: get keys from pem and key files
 	}
 
 	private PrivateKey loadPrivKey(){
@@ -62,7 +62,7 @@ public class AuthManager {
 		return publicKey;
 	}
 
-	public List<String> genTokens(int userID){
+	public List<String> genTokens(int userID, String userAgent){
 		PrivateKey privateKey = loadPrivKey();
 
 		User user = db.withExtension(UserDao.class, d->d.getUser(userID));
@@ -87,9 +87,23 @@ public class AuthManager {
 				.signWith(privateKey, SignatureAlgorithm.RS256)
 				.compact();
 
+		db.useExtension(UserDao.class, d ->
+				d.insertUserToken(userID, refreshToken, userAgent, refreshExp));
+
 		ArrayList<String> res = new ArrayList<String>();
 		res.add(authToken);
 		res.add(refreshToken);
 		return res;
+	}
+
+	public void validateToken(String authToken){
+		Jws<Claims> jws;
+		try{
+			jws = Jwts.parserBuilder().setSigningKey(loadPubKey()).build()
+					.parseClaimsJws(authToken);
+		}
+		catch (JwtException e){
+			throw new RuntimeException("Invalid token");
+		}
 	}
 }

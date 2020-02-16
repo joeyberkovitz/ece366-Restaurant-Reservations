@@ -6,6 +6,7 @@ option java_multiple_files = true;
 service AuthService {
 	rpc createUser (CreateUserRequest) returns (User);
 	rpc authenticate(AuthRequest) returns (AuthResponse);
+	rpc refreshToken(RefreshRequest) returns (AuthResponse);
 }
 
 service RestaurantService {
@@ -110,6 +111,11 @@ message AuthRequest {
 	string username = 1;
 	string password = 2;
 	string userAgent = 3;
+}
+
+message RefreshRequest {
+	string refreshToken = 1;
+	string userAgent = 2;
 }
 
 message AuthResponse {

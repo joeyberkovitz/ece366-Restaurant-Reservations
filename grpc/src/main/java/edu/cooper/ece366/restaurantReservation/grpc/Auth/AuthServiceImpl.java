@@ -6,6 +6,8 @@ import edu.cooper.ece366.restaurantReservation.grpc.*;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserDao;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserManager;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import org.jdbi.v3.core.Jdbi;
 
@@ -79,7 +81,7 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 		}
 
 		if(verifyPassword(request.getPassword(), dbHash.get().getPassword())){
-			List<String> tokens = this.authManager.genTokens(dbHash.get().getId());
+			List<String> tokens = this.authManager.genTokens(dbHash.get().getId(), request.getUserAgent());
 			resBuild.setAuthToken(tokens.get(0));
 			resBuild.setRefreshToken(tokens.get(1));
 		}
@@ -96,5 +98,24 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 
 	private boolean verifyPassword(String password, String hash){
 		return argon2.verify(hash, password.toCharArray());
+	}
+
+	@Override
+	public void refreshToken(RefreshRequest request, StreamObserver<AuthResponse> responseObserver) {
+		//Todo: maybe validate retrieved user id against id in token
+		this.authManager.validateToken(request.getRefreshToken());
+		Optional<Integer> userId = db.withExtension(UserDao.class, d -> d.checkRefreshToken(request.getRefreshToken()));
+		if(userId.isEmpty())
+			throw new StatusRuntimeException(Status.PERMISSION_DENIED.withDescription("Invalid or revoked refresh " +
+					"token"));
+
+		List<String> tokens = authManager.genTokens(userId.get(), request.getUserAgent());
+		AuthResponse res = AuthResponse.newBuilder()
+				.setAuthToken(tokens.get(0))
+				.setRefreshToken(tokens.get(1))
+				.build();
+
+		responseObserver.onNext(res);
+		responseObserver.onCompleted();
 	}
 }
