@@ -9,6 +9,7 @@ import edu.cooper.ece366.restaurantReservation.grpc.Users.UserManager;
 import io.grpc.stub.StreamObserver;
 import org.jdbi.v3.core.Jdbi;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -17,10 +18,12 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 	private Properties prop;
 	private Argon2 argon2;
 	private int argonIter, argonMem, argonPar;
+	private AuthManager authManager;
 
 	public AuthServiceImpl(Jdbi db, Properties prop){
 		this.db = db;
 		this.prop = prop;
+		this.authManager = new AuthManager(prop, db);
 		initHash();
 	}
 
@@ -76,11 +79,9 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 		}
 
 		if(verifyPassword(request.getPassword(), dbHash.get().getPassword())){
-			//Todo: generate auth and refresh tokens
-			resBuild.setAuthToken("Auth Token");
-			resBuild.setRefreshToken("RefreshToken");
-
-			System.out.println("User id is: " + dbHash.get().getId());
+			List<String> tokens = this.authManager.genTokens(dbHash.get().getId());
+			resBuild.setAuthToken(tokens.get(0));
+			resBuild.setRefreshToken(tokens.get(1));
 		}
 		else {
 			throw new RuntimeException("Username or Password is invalid");

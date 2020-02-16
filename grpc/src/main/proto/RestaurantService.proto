@@ -93,6 +93,12 @@ message User {
 	string lname = 5;
 	Contact contact = 6;
 	int32 points = 7;
+	enum UserRole {
+		CUSTOMER = 0;
+		MANAGER = 1;
+		ADMIN = 2;
+	}
+	UserRole role = 8;
 }
 
 message CreateUserRequest {

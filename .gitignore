@@ -45,3 +45,4 @@ gradlew.bat
 gradle/
 
 grpc/src/main/resources/config.properties
+.idea/*
