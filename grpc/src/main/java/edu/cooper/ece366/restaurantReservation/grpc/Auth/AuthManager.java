@@ -75,7 +75,7 @@ public class AuthManager {
 				.setExpiration(expDate)
 				.setIssuedAt(issueDate)
 				.setNotBefore(notBefore)
-				.setSubject(user.getUsername())
+				.setSubject(Integer.toString(userID))
 				.signWith(privateKey, SignatureAlgorithm.RS256)
 				.compact();
 
@@ -83,7 +83,7 @@ public class AuthManager {
 				.setExpiration(refreshExp)
 				.setIssuedAt(issueDate)
 				.setNotBefore(notBefore)
-				.setSubject(user.getUsername())
+				.setSubject(Integer.toString(userID))
 				.signWith(privateKey, SignatureAlgorithm.RS256)
 				.compact();
 
@@ -96,11 +96,12 @@ public class AuthManager {
 		return res;
 	}
 
-	public void validateToken(String authToken){
+	public String validateToken(String authToken){
 		Jws<Claims> jws;
 		try{
 			jws = Jwts.parserBuilder().setSigningKey(loadPubKey()).build()
 					.parseClaimsJws(authToken);
+			return jws.getBody().getSubject();
 		}
 		catch (JwtException e){
 			throw new RuntimeException("Invalid token");

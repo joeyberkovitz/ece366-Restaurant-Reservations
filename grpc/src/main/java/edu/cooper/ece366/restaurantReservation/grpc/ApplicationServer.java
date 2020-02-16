@@ -1,6 +1,7 @@
 package edu.cooper.ece366.restaurantReservation.grpc;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
+import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthInterceptor;
 import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthServiceImpl;
 import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantServiceImpl;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserServiceImpl;
@@ -17,6 +18,8 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+
+import static io.grpc.ServerInterceptors.intercept;
 
 /**
  * Server that manages startup/shutdown of a {@code Greeter} server.
@@ -48,7 +51,7 @@ public class ApplicationServer {
 		//Todo: Add interceptor to services
 		server = ServerBuilder.forPort(rpcPort)
 				.addService(ProtoReflectionService.newInstance())
-				.addService(new RestaurantServiceImpl(jdbi))
+				.addService(intercept(new RestaurantServiceImpl(jdbi), new AuthInterceptor(jdbi, prop)))
 				.addService(new ReservationServiceImpl())
 				.addService(new UserServiceImpl(jdbi))
 				.addService(new AuthServiceImpl(jdbi, prop))
