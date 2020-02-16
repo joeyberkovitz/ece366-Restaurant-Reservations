@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS `category` (
   UNIQUE KEY `name_UNIQUE` (`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=123 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
--- Dumping data for table ece366restaurant.category: ~0 rows (approximately)
+-- Dumping data for table ece366restaurant.category: ~122 rows (approximately)
 DELETE FROM `category`;
 /*!40000 ALTER TABLE `category` DISABLE KEYS */;
 INSERT INTO `category` (`id`, `name`) VALUES
@@ -287,7 +287,7 @@ CREATE TABLE IF NOT EXISTS `role` (
   UNIQUE KEY `name_UNIQUE` (`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
--- Dumping data for table ece366restaurant.role: ~0 rows (approximately)
+-- Dumping data for table ece366restaurant.role: ~3 rows (approximately)
 DELETE FROM `role`;
 /*!40000 ALTER TABLE `role` DISABLE KEYS */;
 INSERT INTO `role` (`id`, `name`) VALUES
@@ -304,7 +304,7 @@ CREATE TABLE IF NOT EXISTS `status` (
   UNIQUE KEY `name_UNIQUE` (`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
--- Dumping data for table ece366restaurant.status: ~0 rows (approximately)
+-- Dumping data for table ece366restaurant.status: ~2 rows (approximately)
 DELETE FROM `status`;
 /*!40000 ALTER TABLE `status` DISABLE KEYS */;
 INSERT INTO `status` (`id`, `name`) VALUES
@@ -355,7 +355,7 @@ DELETE FROM `user`;
 CREATE TABLE IF NOT EXISTS `user_login` (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_id` int unsigned NOT NULL,
-  `refresh_token` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
+  `refresh_token` varchar(1000) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `user_agent` varchar(1000) COLLATE utf8_unicode_ci DEFAULT NULL,
   `expiration_date` datetime NOT NULL,
   `revoked` bit(1) NOT NULL DEFAULT b'0',
