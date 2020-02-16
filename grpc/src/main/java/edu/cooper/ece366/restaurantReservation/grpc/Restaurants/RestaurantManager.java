@@ -1,11 +1,11 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Restaurants;
 
-import edu.cooper.ece366.restaurantReservation.grpc.Restaurant;
-import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantDao;
 import edu.cooper.ece366.restaurantReservation.grpc.Addresses.AddressManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
-import edu.cooper.ece366.restaurantReservation.grpc.Category;
+import edu.cooper.ece366.restaurantReservation.grpc.Restaurant;
 import org.jdbi.v3.core.Jdbi;
+
+import java.util.Optional;
 
 public class RestaurantManager {
 	private Jdbi db;
@@ -27,5 +27,13 @@ public class RestaurantManager {
 		return db.withExtension(RestaurantDao.class, dao -> {
 			return dao.insertRestaurant(addrId, contId, restaurant);
 		});
+	}
+
+	public boolean canEditRestaurant(int userId, int restaurantId, boolean privileged){
+		Optional<String> role = db.withExtension(RestaurantDao.class, d ->
+				d.getRestaurantUserRole(userId, restaurantId));
+		if(privileged)
+			return role.isPresent() && role.get().equals("Admin");
+		return role.isPresent() && (role.get().equals("Admin") || role.get().equals("Manager"));
 	}
 }
