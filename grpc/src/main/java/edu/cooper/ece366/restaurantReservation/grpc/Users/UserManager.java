@@ -1,6 +1,5 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Users;
 
-import edu.cooper.ece366.restaurantReservation.grpc.Contact;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
 import edu.cooper.ece366.restaurantReservation.grpc.User;
 import org.jdbi.v3.core.Jdbi;
@@ -38,6 +37,14 @@ public class UserManager {
         if (!name.matches("^[a-zA-Z]*$")) {
             throw new InvalidNameException(type + " name must only include alphabet characters.");
         }
+    }
+
+    public User getUser(int id) {
+        User reply = db.withExtension(UserDao.class, dao -> {
+            return dao.getUser(id);
+        });
+
+        return reply;
     }
 
     public static class InvalidUsernameException extends Exception {
