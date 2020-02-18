@@ -42,7 +42,12 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 		UserManager um = new UserManager(db);
 		final int contId;
 		try {
-			contId = um.checkAndInsertUser(request.getUser());
+			um.checkUsername(request.getUser().getUsername());
+			um.checkName(request.getUser().getFname(),"First");
+			um.checkName(request.getUser().getLname(),"Last");
+
+			ContactManager cm = new ContactManager(db);
+			contId = cm.checkAndInsertContact(request.getUser().getContact());
 		} catch (UserManager.InvalidUsernameException | UserManager.InvalidNameException | ContactManager.InvalidContactIdException | ContactManager.InvalidPhoneException | ContactManager.InvalidEmailException e) {
 			e.printStackTrace();
 			//Todo: On error, return it to gRPC

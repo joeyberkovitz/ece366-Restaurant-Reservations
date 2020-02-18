@@ -9,7 +9,6 @@ import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
-import javax.swing.text.html.Option;
 import java.util.Date;
 import java.util.Optional;
 
@@ -37,6 +36,13 @@ public interface UserDao {
             " WHERE u.id = :id")
     @RegisterRowMapper(UserMapper.class)
     User getUser(int id);
+
+    @SqlUpdate("UPDATE user SET fname=coalesce(:fname,fname)," +
+            "lname=coalesce(:lname,lname)" +
+            "contact_id=coalesce(:contact_id,contact_id" +
+            "WHERE id = :id")
+    void setUser(@BindBean User user, int contact_id);
+    // TODO not set if values same
 
     @SqlUpdate("INSERT INTO user_login(user_id, refresh_token, user_agent, expiration_date) " +
             "VALUES(:id, :token, :userAgent, :expirationDate)")

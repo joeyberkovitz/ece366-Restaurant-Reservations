@@ -13,15 +13,38 @@ public class UserManager {
         this.db = db;
     }
 
-    public int checkAndInsertUser(User user) throws InvalidUsernameException, InvalidNameException,
-            ContactManager.InvalidContactIdException, ContactManager.InvalidPhoneException, ContactManager.InvalidEmailException {
-        checkUsername(user.getUsername());
-        checkName(user.getFname(),"First");
-        checkName(user.getLname(),"Last");
+    public User setUser(User user) throws InvalidNameException, ContactManager.InvalidContactIdException, ContactManager.InvalidPhoneException, ContactManager.InvalidEmailException, InvalidUserException {
         ContactManager cm = new ContactManager(db);
-        int contId = cm.checkAndInsertContact(user.getContact());
 
-        return contId;
+        if (user.getId() == 0) {
+            //todo throw error
+        }
+        else {
+            //todo check by username or id?
+            if (!existsUser(user.getUsername()))
+                throw new InvalidUserException("User does not exits.");
+
+            if (!user.getFname().isEmpty())
+                checkName(user.getFname(),"First");
+            if (!user.getLname().isEmpty())
+                checkName(user.getLname(),"Last");
+
+            // todo check if contact is completely empty
+            Contact newContact = cm.setContact(user.getContact());
+
+            db.withExtension(UserDao.class, dao -> {
+                dao.setUser(user, newContact.getId());
+                return null;
+            });
+        }
+
+        return db.withExtension(UserDao.class, dao -> {
+            return dao.getUser(user.getId());
+        });
+    }
+
+    public boolean existsUser(String username) {
+        return db.withExtension(UserDao.class, dao -> dao.userExists(username));
     }
 
     public void checkUsername(String username) throws InvalidUsernameException {
@@ -37,6 +60,12 @@ public class UserManager {
     public void checkName(String name, String type) throws InvalidNameException {
         if (!name.matches("^[a-zA-Z]*$")) {
             throw new InvalidNameException(type + " name must only include alphabet characters.");
+        }
+    }
+
+    public static class InvalidUserException extends Exception {
+        public InvalidUserException(String message) {
+            super(message);
         }
     }
 
