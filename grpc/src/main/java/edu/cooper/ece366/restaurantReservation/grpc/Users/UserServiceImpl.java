@@ -16,6 +16,12 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
     }
 
     @Override
+    public void getUser(User req, StreamObserver<User> responseObserver) {
+        responseObserver.onNext(manager.getUser(req.getId()));
+        responseObserver.onCompleted();
+    }
+
+    @Override
     public void setUser(User req, StreamObserver<User> responseObserver) {
         try {
             responseObserver.onNext(manager.setUser(req));

@@ -82,4 +82,10 @@ public class UserManager {
             super(message);
         }
     }
+
+    public static class InvalidUserException extends Exception {
+        public InvalidUserException(String message) {
+            super(message);
+        }
+    }
 }
