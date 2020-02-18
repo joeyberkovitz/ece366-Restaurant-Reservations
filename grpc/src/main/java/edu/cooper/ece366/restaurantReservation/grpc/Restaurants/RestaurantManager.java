@@ -28,4 +28,33 @@ public class RestaurantManager {
 			return dao.insertRestaurant(addrId, contId, restaurant);
 		});
 	}
+
+	public Restaurant getRestaurant(int id) {
+		return db.withExtension(RestaurantDao.class, dao -> {
+			return dao.getRestaurant(id);
+		});
+	}
+
+	public Restaurant setRestaurant(Restaurant target)
+	throws ContactManager.InvalidContactIdException,
+	       ContactManager.InvalidPhoneException,
+	       ContactManager.InvalidEmailException,
+	       AddressManager.InvalidAddressIdException {
+		int contId;
+		int addrId;
+		// TODO support changes to name only
+		//if(target.getContact() != null) {
+			ContactManager cm = new ContactManager(db);
+			contId = cm.setContact(target.getContact()).getId();
+		//}
+		//if(target.getAddress() != null) {
+			AddressManager am = new AddressManager(db);
+			addrId = am.setAddress(target.getAddress()).getId();
+		//}
+
+		return db.withExtension(RestaurantDao.class, dao -> {
+			dao.setRestaurant(addrId, contId, target);
+			return dao.getRestaurant(target.getId());
+		});
+	}
 }

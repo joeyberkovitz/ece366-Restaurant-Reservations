@@ -14,6 +14,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		this.db = db;
 		this.manager = new RestaurantManager(db);
 	}
+
 	@Override
 	public void createRestaurant(Restaurant req, StreamObserver<Restaurant> responseObserver) {
 		try {
@@ -21,6 +22,26 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			Restaurant reply =
 			Restaurant.newBuilder().setId(restId).build();
 			responseObserver.onNext(reply);
+			responseObserver.onCompleted();
+		}
+		catch (ContactManager.InvalidContactIdException |
+		       ContactManager.InvalidPhoneException |
+		       ContactManager.InvalidEmailException |
+		       AddressManager.InvalidAddressIdException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void getRestaurant(Restaurant req, StreamObserver<Restaurant> responseObserver) {
+		responseObserver.onNext(manager.getRestaurant(req.getId()));
+		responseObserver.onCompleted();
+	}
+
+	@Override
+	public void setRestaurant(Restaurant req, StreamObserver<Restaurant> responseObserver) {
+		try {
+			responseObserver.onNext(manager.setRestaurant(req));
 			responseObserver.onCompleted();
 		}
 		catch (ContactManager.InvalidContactIdException |
