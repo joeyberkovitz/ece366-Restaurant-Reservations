@@ -63,10 +63,12 @@ public class UserManager {
         }
     }
 
-    public static class InvalidUserException extends Exception {
-        public InvalidUserException(String message) {
-            super(message);
-        }
+    public User getUser(int id) {
+        User reply = db.withExtension(UserDao.class, dao -> {
+            return dao.getUser(id);
+        });
+
+        return reply;
     }
 
     public static class InvalidUsernameException extends Exception {
