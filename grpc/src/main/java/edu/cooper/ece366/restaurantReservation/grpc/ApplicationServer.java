@@ -4,6 +4,7 @@ import com.mysql.cj.jdbc.MysqlDataSource;
 import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthServiceImpl;
 import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantServiceImpl;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserServiceImpl;
+import edu.cooper.ece366.restaurantReservation.grpc.ProtoBeanMapper;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.protobuf.services.ProtoReflectionService;
@@ -41,7 +42,10 @@ public class ApplicationServer {
 		ds.setUrl(prop.getProperty("db.connString"));
 		ds.setUser(prop.getProperty("db.user"));
 		ds.setPassword(prop.getProperty("db.pass"));
-		jdbi = Jdbi.create(ds).installPlugin(new SqlObjectPlugin());
+		jdbi = Jdbi.create(ds)
+			.registerRowMapper(ProtoBeanMapper.factory(Contact.class, Contact.Builder.class))
+			.registerRowMapper(ProtoBeanMapper.factory(Address.class, Address.Builder.class))
+			.installPlugin(new SqlObjectPlugin());
 		/* The port on which the RPC server should run */
 		int rpcPort = 50051;
 
