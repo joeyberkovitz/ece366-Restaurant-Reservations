@@ -20,7 +20,22 @@ public interface AddressDao {
     @GetGeneratedKeys("id")
     int insertAddress(@BindBean Address address);
 
+    @SqlQuery("SELECT * from address WHERE id = :id")
+    Address getAddress(int id);
+
     @SqlQuery("SELECT id FROM address WHERE id = :id")
     Optional<Integer> checkAddress(int id);
+
+    @SqlUpdate("UPDATE address SET name= coalesce(:name,name)," +
+                                  "latitude=coalesce(:latitude,latitude) " +
+                                  "longitude=coalesce(:longitude,longitude) " +
+                                  "line1=coalesce(:line1,line1) " +
+                                  "line2=coalesce(:line2,line2) " +
+                                  "city=coalesce(:city,city) " +
+                                  "state=coalesce(:state,state) " +
+                                  "zip=coalesce(:zip,zip) " +
+                                  "WHERE id = :id")
+    void setAddress(@BindBean Address address);
+    // TODO not set if values same
 
 }

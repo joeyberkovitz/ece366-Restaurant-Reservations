@@ -14,24 +14,47 @@ public class AddressManager {
     // todo setAddress
 
     public int checkAndInsertAddress(Address address) throws InvalidAddressIdException {
-        int contId;
+        int addrId;
         if (address.getId() == 0) {
             // TODO checks?
-            contId = db.withExtension(AddressDao.class, dao -> {
+            addrId = db.withExtension(AddressDao.class, dao -> {
                 return dao.insertAddress(address);
             });
         } else {
             // Check if id exists
-            Optional<Integer> valContId =
-                    db.withExtension(AddressDao.class, dao -> {
-                        return dao.checkAddress(address.getId());
-                    });
-            if (valContId.isEmpty()) {
+            if (!existsAddress(address.getId())) {
                 throw new InvalidAddressIdException("Address ID does not exist.");
             }
-            contId = address.getId();
+            addrId = address.getId();
         }
-        return contId;
+        return addrId;
+    }
+
+    public Address setAddress(Address address) throws InvalidAddressIdException {
+        int addrId;
+        if (address.getId() == 0)
+            addrId = checkAndInsertAddress(address);
+        else {
+            addrId = address.getId();
+            if (!existsAddress(addrId)) {
+                throw new InvalidAddressIdException("Address ID does not exist.");
+            }
+
+            db.withExtension(AddressDao.class, dao -> {
+                dao.setAddress(address);
+                return null;
+            });
+        }
+        return db.withExtension(AddressDao.class, dao -> {
+            return dao.getAddress(addrId);
+        });
+    }
+
+    private boolean existsAddress(int id) {
+        Optional<Integer> valaddrId = db.withExtension(AddressDao.class, dao -> {
+            return dao.checkAddress(id);
+        });
+        return !valaddrId.isEmpty();
     }
 
     public static class InvalidAddressIdException extends Exception {
