@@ -1,13 +1,11 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Restaurants;
 
-import edu.cooper.ece366.restaurantReservation.grpc.Address;
-import edu.cooper.ece366.restaurantReservation.grpc.Category;
-import edu.cooper.ece366.restaurantReservation.grpc.Contact;
-import edu.cooper.ece366.restaurantReservation.grpc.Restaurant;
+import edu.cooper.ece366.restaurantReservation.grpc.*;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 import org.jdbi.v3.sqlobject.config.RegisterRowMapper;
+import org.jdbi.v3.sqlobject.config.RegisterRowMapperFactory;
 import org.jdbi.v3.sqlobject.customizer.BindBean;
 import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
@@ -51,6 +49,19 @@ public interface RestaurantDao {
 	void setRestaurant(int address_id, int contact_id,
 	                         @BindBean("restaurant") Restaurant restaurant);
 	// TODO figure out why this complains when category is unset
+
+	@SqlQuery("SELECT * FROM table WHERE label = :name AND restaurant_id=:rest")
+	Optional<Table> getTableByName(String label, int rest);
+
+	@SqlQuery("SELECT * FROM table WHERE id = :table_id")
+	Table getTableById(int table_id);
+
+	@SqlUpdate("INSERT INTO " +
+		"table(label, capacity, restaurant_id) " +
+		"VALUES(:table.label,:table.capacity, :restaurant.id")
+	@GetGeneratedKeys("id")
+	int insertTable(@BindBean("table") Table table,
+	                     @BindBean("restaurant") Restaurant restaurant);
 
 	class RestaurantMapper implements RowMapper<Restaurant> {
 		@Override

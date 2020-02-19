@@ -5,6 +5,7 @@ import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantDao;
 import edu.cooper.ece366.restaurantReservation.grpc.Addresses.AddressManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Category;
+import edu.cooper.ece366.restaurantReservation.grpc.Table;
 import org.jdbi.v3.core.Jdbi;
 
 import java.util.Optional;
@@ -66,5 +67,25 @@ public class RestaurantManager {
 		if(privileged)
 			return role.isPresent() && role.get().equals("Admin");
 		return role.isPresent() && (role.get().equals("Admin") || role.get().equals("Manager"));
+	}
+
+	public int checkAndInsertTable(Table table, Restaurant restaurant)
+		throws InvalidTableException {
+		//Todo: maybe validate table name?
+		Optional<Table> existingTable = db.withExtension(RestaurantDao.class,
+			d -> d.getTableByName(table.getLabel(), restaurant.getId()));
+		if(existingTable.isPresent()){
+			throw new InvalidTableException("Table name already exists" +
+				" for given restaurant");
+		}
+
+		return db.withExtension(RestaurantDao.class,
+			d -> d.insertTable(table, restaurant));
+	}
+
+	public static class InvalidTableException extends Exception {
+		public InvalidTableException(String message) {
+			super(message);
+		}
 	}
 }

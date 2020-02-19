@@ -70,29 +70,36 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 	@Override
 	public void setRelationship(Relationship request, StreamObserver<RelationshipResponse> responseObserver) {
-		if(!request.hasRestaurant() || request.getRestaurant().getId() == 0 || request.getUser().getId() == 0) {
-			responseObserver.onError(new StatusRuntimeException(Status.NOT_FOUND.withDescription("Invalid Restaurant")));
+		if(!request.hasRestaurant() || request.getRestaurant().getId() == 0
+			|| request.getUser().getId() == 0) {
+			responseObserver.onError(new StatusRuntimeException(
+				Status.NOT_FOUND.withDescription("Invalid Restaurant")));
 			return;
 		}
 
 		int userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
 		if(!manager.canEditRestaurant(userId, request.getRestaurant().getId(), false)) {
-			responseObserver.onError(new StatusRuntimeException(Status.PERMISSION_DENIED.withDescription("Not authorized to " +
-					"edit restaurant")));
+			responseObserver.onError(
+				new StatusRuntimeException(Status.PERMISSION_DENIED
+				.withDescription("Not authorized to edit restaurant")));
 			return;
 		}
 
 		String roleName = request.getRole().getValueDescriptor().getName();
-		int roleId = db.withExtension(RoleDao.class, d -> d.getRoleIdByName(roleName));
+		int roleId = db.withExtension(RoleDao.class,
+			d -> d.getRoleIdByName(roleName));
 
 		try {
 			db.useExtension(RestaurantDao.class, d -> {
-					d.addRestaurantRelationship(request.getRestaurant().getId(), request.getUser().getId(), roleId);
+				d.addRestaurantRelationship(request.getRestaurant().getId(),
+					request.getUser().getId(), roleId);
 			});
 		}
 		catch (UnableToExecuteStatementException ex){
 			ex.printStackTrace();
-			responseObserver.onError(new StatusRuntimeException(Status.ALREADY_EXISTS.withDescription("Relationship already exists or invalid key")));
+			responseObserver.onError(new StatusRuntimeException(
+				Status.ALREADY_EXISTS
+				.withDescription("Relationship already exists or invalid key")));
 			return;
 		}
 
@@ -100,4 +107,60 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		responseObserver.onNext(res);
 		responseObserver.onCompleted();
 	}
+
+	@Override
+	public void createTable(CreateTableRequest request, StreamObserver<Table> responseObserver) {
+		if(!request.hasTable() || !request.hasTarget() ||
+			request.getTable().getCapacity() <= 0 ||
+			request.getTable().getLabel().isEmpty() ||
+			request.getTarget().getId() == 0){
+			responseObserver.onError(
+				new StatusRuntimeException(Status.INVALID_ARGUMENT
+					.withDescription("Missing restauraunt or table details")));
+			return;
+		}
+
+		int userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
+		if(!manager.canEditRestaurant(userId, request.getTarget().getId(), false)) {
+			responseObserver.onError(
+				new StatusRuntimeException(Status.PERMISSION_DENIED
+					.withDescription("Not authorized to edit restaurant")));
+			return;
+		}
+
+		int tableId;
+		try {
+			tableId = manager.checkAndInsertTable(request.getTable(),
+				request.getTarget());
+		} catch (RestaurantManager.InvalidTableException e) {
+			responseObserver.onError(
+				new StatusRuntimeException(Status.INVALID_ARGUMENT
+					.withDescription("Invalid table name or table already exists"))
+			);
+			return;
+		}
+		responseObserver.onNext(db.withExtension(RestaurantDao.class,
+			d -> d.getTableById(tableId)));
+		responseObserver.onCompleted();
+	}
+
+	@Override
+	public void getTableById(Table request, StreamObserver<Table> responseObserver) {
+		//Todo: do we want to check if user has permission to restaurant associated with table
+		if(request.getId() == 0){
+			responseObserver.onError(
+				new StatusRuntimeException(Status.INVALID_ARGUMENT
+					.withDescription("Invalid table ID")));
+			return;
+		}
+
+		//Todo: do we want to handle invalid id with an Optional?
+		Table table = db.withExtension(RestaurantDao.class,
+			d -> d.getTableById(request.getId()));
+
+		responseObserver.onNext(table);
+		responseObserver.onCompleted();
+	}
+
+
 }
