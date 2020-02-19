@@ -1,6 +1,7 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Users;
 
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
+import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantManager;
 import edu.cooper.ece366.restaurantReservation.grpc.User;
 import edu.cooper.ece366.restaurantReservation.grpc.UserServiceGrpc;
 import io.grpc.stub.StreamObserver;
@@ -13,6 +14,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
     public UserServiceImpl(Jdbi db){
         this.db = db;
+        this.manager = new UserManager(db);
     }
 
     @Override
