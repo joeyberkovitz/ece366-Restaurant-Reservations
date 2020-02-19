@@ -9,14 +9,11 @@ import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 import java.util.Optional;
 
 public interface AddressDao {
-    @SqlUpdate("INSERT INTO address(name," +
-                                   "latitude,longitude," +
-                                   "line1,line2," +
-                                   "city,state,zip)" + " VALUES " +
-                                  "(:name," +
-                                   ":latitude,:longitude," +
-                                   ":line1,:line2," +
-                                   ":city,:state,:zip)")
+    @SqlUpdate("INSERT INTO " +
+                "address (name, latitude, longitude, line1, line2, city," +
+                         "state, zip) " +
+                "VALUES (:name,:latitude,:longitude,:line1,:line2,:city," +
+                        ":state,:zip)")
     @GetGeneratedKeys("id")
     int insertAddress(@BindBean Address address);
 
