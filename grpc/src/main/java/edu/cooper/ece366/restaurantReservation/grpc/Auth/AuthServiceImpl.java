@@ -109,10 +109,12 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 	public void refreshToken(RefreshRequest request, StreamObserver<AuthResponse> responseObserver) {
 		//Todo: maybe validate retrieved user id against id in token
 		this.authManager.validateToken(request.getRefreshToken());
-		Optional<Integer> userId = db.withExtension(UserDao.class, d -> d.checkRefreshToken(request.getRefreshToken()));
+		//DAO verifies that refresh token isn't revoked
+		Optional<Integer> userId = db.withExtension(UserDao.class,
+			d -> d.checkRefreshToken(request.getRefreshToken()));
 		if(userId.isEmpty())
-			throw new StatusRuntimeException(Status.PERMISSION_DENIED.withDescription("Invalid or revoked refresh " +
-					"token"));
+			throw new StatusRuntimeException(Status.PERMISSION_DENIED
+				.withDescription("Invalid or revoked refresh token"));
 
 		List<String> tokens = authManager.genTokens(userId.get(), request.getUserAgent());
 		AuthResponse res = AuthResponse.newBuilder()

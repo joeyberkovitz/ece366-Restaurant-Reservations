@@ -48,6 +48,7 @@ public class ApplicationServer {
 		jdbi = Jdbi.create(ds)
 			.registerRowMapper(ProtoBeanMapper.factory(Contact.class, Contact.Builder.class))
 			.registerRowMapper(ProtoBeanMapper.factory(Address.class, Address.Builder.class))
+			.registerRowMapper(ProtoBeanMapper.factory(Table.class, Table.Builder.class))
 			.installPlugin(new SqlObjectPlugin());
 		/* The port on which the RPC server should run */
 		int rpcPort = 50051;

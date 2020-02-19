@@ -97,6 +97,7 @@ public class AuthManager {
 	}
 
 	public String validateToken(String authToken){
+		//Todo: make this static so db isn't needed in interceptor
 		Jws<Claims> jws;
 		try{
 			jws = Jwts.parserBuilder().setSigningKey(loadPubKey()).build()
