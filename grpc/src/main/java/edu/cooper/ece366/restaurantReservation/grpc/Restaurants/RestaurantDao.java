@@ -105,5 +105,53 @@ public interface RestaurantDao {
 				.build();
 		}
 	}
+
+	class RelationshipMapper implements RowMapper<Relationship> {
+		@Override
+		public Relationship map(ResultSet rs, StatementContext ctx)
+		throws SQLException {
+			return Relationship.newBuilder()
+				// TODO: no, seriously
+				.setRestaurant(Restaurant.newBuilder()
+				 .setId(rs.getInt("restaurant.id"))
+				 .setName(rs.getString("restaurant.name"))
+				 .setAddress(Address.newBuilder()
+				  .setName(rs.getString("address.name"))
+				  .setLatitude(rs.getFloat(
+				               "address.latitude"))
+				  .setLongitude(rs.getFloat(
+				                "address.longitude"))
+				  .setLine1(rs.getString("address.line1"))
+				  .setLine2(rs.getString("address.line2"))
+				  .setCity(rs.getString("address.city"))
+				  .setState(rs.getString("address.state"))
+				  .setZip(rs.getString("address.zip"))
+				  .build())
+				 .setContact(Contact.newBuilder()
+				  .setPhone(rs.getString("rscon.phone"))
+				  .setEmail(rs.getString("rscon.email"))
+				  .build())
+				 .setCategory(Category.newBuilder()
+				  .setCategory(rs.getInt(
+				               "restaurant.category_id"))
+				  .build())
+				 .build())
+				.setUser(User.newBuilder()
+				 .setId(rs.getInt("user.id"))
+				 .setUsername(rs.getString("user.username"))
+				 .setFname(rs.getString("user.fname"))
+				 .setLname(rs.getString("user.lname"))
+				 .setPoints(rs.getInt("user.points"))
+				 .setContact(Contact.newBuilder()
+				  .setPhone(rs.getString("uscon.phone"))
+				  .setEmail(rs.getString("uscon.email"))
+				  .build())
+				 .setRole(User.UserRole.valueOf(rs.getString("role").toUpperCase()))
+				 .build())
+				.setRole(Relationship.UserRole.valueOf(rs.getString("role").toUpperCase()))
+				.build();
+
+		}
+	}
 }
 
