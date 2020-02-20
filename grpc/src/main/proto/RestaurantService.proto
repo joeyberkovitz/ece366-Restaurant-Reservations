@@ -17,8 +17,6 @@ service RestaurantService {
 	// D) no id, address w/ id, contact w/ id, category and returns restaurant w/ id
 	rpc getRestaurant (Restaurant) returns (Restaurant); // send id, get whole thing
 	rpc setRestaurant (Restaurant) returns (Restaurant); // send info desired to change, returns result
-	rpc setCapacity (CapacityRequest) returns (CapacityResponse);
-	rpc setRTime (RTimeRequest) returns (RTimeResponse);
 	rpc deleteRestaurant (Restaurant) returns (DeleteRestaurantResponse);
 	rpc searchByCategory (Category) returns (stream Restaurant);
 
@@ -56,6 +54,8 @@ message Restaurant {
 	Contact contact = 3;
 	Category category = 4;
 	string name = 5;
+	uint32 capacity = 6;
+	uint32 rtime = 7;
 }
 
 message Category {
@@ -140,22 +140,6 @@ message Reservation {
 message CreateTableRequest {
 	Restaurant target = 1; // just ID
 	Table table = 2; // no ID
-}
-
-message CapacityRequest {
-	Restaurant target = 1; // just ID
-	uint32 capacity = 2;
-}
-
-message CapacityResponse {
-}
-
-message RTimeRequest {
-	Restaurant target = 1; // just ID
-	uint32 rtime = 2;
-}
-
-message RTimeResponse {
 }
 
 message Relationship {

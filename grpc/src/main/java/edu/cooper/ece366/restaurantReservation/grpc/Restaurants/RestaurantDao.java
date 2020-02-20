@@ -101,25 +101,29 @@ public interface RestaurantDao {
 				// and contact to ProtoBeanMapper, and share it
 				// wiht other code, e.g. UserMapper
 				.setAddress(Address.newBuilder()
-					.setName(rs.getString("address.name"))
-					.setLatitude(rs.getFloat(
-					             "address.latitude"))
-					.setLongitude(rs.getFloat(
-					              "address.longitude"))
-					.setLine1(rs.getString("address.line1"))
-					.setLine2(rs.getString("address.line2"))
-					.setCity(rs.getString("address.city"))
-					.setState(rs.getString("address.state"))
-					.setZip(rs.getString("address.zip"))
-					.build())
+				 .setName(rs.getString("address.name"))
+				 .setLatitude(rs.getFloat(
+				              "address.latitude"))
+				 .setLongitude(rs.getFloat(
+				               "address.longitude"))
+				 .setLine1(rs.getString("address.line1"))
+				 .setLine2(rs.getString("address.line2"))
+				 .setCity(rs.getString("address.city"))
+				 .setState(rs.getString("address.state"))
+				 .setZip(rs.getString("address.zip"))
+				 .build())
 				.setContact(Contact.newBuilder()
-					.setPhone(rs.getString("contact.phone"))
-					.setEmail(rs.getString("contact.email"))
-					.build())
+				 .setPhone(rs.getString("contact.phone"))
+				 .setEmail(rs.getString("contact.email"))
+				 .build())
 				.setCategory(Category.newBuilder()
-					.setCategory(rs.getInt(
-					             "restaurant.category_id"))
-					.build())
+				 .setCategory(rs.getInt(
+				              "restaurant.category_id"))
+				 .build())
+				.setCapacity(
+				 rs.getInt("restaurant.capacity_factor"))
+				.setRtime(
+				 rs.getInt("restaurant.reservation_time"))
 				.build();
 		}
 	}
