@@ -61,9 +61,12 @@ public interface RestaurantDao {
 	@SqlQuery("SELECT * FROM `table` WHERE restaurant_id = :restaurant_id")
 	List<Table> getRestaurantTables(int restaurant_id);
 
-	@SqlQuery("SELECT r.* from restaurant" +
-		"INNER JOIN `table` t on t.restaurant_id = r.id" +
+	@SqlQuery("SELECT restaurant.*, address.*, contact.* from restaurant " +
+		"INNER JOIN `table` t on t.restaurant_id = restaurant.id " +
+		"inner join address on restaurant.address_id = address.id " +
+		"inner join contact on restaurant.contact_id = contact.id " +
 		"WHERE t.id = :table_id")
+	@RegisterRowMapper(RestaurantMapper.class)
 	Optional<Restaurant> getRestaurantByTable(int table_id);
 
 	@SqlUpdate("INSERT INTO " +

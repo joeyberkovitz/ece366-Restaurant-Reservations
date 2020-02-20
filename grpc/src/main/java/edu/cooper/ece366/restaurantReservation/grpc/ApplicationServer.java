@@ -55,6 +55,7 @@ public class ApplicationServer {
 
 		//Todo: Add interceptor to services
 		server = ServerBuilder.forPort(rpcPort)
+				.intercept(new StatusExceptionInterceptor())
 				.addService(ProtoReflectionService.newInstance())
 				.addService(intercept(new RestaurantServiceImpl(jdbi), new AuthInterceptor(jdbi, prop)))
 				.addService(new ReservationServiceImpl())

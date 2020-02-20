@@ -71,8 +71,8 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 	public void authenticate(AuthRequest request, StreamObserver<AuthResponse> responseObserver) {
 		AuthResponse.Builder resBuild = AuthResponse.newBuilder();
 		if(request.getPassword().isEmpty()){
-			//Todo: return exception to gRPC
-			throw new RuntimeException("Password can't be blank");
+			throw new StatusRuntimeException(Status.INVALID_ARGUMENT
+				.withDescription("Password can't be blank"));
 		}
 
 		Optional<DBHashResponse> dbHash = db.withExtension(UserDao.class,
@@ -82,7 +82,8 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 		// make it non-obvious that username is invalid
 		if(dbHash.isEmpty()) {
 			hashPassword(request.getPassword());
-			throw new RuntimeException("Username or Password is invalid");
+			throw new StatusRuntimeException(Status.UNAUTHENTICATED
+				.withDescription("Username or Password is invalid"));
 		}
 
 		if(verifyPassword(request.getPassword(), dbHash.get().getPassword())){
@@ -91,7 +92,8 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 			resBuild.setRefreshToken(tokens.get(1));
 		}
 		else {
-			throw new RuntimeException("Username or Password is invalid");
+			throw new StatusRuntimeException(Status.UNAUTHENTICATED
+				.withDescription("Username or Password is invalid"));
 		}
 		responseObserver.onNext(resBuild.build());
 		responseObserver.onCompleted();

@@ -59,13 +59,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 	@Override
 	public void setRestaurant(Restaurant req, StreamObserver<Restaurant> responseObserver) {
-		int userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
-		if(!manager.canEditRestaurant(userId, req.getId(), false)) {
-			responseObserver.onError(
-				new StatusRuntimeException(Status.PERMISSION_DENIED
-					.withDescription("Not authorized to edit restaurant")));
-			return;
-		}
+		checkRestaurantPermission(req, null, false);
 
 		try {
 			responseObserver.onNext(manager.setRestaurant(req));
@@ -88,23 +82,16 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			return;
 		}
 
-		int userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
-		if(!manager.canEditRestaurant(userId, request.getRestaurant().getId(), false)) {
-			responseObserver.onError(
-				new StatusRuntimeException(Status.PERMISSION_DENIED
-				.withDescription("Not authorized to edit restaurant")));
-			return;
-		}
+		checkRestaurantPermission(request.getRestaurant(), null, true);
 
 		String roleName = request.getRole().getValueDescriptor().getName();
 		int roleId = db.withExtension(RoleDao.class,
 			d -> d.getRoleIdByName(roleName));
 
 		try {
-			db.useExtension(RestaurantDao.class, d -> {
+			db.useExtension(RestaurantDao.class, d ->
 				d.addRestaurantRelationship(request.getRestaurant().getId(),
-					request.getUser().getId(), roleId);
-			});
+					request.getUser().getId(), roleId));
 		}
 		catch (UnableToExecuteStatementException ex){
 			ex.printStackTrace();
@@ -131,13 +118,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			return;
 		}
 
-		int userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
-		if(!manager.canEditRestaurant(userId, request.getTarget().getId(), false)) {
-			responseObserver.onError(
-				new StatusRuntimeException(Status.PERMISSION_DENIED
-					.withDescription("Not authorized to edit restaurant")));
-			return;
-		}
+		checkRestaurantPermission(request.getTarget(), null, false);
 
 		int tableId;
 		try {
@@ -182,13 +163,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			return;
 		}
 
-		int userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
-		if(!manager.canEditRestaurant(userId, request.getId(), false)) {
-			responseObserver.onError(
-				new StatusRuntimeException(Status.PERMISSION_DENIED
-					.withDescription("Not authorized to edit restaurant")));
-			return;
-		}
+		checkRestaurantPermission(request, null, false);
 
 		List<Table> tables = manager.getRestaurantTables(request.getId());
 		for (Table table: tables) {
@@ -199,19 +174,11 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 	@Override
 	public void setTable(Table request, StreamObserver<Table> responseObserver) {
-		int userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
-		Optional<Restaurant> restaurant = manager.getRestaurantByTable(request.getId());
-		if(restaurant.isEmpty() || !manager.canEditRestaurant(userId,
-			restaurant.get().getId(), false)) {
-			responseObserver.onError(
-				new StatusRuntimeException(Status.PERMISSION_DENIED
-					.withDescription("Not authorized to edit restaurant")));
-			return;
-		}
+		Restaurant restaurant = checkRestaurantPermission(null, request, false);
 
 		Table retTable;
 		try{
-			retTable = manager.setTable(request, restaurant.get());
+			retTable = manager.setTable(request, restaurant);
 		} catch (RestaurantManager.InvalidTableException e) {
 			e.printStackTrace();
 			responseObserver.onError(
@@ -227,15 +194,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 	@Override
 	public void deleteTable(Table request, StreamObserver<DeleteTableResponse> responseObserver) {
-		int userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
-		Optional<Restaurant> restaurant = manager.getRestaurantByTable(request.getId());
-		if(restaurant.isEmpty() || !manager.canEditRestaurant(userId,
-			restaurant.get().getId(), false)) {
-			responseObserver.onError(
-				new StatusRuntimeException(Status.PERMISSION_DENIED
-					.withDescription("Not authorized to edit restaurant")));
-			return;
-		}
+		checkRestaurantPermission(null, request, false);
 
 		DeleteTableResponse deleteTableResponse = DeleteTableResponse
 			.newBuilder().build();
@@ -244,5 +203,21 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 		responseObserver.onNext(deleteTableResponse);
 		responseObserver.onCompleted();
+	}
+
+	private Restaurant checkRestaurantPermission(Restaurant rest, Table tab, boolean priv){
+		int userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
+		if(rest == null && tab != null && tab.getId() > 0) {
+			Optional<Restaurant> restaurant = manager.getRestaurantByTable(tab.getId());
+			if(restaurant.isPresent())
+				rest = restaurant.get();
+		}
+		if(rest == null || rest.getId() <= 0 || !manager.canEditRestaurant(userId,
+			rest.getId(), priv)) {
+			throw new StatusRuntimeException(Status.PERMISSION_DENIED
+					.withDescription("Not authorized to edit restaurant"));
+		}
+
+		return rest;
 	}
 }
