@@ -58,6 +58,24 @@ public interface RestaurantDao {
 	@RegisterRowMapper(RestaurantMapper.class)
 	List<Restaurant> searchByCategory(int id);
 
+	static final String RELSQL =
+	"select rel.*,restaurant.*,address.*,rscon.*,user.*,uscon.*" +
+	"from restaurant_user rel " +
+	"inner join restaurant on rel.restaurant_id = restaurant.id "+
+	"inner join address on restaurant.address_id = address.id " +
+	"inner join contact rscon on restaurant.contact_id = rscon.id " +
+	"inner join user on rel.user_id = user.id " +
+	"inner join contact uscon on user.contact_id = uscon.id ";
+
+	@SqlQuery(RELSQL + "where rel.restaurant_id=:id")
+	@RegisterRowMapper(RelationshipMapper.class)
+	List<Relationship> getRelationshipByRestaurant(int id);
+
+	@SqlQuery(RELSQL + "where rel.user_id=:id")
+	@RegisterRowMapper(RelationshipMapper.class)
+	List<Relationship> getRelationshipByUser(int id);
+
+
 	@SqlQuery("SELECT * FROM table WHERE label = :name AND restaurant_id=:rest")
 	Optional<Table> getTableByName(String label, int rest);
 

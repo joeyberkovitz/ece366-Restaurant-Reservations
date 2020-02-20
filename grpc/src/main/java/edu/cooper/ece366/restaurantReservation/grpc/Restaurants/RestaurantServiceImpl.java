@@ -166,9 +166,27 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 	@Override
 	public void searchByCategory(Category request, StreamObserver<Restaurant> responseObserver) {
-		List<Restaurant> restaurants = manager.searchByCategory(request);
-		for(Restaurant restaurant: restaurants) {
-			responseObserver.onNext(restaurant);
+		List<Restaurant> results = manager.searchByCategory(request);
+		for(Restaurant result: results) {
+			responseObserver.onNext(result);
+		}
+		responseObserver.onCompleted();
+	}
+
+	@Override
+	public void getUsersByRestaurant(Restaurant request, StreamObserver<Relationship> responseObserver) {
+		List<Relationship> results = manager.getRelationshipByRestaurant(request);
+		for(Relationship result: results) {
+			responseObserver.onNext(result);
+		}
+		responseObserver.onCompleted();
+	}
+
+	@Override
+	public void getRestaurantsByUser(User request, StreamObserver<Relationship> responseObserver) {
+		List<Relationship> results = manager.getRelationshipByUser(request);
+		for(Relationship result: results) {
+			responseObserver.onNext(result);
 		}
 		responseObserver.onCompleted();
 	}
