@@ -8,6 +8,7 @@ import edu.cooper.ece366.restaurantReservation.grpc.Category;
 import edu.cooper.ece366.restaurantReservation.grpc.Table;
 import org.jdbi.v3.core.Jdbi;
 
+import java.util.List;
 import java.util.Optional;
 
 public class RestaurantManager {
@@ -35,6 +36,12 @@ public class RestaurantManager {
 	public Restaurant getRestaurant(int id) {
 		return db.withExtension(RestaurantDao.class, dao -> {
 			return dao.getRestaurant(id);
+		});
+	}
+
+	public List<Restaurant> searchByCategory(Category cat) {
+		return db.withExtension(RestaurantDao.class, dao -> {
+			return dao.searchByCategory(cat.getCategory());
 		});
 	}
 

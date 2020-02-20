@@ -13,6 +13,7 @@ import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 public interface RestaurantDao {
@@ -49,6 +50,13 @@ public interface RestaurantDao {
 	void setRestaurant(int address_id, int contact_id,
 	                         @BindBean("restaurant") Restaurant restaurant);
 	// TODO figure out why this complains when category is unset
+
+	@SqlQuery("select restaurant.*,address.*,contact.* from restaurant " +
+	          "inner join address on restaurant.address_id = address.id " +
+	          "inner join contact on restaurant.contact_id = contact.id " +
+	          "where restaurant.category_id=:id")
+	@RegisterRowMapper(RestaurantMapper.class)
+	List<Restaurant> searchByCategory(int id);
 
 	@SqlQuery("SELECT * FROM table WHERE label = :name AND restaurant_id=:rest")
 	Optional<Table> getTableByName(String label, int rest);

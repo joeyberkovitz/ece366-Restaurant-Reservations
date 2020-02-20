@@ -11,6 +11,8 @@ import io.grpc.stub.StreamObserver;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 
+import java.util.List;
+
 public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServiceImplBase {
 	private Jdbi db;
 	private RestaurantManager manager;
@@ -162,5 +164,12 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		responseObserver.onCompleted();
 	}
 
-
+	@Override
+	public void searchByCategory(Category request, StreamObserver<Restaurant> responseObserver) {
+		List<Restaurant> restaurants = manager.searchByCategory(request);
+		for(Restaurant restaurant: restaurants) {
+			responseObserver.onNext(restaurant);
+		}
+		responseObserver.onCompleted();
+	}
 }
