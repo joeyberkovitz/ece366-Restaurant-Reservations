@@ -8,6 +8,7 @@ import edu.cooper.ece366.restaurantReservation.grpc.Category;
 import edu.cooper.ece366.restaurantReservation.grpc.Table;
 import org.jdbi.v3.core.Jdbi;
 
+import java.util.List;
 import java.util.Optional;
 
 public class RestaurantManager {
@@ -36,6 +37,11 @@ public class RestaurantManager {
 		return db.withExtension(RestaurantDao.class, dao -> {
 			return dao.getRestaurant(id);
 		});
+	}
+
+	public List<Table> getRestaurantTables(int restaurant_id){
+		return db.withExtension(RestaurantDao.class, d ->
+			d.getRestaurantTables(restaurant_id));
 	}
 
 	public Restaurant setRestaurant(Restaurant target)
@@ -81,6 +87,30 @@ public class RestaurantManager {
 
 		return db.withExtension(RestaurantDao.class,
 			d -> d.insertTable(table, restaurant));
+	}
+
+	public Optional<Restaurant> getRestaurantByTable(int tableId){
+		return db.withExtension(RestaurantDao.class,
+			d -> d.getRestaurantByTable(tableId));
+	}
+
+	public Table setTable(Table table, Restaurant restaurant)
+		throws InvalidTableException {
+		Optional<Table> existingTable = db.withExtension(RestaurantDao.class,
+			d -> d.getTableByName(table.getLabel(), restaurant.getId()));
+		if(existingTable.isPresent()
+			&& existingTable.get().getId() != table.getId()){
+			throw new InvalidTableException("Table name already exists" +
+				" for given restaurant");
+		}
+
+		db.useExtension(RestaurantDao.class, d -> d.setTable(table));
+		return db.withExtension(RestaurantDao.class,
+			d -> d.getTableById(table.getId()));
+	}
+
+	public void deleteTableById(int table_id){
+		db.useExtension(RestaurantDao.class, d -> d.deleteTableById(table_id));
 	}
 
 	public static class InvalidTableException extends Exception {

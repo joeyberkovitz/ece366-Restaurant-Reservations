@@ -1,6 +1,7 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Restaurants;
 
 import edu.cooper.ece366.restaurantReservation.grpc.*;
+import javafx.scene.control.Tab;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
@@ -13,6 +14,7 @@ import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 public interface RestaurantDao {
@@ -50,18 +52,33 @@ public interface RestaurantDao {
 	                         @BindBean("restaurant") Restaurant restaurant);
 	// TODO figure out why this complains when category is unset
 
-	@SqlQuery("SELECT * FROM table WHERE label = :name AND restaurant_id=:rest")
-	Optional<Table> getTableByName(String label, int rest);
+	@SqlQuery("SELECT * FROM `table` WHERE label = :name AND restaurant_id = :rest")
+	Optional<Table> getTableByName(String name, int rest);
 
-	@SqlQuery("SELECT * FROM table WHERE id = :table_id")
+	@SqlQuery("SELECT * FROM `table` WHERE id = :table_id")
 	Table getTableById(int table_id);
 
+	@SqlQuery("SELECT * FROM `table` WHERE restaurant_id = :restaurant_id")
+	List<Table> getRestaurantTables(int restaurant_id);
+
+	@SqlQuery("SELECT r.* from restaurant" +
+		"INNER JOIN `table` t on t.restaurant_id = r.id" +
+		"WHERE t.id = :table_id")
+	Optional<Restaurant> getRestaurantByTable(int table_id);
+
 	@SqlUpdate("INSERT INTO " +
-		"table(label, capacity, restaurant_id) " +
-		"VALUES(:table.label,:table.capacity, :restaurant.id")
+		"`table`(label, capacity, restaurant_id) " +
+		"VALUES(:table.label,:table.capacity, :restaurant.id)")
 	@GetGeneratedKeys("id")
 	int insertTable(@BindBean("table") Table table,
 	                     @BindBean("restaurant") Restaurant restaurant);
+
+	@SqlUpdate("UPDATE `table` SET label = :tab.label," +
+		" capacity = :tab.capacity WHERE id = :tab.id")
+	void setTable(@BindBean("tab") Table table);
+
+	@SqlUpdate("DELETE FROM `table` WHERE id = :table_id")
+	void deleteTableById(int table_id);
 
 	class RestaurantMapper implements RowMapper<Restaurant> {
 		@Override

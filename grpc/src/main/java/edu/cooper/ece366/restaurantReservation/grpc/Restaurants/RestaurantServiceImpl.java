@@ -11,6 +11,9 @@ import io.grpc.stub.StreamObserver;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 
+import java.util.List;
+import java.util.Optional;
+
 public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServiceImplBase {
 	private Jdbi db;
 	private RestaurantManager manager;
@@ -56,6 +59,14 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 	@Override
 	public void setRestaurant(Restaurant req, StreamObserver<Restaurant> responseObserver) {
+		int userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
+		if(!manager.canEditRestaurant(userId, req.getId(), false)) {
+			responseObserver.onError(
+				new StatusRuntimeException(Status.PERMISSION_DENIED
+					.withDescription("Not authorized to edit restaurant")));
+			return;
+		}
+
 		try {
 			responseObserver.onNext(manager.setRestaurant(req));
 			responseObserver.onCompleted();
@@ -116,7 +127,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			request.getTarget().getId() == 0){
 			responseObserver.onError(
 				new StatusRuntimeException(Status.INVALID_ARGUMENT
-					.withDescription("Missing restauraunt or table details")));
+					.withDescription("Missing restaurant or table details")));
 			return;
 		}
 
@@ -162,5 +173,76 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		responseObserver.onCompleted();
 	}
 
+	@Override
+	public void getTablesByRestaurant(Restaurant request, StreamObserver<Table> responseObserver) {
+		if(request.getId() == 0){
+			responseObserver.onError(
+				new StatusRuntimeException(Status.INVALID_ARGUMENT
+					.withDescription("Missing restaurant id")));
+			return;
+		}
 
+		int userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
+		if(!manager.canEditRestaurant(userId, request.getId(), false)) {
+			responseObserver.onError(
+				new StatusRuntimeException(Status.PERMISSION_DENIED
+					.withDescription("Not authorized to edit restaurant")));
+			return;
+		}
+
+		List<Table> tables = manager.getRestaurantTables(request.getId());
+		for (Table table: tables) {
+			responseObserver.onNext(table);
+		}
+		responseObserver.onCompleted();
+	}
+
+	@Override
+	public void setTable(Table request, StreamObserver<Table> responseObserver) {
+		int userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
+		Optional<Restaurant> restaurant = manager.getRestaurantByTable(request.getId());
+		if(restaurant.isEmpty() || !manager.canEditRestaurant(userId,
+			restaurant.get().getId(), false)) {
+			responseObserver.onError(
+				new StatusRuntimeException(Status.PERMISSION_DENIED
+					.withDescription("Not authorized to edit restaurant")));
+			return;
+		}
+
+		Table retTable;
+		try{
+			retTable = manager.setTable(request, restaurant.get());
+		} catch (RestaurantManager.InvalidTableException e) {
+			e.printStackTrace();
+			responseObserver.onError(
+				new StatusRuntimeException(Status.INVALID_ARGUMENT
+					.withDescription("Invalid table parameters received"))
+			);
+			return;
+		}
+
+		responseObserver.onNext(retTable);
+		responseObserver.onCompleted();
+	}
+
+	@Override
+	public void deleteTable(Table request, StreamObserver<DeleteTableResponse> responseObserver) {
+		int userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
+		Optional<Restaurant> restaurant = manager.getRestaurantByTable(request.getId());
+		if(restaurant.isEmpty() || !manager.canEditRestaurant(userId,
+			restaurant.get().getId(), false)) {
+			responseObserver.onError(
+				new StatusRuntimeException(Status.PERMISSION_DENIED
+					.withDescription("Not authorized to edit restaurant")));
+			return;
+		}
+
+		DeleteTableResponse deleteTableResponse = DeleteTableResponse
+			.newBuilder().build();
+
+		manager.deleteTableById(request.getId());
+
+		responseObserver.onNext(deleteTableResponse);
+		responseObserver.onCompleted();
+	}
 }
