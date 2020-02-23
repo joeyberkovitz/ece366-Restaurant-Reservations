@@ -1,7 +1,6 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Restaurants;
 
 import edu.cooper.ece366.restaurantReservation.grpc.Addresses.AddressManager;
-import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactDao;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Restaurant;
 import edu.cooper.ece366.restaurantReservation.grpc.Table;
@@ -124,12 +123,12 @@ public class RestaurantManager {
 
 		Restaurant rest = getRestaurant(rest_id);
 
-		cm.deleteContact(rest.getContact().getId());
-		am.deleteAddress(rest.getAddress().getId());
-
 		db.withExtension(RestaurantDao.class, dao -> {
 			dao.deleteRestaurant(rest_id);
 			return null;
 		});
+
+		cm.deleteContact(rest.getContact().getId());
+		am.deleteAddress(rest.getAddress().getId());
 	}
 }
