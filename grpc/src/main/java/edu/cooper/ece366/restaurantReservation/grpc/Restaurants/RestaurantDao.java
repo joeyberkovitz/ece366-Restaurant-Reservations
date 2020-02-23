@@ -41,6 +41,12 @@ public interface RestaurantDao {
 	@RegisterRowMapper(RestaurantMapper.class)
 	Restaurant getRestaurant(int id);
 
+	@SqlQuery("SELECT capacity_factor FROM restaurant WHERE id = :id")
+	int getRestaurantCapFactor(int id);
+
+	@SqlQuery("SELECT reservation_time FROM restaurant WHERE id = :id")
+	int getRestaurantReservationTime(int id);
+
 	@SqlUpdate("update restaurant set name = :restaurant.name," +
 			"address_id = coalesce(:address_id, address_id)," +
 			"contact_id = coalesce(:contact_id, contact_id)," +

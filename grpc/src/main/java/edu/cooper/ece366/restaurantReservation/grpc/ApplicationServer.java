@@ -3,6 +3,7 @@ package edu.cooper.ece366.restaurantReservation.grpc;
 import com.mysql.cj.jdbc.MysqlDataSource;
 import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthInterceptor;
 import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthServiceImpl;
+import edu.cooper.ece366.restaurantReservation.grpc.Reservations.ReservationServiceImpl;
 import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantServiceImpl;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserServiceImpl;
 import edu.cooper.ece366.restaurantReservation.grpc.ProtoBeanMapper;
@@ -58,7 +59,7 @@ public class ApplicationServer {
 				.intercept(new StatusExceptionInterceptor())
 				.addService(ProtoReflectionService.newInstance())
 				.addService(intercept(new RestaurantServiceImpl(jdbi), new AuthInterceptor(jdbi, prop)))
-				.addService(new ReservationServiceImpl())
+				.addService(intercept(new ReservationServiceImpl(jdbi), new AuthInterceptor(jdbi, prop)))
 				.addService(new UserServiceImpl(jdbi))
 				.addService(new AuthServiceImpl(jdbi, prop))
 				.build()
@@ -102,6 +103,4 @@ public class ApplicationServer {
 		server.start();
 		server.blockUntilShutdown();
 	}
-
-	static class ReservationServiceImpl extends ReservationServiceGrpc.ReservationServiceImplBase {}
 }
