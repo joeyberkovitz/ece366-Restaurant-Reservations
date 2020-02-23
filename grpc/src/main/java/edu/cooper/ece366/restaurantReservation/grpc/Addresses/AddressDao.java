@@ -35,4 +35,6 @@ public interface AddressDao {
     void setAddress(@BindBean Address address);
     // TODO not set if values same
 
+    @SqlUpdate("DELETE FROM address WHERE id = :id")
+    void deleteAddress(int id);
 }

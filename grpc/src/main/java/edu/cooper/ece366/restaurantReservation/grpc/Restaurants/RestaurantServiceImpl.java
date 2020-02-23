@@ -1,10 +1,9 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Restaurants;
 
-import edu.cooper.ece366.restaurantReservation.grpc.*;
-import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Addresses.AddressManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthInterceptor;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
+import edu.cooper.ece366.restaurantReservation.grpc.*;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
@@ -219,5 +218,18 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		}
 
 		return rest;
+	}
+
+	@Override
+	public void deleteRestaurant(Restaurant rest, StreamObserver<DeleteRestaurantResponse> responseObserver){
+		checkRestaurantPermission(rest, null, false);
+
+		DeleteRestaurantResponse deleteRestaurantResponse = DeleteRestaurantResponse
+				.newBuilder().build();
+
+		manager.deleteRestaurant(rest.getId());
+
+		responseObserver.onNext(deleteRestaurantResponse);
+		responseObserver.onCompleted();
 	}
 }

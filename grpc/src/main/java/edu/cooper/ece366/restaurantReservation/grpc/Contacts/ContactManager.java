@@ -1,8 +1,11 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Contacts;
 
 import edu.cooper.ece366.restaurantReservation.grpc.Contact;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import org.jdbi.v3.core.Jdbi;
 
+import java.sql.SQLException;
 import java.util.Optional;
 
 public class ContactManager {
@@ -75,6 +78,23 @@ public class ContactManager {
     private void checkEmail(String email) throws InvalidEmailException {
         if (!email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
             throw new InvalidEmailException("Valid email must be provided.");
+        }
+    }
+
+    public void deleteContact(int id) {
+        if (!existsContact(id))
+            throw new StatusRuntimeException(Status.PERMISSION_DENIED.withDescription("Invalid or revoked refresh " +
+                    "token"));
+        try {
+            db.withExtension(ContactDao.class, dao -> {
+                dao.deleteContact(id);
+                return null;
+            });
+        }
+        catch (Exception e) {
+            if (e.getCause() instanceof SQLException) {
+                if (!((SQLException) e.getCause()).getSQLState().equals("1451")) throw e;
+            }
         }
     }
 

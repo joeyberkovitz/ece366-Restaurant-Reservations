@@ -1,12 +1,10 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Restaurants;
 
 import edu.cooper.ece366.restaurantReservation.grpc.*;
-import javafx.scene.control.Tab;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 import org.jdbi.v3.sqlobject.config.RegisterRowMapper;
-import org.jdbi.v3.sqlobject.config.RegisterRowMapperFactory;
 import org.jdbi.v3.sqlobject.customizer.BindBean;
 import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
@@ -82,6 +80,9 @@ public interface RestaurantDao {
 
 	@SqlUpdate("DELETE FROM `table` WHERE id = :table_id")
 	void deleteTableById(int table_id);
+
+	@SqlUpdate("DELETE FROM restaurant WHERE id = :id")
+	void deleteRestaurant(int id);
 
 	class RestaurantMapper implements RowMapper<Restaurant> {
 		@Override

@@ -3,6 +3,8 @@ package edu.cooper.ece366.restaurantReservation.grpc.Users;
 import edu.cooper.ece366.restaurantReservation.grpc.Contact;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
 import edu.cooper.ece366.restaurantReservation.grpc.User;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import org.jdbi.v3.core.Jdbi;
 
 public class UserManager {
@@ -13,30 +15,24 @@ public class UserManager {
         this.db = db;
     }
 
-    public User setUser(User user) throws InvalidNameException, ContactManager.InvalidContactIdException, ContactManager.InvalidPhoneException, ContactManager.InvalidEmailException, InvalidUserException {
+    public User setUser(User user) throws InvalidNameException, ContactManager.InvalidContactIdException,
+            ContactManager.InvalidPhoneException, ContactManager.InvalidEmailException {
         ContactManager cm = new ContactManager(db);
 
-        if (user.getId() == 0) {
-            //todo throw error
-        }
-        else {
-            //todo check by username or id?
-            if (!existsUser(user.getUsername()))
-                throw new InvalidUserException("User does not exits.");
+        // todo should check id to username?
+        if (user.getId() == 0 || !existsUser(user.getUsername()))
+            throw new StatusRuntimeException(Status.PERMISSION_DENIED.withDescription("Invalid or revoked refresh " +
+                    "token"));
 
-            if (!user.getFname().isEmpty())
-                checkName(user.getFname(),"First");
-            if (!user.getLname().isEmpty())
-                checkName(user.getLname(),"Last");
+        checkName(user.getFname(),"First");
+        checkName(user.getLname(),"Last");
 
-            // todo check if contact is completely empty
-            Contact newContact = cm.setContact(user.getContact());
+        Contact newContact = cm.setContact(user.getContact());
 
-            db.withExtension(UserDao.class, dao -> {
-                dao.setUser(user, newContact.getId());
-                return null;
-            });
-        }
+        db.withExtension(UserDao.class, dao -> {
+            dao.setUser(user, newContact.getId());
+            return null;
+        });
 
         return db.withExtension(UserDao.class, dao -> {
             return dao.getUser(user.getId());
@@ -79,12 +75,6 @@ public class UserManager {
 
     public static class InvalidNameException extends Exception {
         public InvalidNameException(String message) {
-            super(message);
-        }
-    }
-
-    public static class InvalidUserException extends Exception {
-        public InvalidUserException(String message) {
             super(message);
         }
     }

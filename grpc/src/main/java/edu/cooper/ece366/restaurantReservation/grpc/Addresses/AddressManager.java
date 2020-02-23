@@ -1,8 +1,12 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Addresses;
 
 import edu.cooper.ece366.restaurantReservation.grpc.Address;
-import java.util.Optional;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import org.jdbi.v3.core.Jdbi;
+
+import java.sql.SQLException;
+import java.util.Optional;
 
 public class AddressManager {
     private Jdbi db;
@@ -55,6 +59,23 @@ public class AddressManager {
             return dao.checkAddress(id);
         });
         return !valaddrId.isEmpty();
+    }
+
+    public void deleteAddress(int id) {
+        if (!existsAddress(id))
+            throw new StatusRuntimeException(Status.PERMISSION_DENIED.withDescription("Invalid or revoked refresh " +
+                    "token"));
+        try {
+            db.withExtension(AddressDao.class, dao -> {
+                dao.deleteAddress(id);
+                return null;
+            });
+        }
+        catch (Exception e) {
+            if (e.getCause() instanceof SQLException) {
+                if (!((SQLException) e.getCause()).getSQLState().equals("1451")) throw e;
+            }
+        }
     }
 
     public static class InvalidAddressIdException extends Exception {

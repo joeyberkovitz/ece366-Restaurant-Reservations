@@ -16,7 +16,7 @@ public interface ContactDao {
     @SqlQuery("SELECT id FROM contact WHERE id = :id")
     Optional<Integer> checkContact(int id);
 
-    @SqlQuery("SELECT * from contact WHERE id = :id")
+    @SqlQuery("SELECT * FROM contact WHERE id = :id")
     Contact getContact(int id);
 
     @SqlUpdate("UPDATE contact SET phone=coalesce(:phone,phone)," +
@@ -24,4 +24,6 @@ public interface ContactDao {
     void setContact(@BindBean Contact contact);
     // TODO not set if values same
 
+    @SqlUpdate("DELETE FROM contact WHERE id = :id")
+    void deleteContact(int id);
 }

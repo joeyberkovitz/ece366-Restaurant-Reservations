@@ -28,21 +28,14 @@ public interface UserDao {
     @RegisterBeanMapper(DBHashResponse.class)
     Optional<DBHashResponse> getUserHash(String name);
 
-    @SqlQuery("SELECT u.id, u.username, u.fname, u.lname, u.rewards_points as points," +
-            " c.phone, c.email, r.name as role" +
-            " FROM user u" +
-            " INNER JOIN contact c on c.id = u.contact_id " +
-            " INNER JOIN role r on r.id = u.role_id " +
+    @SqlQuery("SELECT u.id, u.username, u.fname, u.lname, u.rewards_points as points, c.phone, c.email, r.name as role"+
+            " FROM user u INNER JOIN contact c on c.id = u.contact_id INNER JOIN role r on r.id = u.role_id " +
             " WHERE u.id = :id")
     @RegisterRowMapper(UserMapper.class)
     User getUser(int id);
 
-    @SqlUpdate("UPDATE user SET fname=coalesce(:fname,fname)," +
-            "lname=coalesce(:lname,lname)" +
-            "contact_id=coalesce(:contact_id,contact_id" +
-            "WHERE id = :id")
+    @SqlUpdate("UPDATE user SET fname=:fname, lname=:lname, contact_id=:contact_id, WHERE id = :id")
     void setUser(@BindBean User user, int contact_id);
-    // TODO not set if values same
 
     @SqlUpdate("INSERT INTO user_login(user_id, refresh_token, user_agent, expiration_date) " +
             "VALUES(:id, :token, :userAgent, :expirationDate)")
