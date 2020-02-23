@@ -10,6 +10,7 @@ import org.jdbi.v3.core.Jdbi;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class ReservationManager {
 	private Jdbi db;
@@ -64,5 +65,23 @@ public class ReservationManager {
 		}
 
 		return retTables;
+	}
+
+	public boolean canEditReservation(int userId, Reservation reservation){
+		Optional<Integer> resUser = db.withExtension(ReservationDao.class,
+			d -> d.getReservationUser(userId, reservation.getId()));
+
+		Optional<String> restaurantUser = Optional.empty();
+		if(!resUser.isPresent()){
+			restaurantUser = db.withExtension(RestaurantDao.class,
+				d -> d.getRestaurantUserRole(userId,
+					reservation.getRestaurant().getId()));
+
+		}
+
+		return resUser.isPresent() || (restaurantUser.isPresent() && (
+			restaurantUser.get().equals("Admin") ||
+			restaurantUser.get().equals("Manager")
+		));
 	}
 }

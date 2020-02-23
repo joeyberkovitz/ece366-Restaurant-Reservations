@@ -1,20 +1,21 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Reservations;
 
 import edu.cooper.ece366.restaurantReservation.grpc.Reservation;
-import edu.cooper.ece366.restaurantReservation.grpc.Restaurant;
 import edu.cooper.ece366.restaurantReservation.grpc.Table;
+import edu.cooper.ece366.restaurantReservation.grpc.User;
+import edu.cooper.ece366.restaurantReservation.grpc.Users.UserMapper;
+import org.jdbi.v3.sqlobject.config.RegisterRowMapper;
 import org.jdbi.v3.sqlobject.customizer.BindBean;
 import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys;
 import org.jdbi.v3.sqlobject.statement.SqlBatch;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 public interface ReservationDao {
-
+	//Todo: ignore cancelled reservations
 	@SqlQuery("select * from `table` t " +
 		"where t.restaurant_id = :r.restaurant.id  " +
 		"and t.id NOT IN ( " +
@@ -44,6 +45,36 @@ public interface ReservationDao {
 		" VALUES(:resId, :userId)")
 	void addReservationUser(int resId, int userId);
 
-	@SqlQuery("")
-	Map<Integer, Restaurant> getRestaurantCapacities();
+	@SqlQuery("SELECT u.id FROM reservation r " +
+		"INNER JOIN reservation_user ru on r.id = ru.reservation_id " +
+		"INNER JOIN user u on ru.user_id = u.id " +
+		"WHERE r.id = :reservationId AND u.id = :userId")
+	Optional<Integer> getReservationUser(int userId, int reservationId);
+
+	@SqlQuery("SELECT u.id, u.username, u.fname, u.lname, " +
+		"u.rewards_points as points, c.phone, c.email, r.name as role " +
+		"FROM reservation r " +
+		"INNER JOIN reservation_user ru on r.id = ru.reservation_id " +
+		"INNER JOIN user u on ru.user_id = u.id " +
+		"INNER JOIN contact c on c.id = u.contact_id " +
+		"INNER JOIN role r on r.id = u.role_id " +
+		"WHERE r.id = :reservationId")
+	@RegisterRowMapper(UserMapper.class)
+	List<User> getReservationUsers(int reservationId);
+
+	@SqlQuery("SELECT r.* FROM reservation WHERE " +
+		"(:reservationId IS NULL OR r.id = :reservationId) " +
+		"(:restaurantId IS NULL OR r.restaurant_id = :restaurantId) " +
+		"(:userId IS NULL OR r.id IN (" +
+			"SELECT ru.reservation_id FROM reservation_user " +
+			"WHERE ru.reservation_id = r.id AND ru.user_id = :userId))")
+	List<Reservation> searchReservations(Integer reservationId, Integer userId,
+	                                     Integer restaurantId);
+
+	@SqlQuery("select t.id, t.capacity, t.label " +
+		"from reservation r " +
+		"INNER JOIN reservation_table rt on r.id = rt.reservation_id " +
+		"INNER JOIN `table` t on rt.table_id = t.id " +
+		"WHERE r.id = :reservationId")
+	List<Table> getReservationTables(int reservationId);
 }
