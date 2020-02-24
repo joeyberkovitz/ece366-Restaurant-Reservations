@@ -62,12 +62,14 @@ public interface ReservationDao {
 	@RegisterRowMapper(UserMapper.class)
 	List<User> getReservationUsers(int reservationId);
 
-	@SqlQuery("SELECT r.* FROM reservation WHERE " +
-		"(:reservationId IS NULL OR r.id = :reservationId) " +
+	@SqlQuery("SELECT r.*, st.name as statusName FROM reservation " +
+		"INNER JOIN status st on r.status_id = st.id" +
+		"WHERE (:reservationId IS NULL OR r.id = :reservationId) " +
 		"(:restaurantId IS NULL OR r.restaurant_id = :restaurantId) " +
 		"(:userId IS NULL OR r.id IN (" +
 			"SELECT ru.reservation_id FROM reservation_user " +
 			"WHERE ru.reservation_id = r.id AND ru.user_id = :userId))")
+	@RegisterRowMapper(ReservationMapper.class)
 	List<Reservation> searchReservations(Integer reservationId, Integer userId,
 	                                     Integer restaurantId);
 

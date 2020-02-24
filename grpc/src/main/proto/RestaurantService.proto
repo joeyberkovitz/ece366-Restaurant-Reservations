@@ -129,7 +129,7 @@ message Reservation {
 	uint32 numPeople = 4;
 	uint32 points = 5;
 	enum ReservationStatus {
-		DEFAULT = 0;
+		OPENED = 0;
 		CANCELLED = 1;
 		// will the restaurant mark as completed?
 	}
