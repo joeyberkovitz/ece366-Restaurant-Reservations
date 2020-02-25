@@ -1,0 +1,8 @@
+db.connString=jdbc:mysql://localhost:3306/ece366restaurant?useSSL=false&allowPublicKeyRetrieval=true
+db.user=user
+db.pass=password
+argon.iter=7
+argon.mem=65536
+argon.par=1
+auth.sKey=PRIVKEYHERE
+auth.pKey=PUBLKEYHERE
