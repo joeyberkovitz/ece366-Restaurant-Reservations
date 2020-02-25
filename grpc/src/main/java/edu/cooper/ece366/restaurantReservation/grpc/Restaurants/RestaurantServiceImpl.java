@@ -1,9 +1,8 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Restaurants;
 
-import edu.cooper.ece366.restaurantReservation.grpc.*;
-import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Addresses.AddressManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthInterceptor;
+import edu.cooper.ece366.restaurantReservation.grpc.*;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -241,7 +240,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		}
 		if(rest == null || rest.getId() <= 0 || !manager.canEditRestaurant(userId,
 			rest.getId(), priv)) {
-			// How can rest be null and also have a nonzero ID?
+			// Check null first to ensure restaurant object exists
 			throw new StatusRuntimeException(Status.PERMISSION_DENIED
 					.withDescription("Not authorized to edit restaurant"));
 		}
@@ -256,7 +255,12 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		DeleteRestaurantResponse deleteRestaurantResponse = DeleteRestaurantResponse
 				.newBuilder().build();
 
-		manager.deleteRestaurant(rest.getId());
+		try {
+			manager.deleteRestaurant(rest.getId());
+		} catch (AddressManager.InvalidAddressIdException e) {
+			e.printStackTrace();
+			throw new StatusRuntimeException(Status.INTERNAL.withDescription("An error occurred."));
+		}
 
 		responseObserver.onNext(deleteRestaurantResponse);
 		responseObserver.onCompleted();

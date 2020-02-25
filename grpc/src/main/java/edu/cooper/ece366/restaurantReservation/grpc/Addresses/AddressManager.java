@@ -1,8 +1,6 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Addresses;
 
 import edu.cooper.ece366.restaurantReservation.grpc.Address;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import org.jdbi.v3.core.Jdbi;
 
 import java.sql.SQLException;
@@ -61,12 +59,10 @@ public class AddressManager {
         return !valaddrId.isEmpty();
     }
 
-    public void deleteAddress(int id) {
+    public void deleteAddress(int id) throws InvalidAddressIdException {
         if (!existsAddress(id))
-            // TODO: why does a nonexistent address necessarily imply an invalid
-            // token?
-            throw new StatusRuntimeException(Status.PERMISSION_DENIED.withDescription("Invalid or revoked refresh " +
-                    "token"));
+            throw new InvalidAddressIdException("An error occured.");
+
         try {
             db.withExtension(AddressDao.class, dao -> {
                 dao.deleteAddress(id);
@@ -75,8 +71,9 @@ public class AddressManager {
         }
         catch (Exception e) {
             if (e.getCause() instanceof SQLException) {
+                // SQL error 1451 represents a foreign key constraint. We ignore this to not allow deletion of address
+                // if another restaurant is using this address
                 if (!((SQLException) e.getCause()).getSQLState().equals("1451")) throw e;
-                // TODO: what does this do?
             }
         }
     }

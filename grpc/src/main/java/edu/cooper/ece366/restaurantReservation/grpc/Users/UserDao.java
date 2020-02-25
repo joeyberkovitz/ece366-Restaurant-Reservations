@@ -1,7 +1,10 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Users;
 
 import edu.cooper.ece366.restaurantReservation.grpc.Auth.DBHashResponse;
+import edu.cooper.ece366.restaurantReservation.grpc.Contact;
 import edu.cooper.ece366.restaurantReservation.grpc.User;
+import org.jdbi.v3.core.mapper.RowMapper;
+import org.jdbi.v3.core.statement.StatementContext;
 import org.jdbi.v3.sqlobject.config.RegisterBeanMapper;
 import org.jdbi.v3.sqlobject.config.RegisterRowMapper;
 import org.jdbi.v3.sqlobject.customizer.BindBean;
@@ -9,6 +12,8 @@ import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.Optional;
 
@@ -44,4 +49,23 @@ public interface UserDao {
 
     @SqlQuery("SELECT user_id FROM user_login WHERE refresh_token = :token AND revoked = 0")
     Optional<Integer> checkRefreshToken(String token);
+
+    class UserMapper implements RowMapper<User> {
+
+        @Override
+        public User map(ResultSet rs, StatementContext ctx) throws SQLException {
+            return User.newBuilder()
+                    .setId(rs.getInt("id"))
+                    .setUsername(rs.getString("username"))
+                    .setFname(rs.getString("fname"))
+                    .setLname(rs.getString("lname"))
+                    .setPoints(rs.getInt("points"))
+                    .setContact(Contact.newBuilder()
+                            .setPhone(rs.getString("phone"))
+                            .setEmail(rs.getString("email"))
+                            .build())
+                    .setRole(User.UserRole.valueOf(rs.getString("role").toUpperCase()))
+                    .build();
+        }
+    }
 }

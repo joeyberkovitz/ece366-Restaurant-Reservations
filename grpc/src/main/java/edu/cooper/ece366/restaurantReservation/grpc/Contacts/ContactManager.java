@@ -93,6 +93,8 @@ public class ContactManager {
         }
         catch (Exception e) {
             if (e.getCause() instanceof SQLException) {
+                // SQL error 1451 represents a foreign key constraint. We ignore this to not allow deletion of contact
+                // if another restaurant or user is using this contact
                 if (!((SQLException) e.getCause()).getSQLState().equals("1451")) throw e;
             }
         }

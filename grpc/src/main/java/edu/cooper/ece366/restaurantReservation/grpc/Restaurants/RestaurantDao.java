@@ -5,7 +5,6 @@ import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 import org.jdbi.v3.sqlobject.config.RegisterRowMapper;
-import org.jdbi.v3.sqlobject.config.RegisterRowMapperFactory;
 import org.jdbi.v3.sqlobject.customizer.BindBean;
 import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
@@ -80,6 +79,7 @@ public interface RestaurantDao {
 	@SqlQuery(RELSQL + "where rel.user_id=:id")
 	@RegisterRowMapper(RelationshipMapper.class)
 	List<Relationship> getRelationshipByUser(int id);
+	// TODO merge those two functions
 
 	@SqlQuery("SELECT * FROM `table` WHERE label = :name AND restaurant_id = :rest")
 	Optional<Table> getTableByName(String name, int rest);

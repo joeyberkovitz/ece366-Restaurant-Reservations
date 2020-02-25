@@ -1,13 +1,8 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Restaurants;
 
-import edu.cooper.ece366.restaurantReservation.grpc.Restaurant;
-import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantDao;
-import edu.cooper.ece366.restaurantReservation.grpc.Relationship;
 import edu.cooper.ece366.restaurantReservation.grpc.Addresses.AddressManager;
+import edu.cooper.ece366.restaurantReservation.grpc.*;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
-import edu.cooper.ece366.restaurantReservation.grpc.Category;
-import edu.cooper.ece366.restaurantReservation.grpc.Table;
-import edu.cooper.ece366.restaurantReservation.grpc.User;
 import org.jdbi.v3.core.Jdbi;
 
 import java.util.List;
@@ -139,7 +134,7 @@ public class RestaurantManager {
 		}
 	}
 
-	public void deleteRestaurant(int rest_id) {
+	public void deleteRestaurant(int rest_id) throws AddressManager.InvalidAddressIdException {
 		ContactManager cm = new ContactManager(db);
 		AddressManager am = new AddressManager(db);
 

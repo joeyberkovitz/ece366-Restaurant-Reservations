@@ -80,8 +80,9 @@ public class ReservationManager {
 			d -> d.getReservationUser(userId, reservation.getId()));
 
 		Optional<String> restaurantUser = Optional.empty();
-		if(resUser.isEmpty()){
-		// TODO when would this return empty? What is being returned?
+		if (resUser.isEmpty()){
+			// If current user is not on reservation, check if user is manager of restaurant of reservation.
+			// Managers have privileges over all their restaurant's reservations
 			restaurantUser = db.withExtension(RestaurantDao.class,
 				d -> d.getRestaurantUserRole(userId,
 					reservation.getRestaurant().getId()));
