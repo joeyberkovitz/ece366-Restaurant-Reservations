@@ -31,19 +31,28 @@ public interface ReservationDao {
 	//Reservation always starts with 0 points
 	@SqlUpdate("INSERT INTO reservation" +
 		"(start_time, end_time, num_people, num_points, restaurant_id, status_id)"+
-		"VALUES(FROM_UNIXTIME(:r.startTime), FROM_UNIXTIME(:endTime), :r.numPeople, 0, :r.restaurant.id, :statusId)"
+		"VALUES(FROM_UNIXTIME(:r.startTime), FROM_UNIXTIME(:endTime), " +
+		":r.numPeople, 0, :r.restaurant.id, :statusId)"
 	)
 	@GetGeneratedKeys("id")
 	int insertReservation(@BindBean("r") Reservation reservation, long endTime,
 	                      int statusId);
 
-	@SqlBatch("INSERT INTO reservation_table(reservation_id, table_id)" +
-		" VALUES(:resId, :t.id)")
+	@SqlUpdate("UPDATE reservation set start_time = :r.startTime, " +
+		"num_people = :r.numPeople, num_points = :r.points, status_id = :statusId")
+	void updateReservation(@BindBean("r") Reservation reservation, int statusId);
+
+	@SqlBatch("INSERT INTO reservation_table(reservation_id, table_id) " +
+		"VALUES(:resId, :t.id)")
 	void insertReservationTables(int resId, @BindBean("t") List<Table> tables);
 
 	@SqlUpdate("INSERT INTO reservation_user(reservation_id, user_id)" +
 		" VALUES(:resId, :userId)")
 	void addReservationUser(int resId, int userId);
+
+	@SqlUpdate("DELETE FROM reservation_user WHERE " +
+		"reservation_id = :resId AND user_id = :userId")
+	void removeReservationUser(int resId, int userId);
 
 	@SqlQuery("SELECT u.id FROM reservation r " +
 		"INNER JOIN reservation_user ru on r.id = ru.reservation_id " +

@@ -59,6 +59,30 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 	}
 
 	@Override
+	public StreamObserver<InviteMessage> removeReservationUser(StreamObserver<InviteResponse> responseObserver) {
+		return new StreamObserver<InviteMessage>() {
+			@Override
+			public void onNext(InviteMessage value) {
+				checkReservationPermission(value.getReservation());
+
+				db.useExtension(ReservationDao.class,
+					d -> d.removeReservationUser(value.getReservation().getId(),
+						value.getUser().getId()));
+			}
+
+			@Override
+			public void onError(Throwable t) {
+				responseObserver.onError(t);
+			}
+
+			@Override
+			public void onCompleted() {
+				responseObserver.onNext(InviteResponse.newBuilder().build());
+			}
+		};
+	}
+
+	@Override
 	public void listReservationUsers(Reservation request, StreamObserver<User> responseObserver) {
 		checkReservationPermission(request);
 
@@ -133,5 +157,38 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 			throw new StatusRuntimeException(Status.PERMISSION_DENIED
 				.withDescription("User can't edit reservation"));
 		}
+	}
+
+	@Override
+	public void setReservation(Reservation request, StreamObserver<Reservation> responseObserver) {
+		//After calling this, reservation is guaranteed to exist
+		checkReservationPermission(request);
+
+		List<Reservation> reservationList = db.withExtension(ReservationDao.class,
+			d -> d.searchReservations(request.getId(), null, null));
+
+		Reservation originalReservation = reservationList.get(0);
+
+		if(request.getNumPeople() > originalReservation.getNumPeople())
+			throw new StatusRuntimeException(Status.INVALID_ARGUMENT
+				.withDescription("Increasing num people not supported"));
+		else if(request.getNumPeople() < originalReservation.getNumPeople()){
+			//Todo: need to figure out if tables should be removed
+		}
+
+		if(request.getPoints() != originalReservation.getPoints())
+			throw new StatusRuntimeException(Status.INVALID_ARGUMENT
+				.withDescription("Not allowed to modify points"));
+
+		if(request.getStartTime() != originalReservation.getStartTime())
+			throw new StatusRuntimeException(Status.INVALID_ARGUMENT
+				.withDescription("Not allowed to change start time"));
+
+		if(request.getRestaurant().getId() !=
+			originalReservation.getRestaurant().getId())
+			throw new StatusRuntimeException(Status.INVALID_ARGUMENT
+				.withDescription("Not allowed to change restaurant"));
+
+		manager.updateReservation(request);
 	}
 }

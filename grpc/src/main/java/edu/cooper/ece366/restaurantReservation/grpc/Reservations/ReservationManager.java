@@ -42,6 +42,14 @@ public class ReservationManager {
 		return Reservation.newBuilder().setId(reservationId).build();
 	}
 
+	public void updateReservation(Reservation reservation){
+		int statusId = db.withExtension(StatusDao.class,
+			d -> d.getStatusIdByName(reservation.getStatus().name()));
+
+		db.useExtension(ReservationDao.class,
+			d -> d.updateReservation(reservation, statusId));
+	}
+
 	private List<Table> computeReservationTables(Reservation reservation, long endTime){
 		//Todo: this algorithm may be too simple, always chooses largest table first
 		List<Table> tables = db.withExtension(ReservationDao.class,
@@ -72,7 +80,7 @@ public class ReservationManager {
 			d -> d.getReservationUser(userId, reservation.getId()));
 
 		Optional<String> restaurantUser = Optional.empty();
-		if(!resUser.isPresent()){
+		if(resUser.isEmpty()){
 			restaurantUser = db.withExtension(RestaurantDao.class,
 				d -> d.getRestaurantUserRole(userId,
 					reservation.getRestaurant().getId()));
