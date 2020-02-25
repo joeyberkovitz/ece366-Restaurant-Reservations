@@ -99,6 +99,8 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 	public void getReservationsByUser(ReservationUserRequest request, StreamObserver<Reservation> responseObserver) {
 		int currUser = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
 		//No need for auth check because only getting reservations for currUser
+		// TODO do we need to allow admins to request reservation lists
+		// of arbitrary users from the frontend?
 		List<Reservation> reservations = db.withExtension(ReservationDao.class,
 			d -> d.searchReservations(null, currUser, null));
 

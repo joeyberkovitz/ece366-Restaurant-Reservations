@@ -63,6 +63,8 @@ public class AddressManager {
 
     public void deleteAddress(int id) {
         if (!existsAddress(id))
+            // TODO: why does a nonexistent address necessarily imply an invalid
+            // token?
             throw new StatusRuntimeException(Status.PERMISSION_DENIED.withDescription("Invalid or revoked refresh " +
                     "token"));
         try {
@@ -74,6 +76,7 @@ public class AddressManager {
         catch (Exception e) {
             if (e.getCause() instanceof SQLException) {
                 if (!((SQLException) e.getCause()).getSQLState().equals("1451")) throw e;
+                // TODO: what does this do?
             }
         }
     }

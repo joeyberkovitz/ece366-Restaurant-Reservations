@@ -21,30 +21,36 @@ public interface ReservationDao {
 		"and t.id NOT IN ( " +
 			"select rt.table_id " +
 			"from reservation r " +
-			"inner join reservation_table rt on r.id = rt.reservation_id " +
+			"inner join reservation_table rt on r.id = " +
+			                             "rt.reservation_id " +
 			"where r.restaurant_id = :r.restaurant.id " +
 			"AND r.end_time > FROM_UNIXTIME(:r.startTime) " +
 			"AND r.start_time < FROM_UNIXTIME(:endTime) " +
 		") ORDER BY t.capacity DESC")
-	List<Table> getAvailableTables(@BindBean("r") Reservation reservation, long endTime);
+	List<Table> getAvailableTables(@BindBean("r") Reservation reservation,
+	                               long endTime);
 
 	//Reservation always starts with 0 points
 	@SqlUpdate("INSERT INTO reservation" +
-		"(start_time, end_time, num_people, num_points, restaurant_id, status_id)"+
-		"VALUES(FROM_UNIXTIME(:r.startTime), FROM_UNIXTIME(:endTime), " +
+		"(start_time, end_time, num_people, num_points, restaurant_id,"+
+		" status_id)" +
+		"VALUES(FROM_UNIXTIME(:r.startTime), FROM_UNIXTIME(:endTime), "+
 		":r.numPeople, 0, :r.restaurant.id, :statusId)"
 	)
 	@GetGeneratedKeys("id")
-	int insertReservation(@BindBean("r") Reservation reservation, long endTime,
-	                      int statusId);
+	int insertReservation(@BindBean("r") Reservation reservation,
+	                      long endTime, int statusId);
 
 	@SqlUpdate("UPDATE reservation set start_time = :r.startTime, " +
-		"num_people = :r.numPeople, num_points = :r.points, status_id = :statusId")
-	void updateReservation(@BindBean("r") Reservation reservation, int statusId);
+		"num_people = :r.numPeople, num_points = :r.points, " +
+		"status_id  = :statusId")
+	void updateReservation(@BindBean("r") Reservation reservation,
+	                       int statusId);
 
 	@SqlBatch("INSERT INTO reservation_table(reservation_id, table_id) " +
 		"VALUES(:resId, :t.id)")
-	void insertReservationTables(int resId, @BindBean("t") List<Table> tables);
+	void insertReservationTables(int resId,
+	                             @BindBean("t") List<Table> tables);
 
 	@SqlUpdate("INSERT INTO reservation_user(reservation_id, user_id)" +
 		" VALUES(:resId, :userId)")
@@ -61,7 +67,7 @@ public interface ReservationDao {
 	Optional<Integer> getReservationUser(int userId, int reservationId);
 
 	@SqlQuery("SELECT u.id, u.username, u.fname, u.lname, " +
-		"u.rewards_points as points, c.phone, c.email, r.name as role " +
+		"u.rewards_points as points, c.phone, c.email, r.name as role "+
 		"FROM reservation r " +
 		"INNER JOIN reservation_user ru on r.id = ru.reservation_id " +
 		"INNER JOIN user u on ru.user_id = u.id " +
@@ -77,9 +83,11 @@ public interface ReservationDao {
 		"(:restaurantId IS NULL OR r.restaurant_id = :restaurantId) " +
 		"(:userId IS NULL OR r.id IN (" +
 			"SELECT ru.reservation_id FROM reservation_user " +
-			"WHERE ru.reservation_id = r.id AND ru.user_id = :userId))")
+			 "WHERE ru.reservation_id = r.id " +
+			   "AND ru.user_id = :userId))")
 	@RegisterRowMapper(ReservationMapper.class)
-	List<Reservation> searchReservations(Integer reservationId, Integer userId,
+	List<Reservation> searchReservations(Integer reservationId,
+	                                     Integer userId,
 	                                     Integer restaurantId);
 
 	@SqlQuery("select t.id, t.capacity, t.label " +

@@ -14,6 +14,7 @@ class ReservationMapper implements RowMapper<Reservation> {
 		return Reservation.newBuilder()
 			.setId(rs.getInt("id"))
 			.setStartTime(rs.getDate("start_time").getTime()/1000)
+			// TODO why divide by 1000?
 			.setNumPeople(rs.getInt("num_people"))
 			.setPoints(rs.getInt("num_points"))
 			.setStatus(Reservation.ReservationStatus.valueOf(rs.getString("statusName").toUpperCase()))

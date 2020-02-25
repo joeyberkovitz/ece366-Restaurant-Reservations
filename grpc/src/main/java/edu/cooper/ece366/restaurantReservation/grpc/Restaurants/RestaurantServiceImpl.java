@@ -241,6 +241,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		}
 		if(rest == null || rest.getId() <= 0 || !manager.canEditRestaurant(userId,
 			rest.getId(), priv)) {
+			// How can rest be null and also have a nonzero ID?
 			throw new StatusRuntimeException(Status.PERMISSION_DENIED
 					.withDescription("Not authorized to edit restaurant"));
 		}
