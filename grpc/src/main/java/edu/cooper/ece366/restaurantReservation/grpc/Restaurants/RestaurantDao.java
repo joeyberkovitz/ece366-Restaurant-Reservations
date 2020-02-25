@@ -5,6 +5,7 @@ import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 import org.jdbi.v3.sqlobject.config.RegisterRowMapper;
+import org.jdbi.v3.sqlobject.config.RegisterRowMapperFactory;
 import org.jdbi.v3.sqlobject.customizer.BindBean;
 import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
@@ -56,6 +57,30 @@ public interface RestaurantDao {
 	                         @BindBean("restaurant") Restaurant restaurant);
 	// TODO figure out why this complains when category is unset
 
+	@SqlQuery("select restaurant.*,address.*,contact.* from restaurant " +
+	          "inner join address on restaurant.address_id = address.id " +
+	          "inner join contact on restaurant.contact_id = contact.id " +
+	          "where restaurant.category_id=:id")
+	@RegisterRowMapper(RestaurantMapper.class)
+	List<Restaurant> searchByCategory(int id);
+
+	static final String RELSQL =
+	"select rel.*,restaurant.*,address.*,rscon.*,user.*,uscon.*" +
+	"from restaurant_user rel " +
+	"inner join restaurant on rel.restaurant_id = restaurant.id "+
+	"inner join address on restaurant.address_id = address.id " +
+	"inner join contact rscon on restaurant.contact_id = rscon.id " +
+	"inner join user on rel.user_id = user.id " +
+	"inner join contact uscon on user.contact_id = uscon.id ";
+
+	@SqlQuery(RELSQL + "where rel.restaurant_id=:id")
+	@RegisterRowMapper(RelationshipMapper.class)
+	List<Relationship> getRelationshipByRestaurant(int id);
+
+	@SqlQuery(RELSQL + "where rel.user_id=:id")
+	@RegisterRowMapper(RelationshipMapper.class)
+	List<Relationship> getRelationshipByUser(int id);
+
 	@SqlQuery("SELECT * FROM `table` WHERE label = :name AND restaurant_id = :rest")
 	Optional<Table> getTableByName(String name, int rest);
 
@@ -102,26 +127,78 @@ public interface RestaurantDao {
 				// and contact to ProtoBeanMapper, and share it
 				// wiht other code, e.g. UserMapper
 				.setAddress(Address.newBuilder()
-					.setName(rs.getString("address.name"))
-					.setLatitude(rs.getFloat(
-					             "address.latitude"))
-					.setLongitude(rs.getFloat(
-					              "address.longitude"))
-					.setLine1(rs.getString("address.line1"))
-					.setLine2(rs.getString("address.line2"))
-					.setCity(rs.getString("address.city"))
-					.setState(rs.getString("address.state"))
-					.setZip(rs.getString("address.zip"))
-					.build())
+				 .setName(rs.getString("address.name"))
+				 .setLatitude(rs.getFloat(
+				              "address.latitude"))
+				 .setLongitude(rs.getFloat(
+				               "address.longitude"))
+				 .setLine1(rs.getString("address.line1"))
+				 .setLine2(rs.getString("address.line2"))
+				 .setCity(rs.getString("address.city"))
+				 .setState(rs.getString("address.state"))
+				 .setZip(rs.getString("address.zip"))
+				 .build())
 				.setContact(Contact.newBuilder()
-					.setPhone(rs.getString("contact.phone"))
-					.setEmail(rs.getString("contact.email"))
-					.build())
+				 .setPhone(rs.getString("contact.phone"))
+				 .setEmail(rs.getString("contact.email"))
+				 .build())
 				.setCategory(Category.newBuilder()
-					.setCategory(rs.getInt(
-					             "restaurant.category_id"))
-					.build())
+				 .setCategory(rs.getInt(
+				              "restaurant.category_id"))
+				 .build())
+				.setCapacity(
+				 rs.getInt("restaurant.capacity_factor"))
+				.setRtime(
+				 rs.getInt("restaurant.reservation_time"))
 				.build();
+		}
+	}
+
+	class RelationshipMapper implements RowMapper<Relationship> {
+		@Override
+		public Relationship map(ResultSet rs, StatementContext ctx)
+		throws SQLException {
+			return Relationship.newBuilder()
+				// TODO: no, seriously
+				.setRestaurant(Restaurant.newBuilder()
+				 .setId(rs.getInt("restaurant.id"))
+				 .setName(rs.getString("restaurant.name"))
+				 .setAddress(Address.newBuilder()
+				  .setName(rs.getString("address.name"))
+				  .setLatitude(rs.getFloat(
+				               "address.latitude"))
+				  .setLongitude(rs.getFloat(
+				                "address.longitude"))
+				  .setLine1(rs.getString("address.line1"))
+				  .setLine2(rs.getString("address.line2"))
+				  .setCity(rs.getString("address.city"))
+				  .setState(rs.getString("address.state"))
+				  .setZip(rs.getString("address.zip"))
+				  .build())
+				 .setContact(Contact.newBuilder()
+				  .setPhone(rs.getString("rscon.phone"))
+				  .setEmail(rs.getString("rscon.email"))
+				  .build())
+				 .setCategory(Category.newBuilder()
+				  .setCategory(rs.getInt(
+				               "restaurant.category_id"))
+				  .build())
+				 .build())
+				.setUser(User.newBuilder()
+				 .setId(rs.getInt("user.id"))
+				 .setUsername(rs.getString("user.username"))
+				 .setFname(rs.getString("user.fname"))
+				 .setLname(rs.getString("user.lname"))
+				 .setPoints(rs.getInt("user.points"))
+				 .setContact(Contact.newBuilder()
+				  .setPhone(rs.getString("uscon.phone"))
+				  .setEmail(rs.getString("uscon.email"))
+				  .build())
+				 .setRole(User.UserRole.valueOf(rs.getString("role").toUpperCase()))
+				 .build())
+				.setRole(Relationship.UserRole.valueOf(rs.getString("role").toUpperCase()))
+				.build();
+
 		}
 	}
 }

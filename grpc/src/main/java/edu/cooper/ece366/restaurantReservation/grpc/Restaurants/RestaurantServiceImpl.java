@@ -1,9 +1,10 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Restaurants;
 
+import edu.cooper.ece366.restaurantReservation.grpc.*;
+import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Addresses.AddressManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthInterceptor;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
-import edu.cooper.ece366.restaurantReservation.grpc.*;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
@@ -150,6 +151,33 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			d -> d.getTableById(request.getId()));
 
 		responseObserver.onNext(table);
+		responseObserver.onCompleted();
+	}
+
+	@Override
+	public void searchByCategory(Category request, StreamObserver<Restaurant> responseObserver) {
+		List<Restaurant> results = manager.searchByCategory(request);
+		for(Restaurant result: results) {
+			responseObserver.onNext(result);
+		}
+		responseObserver.onCompleted();
+	}
+
+	@Override
+	public void getUsersByRestaurant(Restaurant request, StreamObserver<Relationship> responseObserver) {
+		List<Relationship> results = manager.getRelationshipByRestaurant(request);
+		for(Relationship result: results) {
+			responseObserver.onNext(result);
+		}
+		responseObserver.onCompleted();
+	}
+
+	@Override
+	public void getRestaurantsByUser(User request, StreamObserver<Relationship> responseObserver) {
+		List<Relationship> results = manager.getRelationshipByUser(request);
+		for(Relationship result: results) {
+			responseObserver.onNext(result);
+		}
 		responseObserver.onCompleted();
 	}
 
