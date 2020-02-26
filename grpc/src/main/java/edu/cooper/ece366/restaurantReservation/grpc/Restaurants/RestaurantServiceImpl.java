@@ -29,9 +29,9 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			int restId = manager.checkAndInsertRestaurant(req);
 
 			// Insert current user as admin (owner) for new restaurant
-			int adminRoleId = db.withExtension(RoleDao.class, d -> d.getRoleIdByName("Admin"));
+			int adminRoleId = db.withExtension(RoleDao.class, dao -> dao.getRoleIdByName("Admin"));
 			try {
-				db.useExtension(RestaurantDao.class, d -> d.addRestaurantRelationship(restId, userId, adminRoleId));
+				db.useExtension(RestaurantDao.class, dao -> dao.addRestaurantRelationship(restId, userId, adminRoleId));
 			}
 			catch (UnableToExecuteStatementException ex){
 				ex.printStackTrace();
@@ -85,11 +85,11 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 		String roleName = request.getRole().getValueDescriptor().getName();
 		int roleId = db.withExtension(RoleDao.class,
-			d -> d.getRoleIdByName(roleName));
+			dao -> dao.getRoleIdByName(roleName));
 
 		try {
-			db.useExtension(RestaurantDao.class, d ->
-				d.addRestaurantRelationship(request.getRestaurant().getId(),
+			db.useExtension(RestaurantDao.class, dao ->
+				dao.addRestaurantRelationship(request.getRestaurant().getId(),
 					request.getUser().getId(), roleId));
 		}
 		catch (UnableToExecuteStatementException ex){
@@ -131,7 +131,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			return;
 		}
 		responseObserver.onNext(db.withExtension(RestaurantDao.class,
-			d -> d.getTableById(tableId)));
+			dao -> dao.getTableById(tableId)));
 		responseObserver.onCompleted();
 	}
 
@@ -147,7 +147,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 		//Todo: do we want to handle invalid id with an Optional?
 		Table table = db.withExtension(RestaurantDao.class,
-			d -> d.getTableById(request.getId()));
+			dao -> dao.getTableById(request.getId()));
 
 		responseObserver.onNext(table);
 		responseObserver.onCompleted();

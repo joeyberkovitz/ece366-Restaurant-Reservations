@@ -76,7 +76,7 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 		}
 
 		Optional<DBHashResponse> dbHash = db.withExtension(UserDao.class,
-				d -> d.getUserHash(request.getUsername()));
+				dao -> dao.getUserHash(request.getUsername()));
 
 		//If username is invalid, hash the password anyway to waste time and
 		// make it non-obvious that username is invalid
@@ -113,7 +113,7 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 		this.authManager.validateToken(request.getRefreshToken());
 		//DAO verifies that refresh token isn't revoked
 		Optional<Integer> userId = db.withExtension(UserDao.class,
-			d -> d.checkRefreshToken(request.getRefreshToken()));
+			dao -> dao.checkRefreshToken(request.getRefreshToken()));
 		if(userId.isEmpty())
 			throw new StatusRuntimeException(Status.PERMISSION_DENIED
 				.withDescription("Invalid or revoked refresh token"));

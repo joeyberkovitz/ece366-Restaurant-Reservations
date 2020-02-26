@@ -87,8 +87,8 @@ public class AuthManager {
 				.signWith(privateKey, SignatureAlgorithm.RS256)
 				.compact();
 
-		db.useExtension(UserDao.class, d ->
-				d.insertUserToken(userID, refreshToken, userAgent, refreshExp));
+		db.useExtension(UserDao.class, dao ->
+				dao.insertUserToken(userID, refreshToken, userAgent, refreshExp));
 
 		ArrayList<String> res = new ArrayList<String>();
 		res.add(authToken);

@@ -42,7 +42,7 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 				checkReservationPermission(value.getReservation());
 
 				db.useExtension(ReservationDao.class,
-					d -> d.addReservationUser(value.getReservation().getId(),
+					dao -> dao.addReservationUser(value.getReservation().getId(),
 						value.getUser().getId()));
 			}
 
@@ -66,7 +66,7 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 				checkReservationPermission(value.getReservation());
 
 				db.useExtension(ReservationDao.class,
-					d -> d.removeReservationUser(value.getReservation().getId(),
+					dao -> dao.removeReservationUser(value.getReservation().getId(),
 						value.getUser().getId()));
 			}
 
@@ -87,7 +87,7 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 		checkReservationPermission(request);
 
 		List<User> users = db.withExtension(ReservationDao.class,
-			d -> d.getReservationUsers(request.getId()));
+			dao -> dao.getReservationUsers(request.getId()));
 
 		for (User user: users) {
 			responseObserver.onNext(user);
@@ -102,7 +102,7 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 		// TODO do we need to allow admins to request reservation lists
 		// of arbitrary users from the frontend?
 		List<Reservation> reservations = db.withExtension(ReservationDao.class,
-			d -> d.searchReservations(null, currUser, null));
+			dao -> dao.searchReservations(null, currUser, null));
 
 		for (Reservation reservation: reservations) {
 			responseObserver.onNext(reservation);
@@ -116,7 +116,7 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 		checkReservationPermission(request);
 
 		List<Reservation> reservations = db.withExtension(ReservationDao.class,
-			d -> d.searchReservations(request.getId(), null, null));
+			dao -> dao.searchReservations(request.getId(), null, null));
 
 		responseObserver.onNext(reservations.get(0));
 		responseObserver.onCompleted();
@@ -132,7 +132,7 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 		}
 
 		List<Reservation> reservations = db.withExtension(ReservationDao.class,
-			d -> d.searchReservations(null, null, request.getId()));
+			dao -> dao.searchReservations(null, null, request.getId()));
 
 		for (Reservation reservation: reservations) {
 			responseObserver.onNext(reservation);
@@ -145,7 +145,7 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 		checkReservationPermission(request);
 
 		List<Table> tables = db.withExtension(ReservationDao.class,
-			d -> d.getReservationTables(request.getId()));
+			dao -> dao.getReservationTables(request.getId()));
 
 		for (Table table: tables) {
 			responseObserver.onNext(table);
@@ -167,7 +167,7 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 		checkReservationPermission(request);
 
 		List<Reservation> reservationList = db.withExtension(ReservationDao.class,
-			d -> d.searchReservations(request.getId(), null, null));
+			dao -> dao.searchReservations(request.getId(), null, null));
 
 		Reservation originalReservation = reservationList.get(0);
 

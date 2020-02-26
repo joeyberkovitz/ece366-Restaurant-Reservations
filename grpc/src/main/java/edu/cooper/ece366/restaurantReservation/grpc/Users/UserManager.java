@@ -48,7 +48,7 @@ public class UserManager {
             throw new InvalidUsernameException("Username must only include alphanumeric characters.");
         }
 
-        if(db.withExtension(UserDao.class, d -> d.userExists(username))){
+        if(db.withExtension(UserDao.class, dao -> dao.userExists(username))){
             throw new InvalidUsernameException("Username exists");
         }
     }

@@ -20,42 +20,45 @@ public class ReservationManager {
 	}
 
 	public Reservation createReservation(Reservation reservation, int userId){
-		int reservationTime = db.withExtension(RestaurantDao.class, d ->
-			d.getRestaurantReservationTime(reservation.getRestaurant().getId()));
+		int reservationTime = db.withExtension(
+			RestaurantDao.class,
+			dao -> dao.getRestaurantReservationTime(reservation.getRestaurant().getId()));
 		long endTime = reservation.getStartTime() + reservationTime*3600;
 		int statusId = db.withExtension(StatusDao.class,
-			d -> d.getStatusIdByName("Opened"));
+			dao -> dao.getStatusIdByName("Opened"));
 
 		//This will throw a runtime exception if tables unavailable
 		List<Table> tables = computeReservationTables(reservation, endTime);
 
 		//Todo: do we want to put all inserts in a transaction?
 		int reservationId = db.withExtension(ReservationDao.class,
-			d -> d.insertReservation(reservation, endTime, statusId));
+			dao -> dao.insertReservation(reservation, endTime,
+			                             statusId));
 
 		db.useExtension(ReservationDao.class,
-			d -> d.insertReservationTables(reservationId, tables));
+			dao -> dao.insertReservationTables(reservationId,
+			                                   tables));
 
 		db.useExtension(ReservationDao.class,
-			d -> d.addReservationUser(reservationId, userId));
+			dao -> dao.addReservationUser(reservationId, userId));
 
 		return Reservation.newBuilder().setId(reservationId).build();
 	}
 
 	public void updateReservation(Reservation reservation){
 		int statusId = db.withExtension(StatusDao.class,
-			d -> d.getStatusIdByName(reservation.getStatus().name()));
+			dao -> dao.getStatusIdByName(reservation.getStatus().name()));
 
 		db.useExtension(ReservationDao.class,
-			d -> d.updateReservation(reservation, statusId));
+			dao -> dao.updateReservation(reservation, statusId));
 	}
 
 	private List<Table> computeReservationTables(Reservation reservation, long endTime){
 		//Todo: this algorithm may be too simple, always chooses largest table first
 		List<Table> tables = db.withExtension(ReservationDao.class,
-			d -> d.getAvailableTables(reservation, endTime));
+			dao -> dao.getAvailableTables(reservation, endTime));
 		int capFactor = db.withExtension(RestaurantDao.class,
-			d -> d.getRestaurantCapFactor(reservation.getRestaurant().getId()));
+			dao -> dao.getRestaurantCapFactor(reservation.getRestaurant().getId()));
 
 		List<Table> retTables = new ArrayList<Table>();
 
@@ -77,14 +80,14 @@ public class ReservationManager {
 
 	public boolean canEditReservation(int userId, Reservation reservation){
 		Optional<Integer> resUser = db.withExtension(ReservationDao.class,
-			d -> d.getReservationUser(userId, reservation.getId()));
+			dao -> dao.getReservationUser(userId, reservation.getId()));
 
 		Optional<String> restaurantUser = Optional.empty();
 		if (resUser.isEmpty()){
 			// If current user is not on reservation, check if user is manager of restaurant of reservation.
 			// Managers have privileges over all their restaurant's reservations
 			restaurantUser = db.withExtension(RestaurantDao.class,
-				d -> d.getRestaurantUserRole(userId,
+				dao -> dao.getRestaurantUserRole(userId,
 					reservation.getRestaurant().getId()));
 
 		}

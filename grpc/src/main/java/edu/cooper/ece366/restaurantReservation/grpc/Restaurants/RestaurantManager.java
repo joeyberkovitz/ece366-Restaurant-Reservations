@@ -55,8 +55,8 @@ public class RestaurantManager {
 	}
 
 	public List<Table> getRestaurantTables(int restaurant_id){
-		return db.withExtension(RestaurantDao.class, d ->
-			d.getRestaurantTables(restaurant_id));
+		return db.withExtension(RestaurantDao.class, dao ->
+			dao.getRestaurantTables(restaurant_id));
 	}
 
 	public Restaurant setRestaurant(Restaurant target)
@@ -83,8 +83,10 @@ public class RestaurantManager {
 	}
 
 	public boolean canEditRestaurant(int userId, int restaurantId, boolean privileged){
-		Optional<String> role = db.withExtension(RestaurantDao.class, d ->
-				d.getRestaurantUserRole(userId, restaurantId));
+		Optional<String> role = db.withExtension(
+			RestaurantDao.class,
+			dao -> dao.getRestaurantUserRole(userId, restaurantId)
+		);
 		if(privileged)
 			return role.isPresent() && role.get().equals("Admin");
 		return role.isPresent() && (role.get().equals("Admin") || role.get().equals("Manager"));
@@ -93,39 +95,48 @@ public class RestaurantManager {
 	public int checkAndInsertTable(Table table, Restaurant restaurant)
 		throws InvalidTableException {
 		//Todo: maybe validate table name?
-		Optional<Table> existingTable = db.withExtension(RestaurantDao.class,
-			d -> d.getTableByName(table.getLabel(), restaurant.getId()));
+		Optional<Table> existingTable = db.withExtension(
+			RestaurantDao.class,
+			dao -> dao.getTableByName(table.getLabel(),
+			                          restaurant.getId())
+		);
 		if(existingTable.isPresent()){
 			throw new InvalidTableException("Table name already exists" +
 				" for given restaurant");
 		}
 
 		return db.withExtension(RestaurantDao.class,
-			d -> d.insertTable(table, restaurant));
+			dao -> dao.insertTable(table, restaurant));
 	}
 
 	public Optional<Restaurant> getRestaurantByTable(int tableId){
 		return db.withExtension(RestaurantDao.class,
-			d -> d.getRestaurantByTable(tableId));
+			dao -> dao.getRestaurantByTable(tableId));
 	}
 
 	public Table setTable(Table table, Restaurant restaurant)
 		throws InvalidTableException {
-		Optional<Table> existingTable = db.withExtension(RestaurantDao.class,
-			d -> d.getTableByName(table.getLabel(), restaurant.getId()));
+		Optional<Table> existingTable = db.withExtension(
+			RestaurantDao.class,
+			dao -> dao.getTableByName(table.getLabel(),
+			                          restaurant.getId())
+		);
 		if(existingTable.isPresent()
 			&& existingTable.get().getId() != table.getId()){
-			throw new InvalidTableException("Table name already exists" +
-				" for given restaurant");
+			throw new InvalidTableException("Table name already " +
+			                                "exists for given " +
+			                                "restaurant");
 		}
 
-		db.useExtension(RestaurantDao.class, d -> d.setTable(table));
+		db.useExtension(RestaurantDao.class,
+		                dao -> dao.setTable(table));
 		return db.withExtension(RestaurantDao.class,
-			d -> d.getTableById(table.getId()));
+		                        dao -> dao.getTableById(table.getId()));
 	}
 
 	public void deleteTableById(int table_id){
-		db.useExtension(RestaurantDao.class, d -> d.deleteTableById(table_id));
+		db.useExtension(RestaurantDao.class,
+		                dao -> dao.deleteTableById(table_id));
 	}
 
 	public static class InvalidTableException extends Exception {
