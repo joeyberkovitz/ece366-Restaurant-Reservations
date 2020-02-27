@@ -66,7 +66,7 @@ public class ContactManager {
         Optional<Integer> valContId = db.withExtension(ContactDao.class, dao -> {
             return dao.checkContact(id);
         });
-        return !valContId.isEmpty();
+        return valContId.isPresent();
     }
 
     private void checkPhone(String phone) throws InvalidPhoneException{
@@ -81,10 +81,9 @@ public class ContactManager {
         }
     }
 
-    public void deleteContact(int id) {
+    public void deleteContact(int id) throws InvalidContactIdException {
         if (!existsContact(id))
-            throw new StatusRuntimeException(Status.PERMISSION_DENIED.withDescription("Invalid or revoked refresh " +
-                    "token"));
+            throw new InvalidContactIdException("Can't find contact ID");
         try {
             db.withExtension(ContactDao.class, dao -> {
                 dao.deleteContact(id);
