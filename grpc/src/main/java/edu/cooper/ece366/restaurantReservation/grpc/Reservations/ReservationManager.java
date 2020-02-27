@@ -1,9 +1,7 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Reservations;
 
-import edu.cooper.ece366.restaurantReservation.grpc.Reservation;
+import edu.cooper.ece366.restaurantReservation.grpc.*;
 import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantDao;
-import edu.cooper.ece366.restaurantReservation.grpc.StatusDao;
-import edu.cooper.ece366.restaurantReservation.grpc.Table;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import org.jdbi.v3.core.Jdbi;
@@ -52,6 +50,37 @@ public class ReservationManager {
 		db.useExtension(ReservationDao.class,
 			dao -> dao.updateReservation(reservation, statusId));
 	}
+
+	public void addReservationUser(int resId, int userId) {
+		db.useExtension(ReservationDao.class,
+			dao -> dao.addReservationUser(resId, userId));
+	}
+
+	public void removeReservationUser(int resId, int userId) {
+		db.useExtension(ReservationDao.class,
+			dao -> dao.removeReservationUser(resId, userId));
+	}
+
+	public List<User> getReservationUsers(int resId) {
+		return db.withExtension(ReservationDao.class, dao -> {
+			return dao.getReservationUsers(resId);
+		});
+	}
+
+	public List<Table> getReservationTables(int resId) {
+		return db.withExtension(ReservationDao.class, dao -> {
+			return dao.getReservationTables(resId);
+		});
+	}
+
+	public List<Reservation> searchReservations(Integer resId,
+	                                            Integer userId,
+	                                            Integer restId) {
+		return db.withExtension(ReservationDao.class, dao -> {
+			return dao.searchReservations(resId, userId, restId);
+		});
+	}
+
 
 	private List<Table> computeReservationTables(Reservation reservation, long endTime){
 		//Todo: this algorithm may be too simple, always chooses largest table first

@@ -31,7 +31,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			// Insert current user as admin (owner) for new restaurant
 			int adminRoleId = db.withExtension(RoleDao.class, dao -> dao.getRoleIdByName("Admin"));
 			try {
-				db.useExtension(RestaurantDao.class, dao -> dao.addRestaurantRelationship(restId, userId, adminRoleId));
+				manager.addRestaurantRelationship(restId, userId, adminRoleId);
 			}
 			catch (UnableToExecuteStatementException ex){
 				ex.printStackTrace();
@@ -95,9 +95,8 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			dao -> dao.getRoleIdByName(roleName));
 
 		try {
-			db.useExtension(RestaurantDao.class, dao ->
-				dao.addRestaurantRelationship(request.getRestaurant().getId(),
-					request.getUser().getId(), roleId));
+			manager.addRestaurantRelationship(request.getRestaurant().getId(),
+				request.getUser().getId(), roleId);
 		}
 		catch (UnableToExecuteStatementException ex){
 			ex.printStackTrace();

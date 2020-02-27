@@ -92,8 +92,8 @@ public interface ReservationDao {
 			"AND ru.user_id = :userId))")
 	@RegisterRowMapper(ReservationMapper.class)
 	List<Reservation> searchReservations(Integer reservationId,
-										 Integer userId,
-										 Integer restaurantId);
+	                                     Integer userId,
+	                                     Integer restaurantId);
 
 	@SqlQuery("select t.id, t.capacity, t.label " +
 			"from reservation r " +
