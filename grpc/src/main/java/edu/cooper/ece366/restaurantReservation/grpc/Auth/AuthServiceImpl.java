@@ -65,10 +65,9 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 				.withDescription("Password can't be blank"));
 		}
 
-		Optional<DBHashResponse> dbHash = db.withExtension(UserDao.class,
-				dao -> dao.getUserHash(request.getUsername()));
+		Optional<DBHashResponse> dbHash = manager.getUserHash(request.getUsername());
 
-		//If username is invalid, hash the password anyway to waste time and
+		// If username is invalid, hash the password anyway to waste time and
 		// make it non-obvious that username is invalid
 		if(dbHash.isEmpty()) {
 			hashPassword(request.getPassword());

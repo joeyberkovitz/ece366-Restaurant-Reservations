@@ -1,7 +1,7 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Auth;
 
-import edu.cooper.ece366.restaurantReservation.grpc.*;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
+import edu.cooper.ece366.restaurantReservation.grpc.RoleDao;
 import edu.cooper.ece366.restaurantReservation.grpc.User;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserDao;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserManager;
@@ -18,10 +18,7 @@ import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 public class AuthManager {
 	private Properties prop;
@@ -110,6 +107,11 @@ public class AuthManager {
 		catch (JwtException e){
 			throw new RuntimeException("Invalid token");
 		}
+	}
+
+	public Optional<DBHashResponse> getUserHash(String username){
+		return db.withExtension(UserDao.class,
+				dao -> dao.getUserHash(username));
 	}
 
 	public int createUser(User user, String password)
