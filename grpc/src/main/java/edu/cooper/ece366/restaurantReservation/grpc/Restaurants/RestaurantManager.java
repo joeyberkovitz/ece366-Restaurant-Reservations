@@ -30,6 +30,14 @@ public class RestaurantManager {
 		});
 	}
 
+	public void addRestaurantRelationship(int restId, int userId,
+	                                      int adminRoleId) {
+		db.useExtension(RestaurantDao.class, dao -> {
+			dao.addRestaurantRelationship(restId, userId,
+			                              adminRoleId);
+		});
+	}
+
 	public Restaurant getRestaurant(int id) {
 		return db.withExtension(RestaurantDao.class, dao -> {
 			return dao.getRestaurant(id);

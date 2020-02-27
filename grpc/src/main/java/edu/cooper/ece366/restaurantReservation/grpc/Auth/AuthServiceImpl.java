@@ -20,12 +20,12 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 	private Properties prop;
 	private Argon2 argon2;
 	private int argonIter, argonMem, argonPar;
-	private AuthManager authManager;
+	private AuthManager manager;
 
 	public AuthServiceImpl(Jdbi db, Properties prop){
 		this.db = db;
 		this.prop = prop;
-		this.authManager = new AuthManager(prop, db);
+		this.manager = new AuthManager(prop, db);
 		initHash();
 	}
 
@@ -37,30 +37,20 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 	}
 
 	@Override
-	public void createUser(CreateUserRequest request, StreamObserver<User> responseObserver){
-
-		UserManager um = new UserManager(db);
-		final int contId;
+	public void createUser(CreateUserRequest request, StreamObserver<User> responseObserver) {
+		int userId;
 		try {
-			um.checkUsername(request.getUser().getUsername());
-			um.checkName(request.getUser().getFname(),"First");
-			um.checkName(request.getUser().getLname(),"Last");
-
-			ContactManager cm = new ContactManager(db);
-			contId = cm.checkAndInsertContact(request.getUser().getContact());
-		} catch (UserManager.InvalidUsernameException | UserManager.InvalidNameException | ContactManager.InvalidContactIdException | ContactManager.InvalidPhoneException | ContactManager.InvalidEmailException e) {
+			userId = this.manager.createUser(request.getUser(),
+				hashPassword(request.getPassword()));
+		} catch (UserManager.InvalidUsernameException |
+		         UserManager.InvalidNameException |
+		         ContactManager.InvalidContactIdException |
+		         ContactManager.InvalidPhoneException |
+		         ContactManager.InvalidEmailException e) {
 			e.printStackTrace();
 			//Todo: On error, return it to gRPC
 			return;
 		}
-
-		int roleId = db.withExtension(RoleDao.class, dao -> {
-			return dao.getRoleIdByName("Customer");
-		});
-
-		int userId = db.withExtension(UserDao.class, dao -> {
-			return dao.insertUser(hashPassword(request.getPassword()), contId, request.getUser(), roleId);
-		});
 
 		User reply = User.newBuilder().setId(userId).build();
 		responseObserver.onNext(reply);
@@ -87,7 +77,7 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 		}
 
 		if(verifyPassword(request.getPassword(), dbHash.get().getPassword())){
-			List<String> tokens = this.authManager.genTokens(dbHash.get().getId(), request.getUserAgent());
+			List<String> tokens = this.manager.genTokens(dbHash.get().getId(), request.getUserAgent());
 			resBuild.setAuthToken(tokens.get(0));
 			resBuild.setRefreshToken(tokens.get(1));
 		}
@@ -110,7 +100,7 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 	@Override
 	public void refreshToken(RefreshRequest request, StreamObserver<AuthResponse> responseObserver) {
 		//Todo: maybe validate retrieved user id against id in token
-		this.authManager.validateToken(request.getRefreshToken());
+		this.manager.validateToken(request.getRefreshToken());
 		//DAO verifies that refresh token isn't revoked
 		Optional<Integer> userId = db.withExtension(UserDao.class,
 			dao -> dao.checkRefreshToken(request.getRefreshToken()));
@@ -118,7 +108,7 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 			throw new StatusRuntimeException(Status.PERMISSION_DENIED
 				.withDescription("Invalid or revoked refresh token"));
 
-		List<String> tokens = authManager.genTokens(userId.get(), request.getUserAgent());
+		List<String> tokens = manager.genTokens(userId.get(), request.getUserAgent());
 		AuthResponse res = AuthResponse.newBuilder()
 				.setAuthToken(tokens.get(0))
 				.setRefreshToken(tokens.get(1))

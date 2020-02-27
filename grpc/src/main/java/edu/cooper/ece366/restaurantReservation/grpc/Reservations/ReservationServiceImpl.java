@@ -41,9 +41,8 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 			public void onNext(InviteMessage value) {
 				checkReservationPermission(value.getReservation());
 
-				db.useExtension(ReservationDao.class,
-					dao -> dao.addReservationUser(value.getReservation().getId(),
-						value.getUser().getId()));
+				manager.addReservationUser(value.getReservation().getId(),
+					value.getUser().getId());
 			}
 
 			@Override
@@ -65,9 +64,8 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 			public void onNext(InviteMessage value) {
 				checkReservationPermission(value.getReservation());
 
-				db.useExtension(ReservationDao.class,
-					dao -> dao.removeReservationUser(value.getReservation().getId(),
-						value.getUser().getId()));
+				manager.removeReservationUser(value.getReservation().getId(),
+					value.getUser().getId());
 			}
 
 			@Override
@@ -86,8 +84,7 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 	public void listReservationUsers(Reservation request, StreamObserver<User> responseObserver) {
 		checkReservationPermission(request);
 
-		List<User> users = db.withExtension(ReservationDao.class,
-			dao -> dao.getReservationUsers(request.getId()));
+		List<User> users = manager.getReservationUsers(request.getId());
 
 		for (User user: users) {
 			responseObserver.onNext(user);
@@ -101,8 +98,7 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 		//No need for auth check because only getting reservations for currUser
 		// TODO do we need to allow admins to request reservation lists
 		// of arbitrary users from the frontend?
-		List<Reservation> reservations = db.withExtension(ReservationDao.class,
-			dao -> dao.searchReservations(null, currUser, null));
+		List<Reservation> reservations = manager.searchReservations(null, currUser, null);
 
 		for (Reservation reservation: reservations) {
 			responseObserver.onNext(reservation);
@@ -115,8 +111,7 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 		//This function will guarantee that the reservation exists
 		checkReservationPermission(request);
 
-		List<Reservation> reservations = db.withExtension(ReservationDao.class,
-			dao -> dao.searchReservations(request.getId(), null, null));
+		List<Reservation> reservations = manager.searchReservations(request.getId(), null, null);
 
 		responseObserver.onNext(reservations.get(0));
 		responseObserver.onCompleted();
@@ -131,8 +126,7 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 				.withDescription("Not allowed to access restaurant"));
 		}
 
-		List<Reservation> reservations = db.withExtension(ReservationDao.class,
-			dao -> dao.searchReservations(null, null, request.getId()));
+		List<Reservation> reservations = manager.searchReservations(null, null, request.getId());
 
 		for (Reservation reservation: reservations) {
 			responseObserver.onNext(reservation);
@@ -144,8 +138,7 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 	public void getReservationTables(Reservation request, StreamObserver<Table> responseObserver) {
 		checkReservationPermission(request);
 
-		List<Table> tables = db.withExtension(ReservationDao.class,
-			dao -> dao.getReservationTables(request.getId()));
+		List<Table> tables = manager.getReservationTables(request.getId());
 
 		for (Table table: tables) {
 			responseObserver.onNext(table);
@@ -166,8 +159,7 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 		//After calling this, reservation is guaranteed to exist
 		checkReservationPermission(request);
 
-		List<Reservation> reservationList = db.withExtension(ReservationDao.class,
-			dao -> dao.searchReservations(request.getId(), null, null));
+		List<Reservation> reservationList = manager.searchReservations(request.getId(), null, null);
 
 		Reservation originalReservation = reservationList.get(0);
 

@@ -1,7 +1,10 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Auth;
 
+import edu.cooper.ece366.restaurantReservation.grpc.*;
+import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
 import edu.cooper.ece366.restaurantReservation.grpc.User;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserDao;
+import edu.cooper.ece366.restaurantReservation.grpc.Users.UserManager;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import org.jdbi.v3.core.Jdbi;
@@ -107,5 +110,30 @@ public class AuthManager {
 		catch (JwtException e){
 			throw new RuntimeException("Invalid token");
 		}
+	}
+
+	public int createUser(User user, String password)
+	throws UserManager.InvalidUsernameException,
+	       UserManager.InvalidNameException,
+	       ContactManager.InvalidContactIdException,
+	       ContactManager.InvalidPhoneException,
+	       ContactManager.InvalidEmailException
+	{
+		final int contId;
+		UserManager um = new UserManager(db);
+		um.checkUsername(user.getUsername());
+		um.checkName(user.getFname(),"First");
+		um.checkName(user.getLname(),"Last");
+
+		ContactManager cm = new ContactManager(db);
+		contId = cm.checkAndInsertContact(user.getContact());
+
+		int roleId = db.withExtension(RoleDao.class, dao -> {
+			return dao.getRoleIdByName("Customer");
+		});
+
+		return db.withExtension(UserDao.class, dao -> {
+			return dao.insertUser(password, contId, user, roleId);
+		});
 	}
 }
