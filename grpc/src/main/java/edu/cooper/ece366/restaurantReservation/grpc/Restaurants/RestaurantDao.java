@@ -64,14 +64,15 @@ public interface RestaurantDao {
 	List<Restaurant> searchByCategory(int id);
 
 	static final String RELSQL =
-	"select rel.*,restaurant.*,address.*,rscon.*,user.*,uscon.*" +
-	"from restaurant_user rel " +
+	"select rel.*,restaurant.*,address.*,rscon.*,user.*,uscon.*," +
+	"role.name as role from restaurant_user rel " +
 	"inner join restaurant on rel.restaurant_id = restaurant.id "+
 	"inner join address on restaurant.address_id = address.id " +
 	"inner join contact rscon on restaurant.contact_id = rscon.id " +
 	"inner join user on rel.user_id = user.id " +
-	"inner join contact uscon on user.contact_id = uscon.id ";
-
+	"inner join contact uscon on user.contact_id = uscon.id " +
+	"inner join role on rel.role_id = role.id ";
+	// TODO merge those two functions
 	@SqlQuery(RELSQL + "where rel.restaurant_id=:id")
 	@RegisterRowMapper(RelationshipMapper.class)
 	List<Relationship> getRelationshipByRestaurant(int id);
@@ -79,7 +80,11 @@ public interface RestaurantDao {
 	@SqlQuery(RELSQL + "where rel.user_id=:id")
 	@RegisterRowMapper(RelationshipMapper.class)
 	List<Relationship> getRelationshipByUser(int id);
-	// TODO merge those two functions
+
+	@SqlUpdate("DELETE FROM restaurant_user WHERE user_id = :userId AND " +
+		"restaurant_id = :restaurantId")
+	void deleteRelationship(int userId, int restaurantId);
+
 
 	@SqlQuery("SELECT * FROM `table` WHERE label = :name AND restaurant_id = :rest")
 	Optional<Table> getTableByName(String name, int rest);
@@ -127,6 +132,7 @@ public interface RestaurantDao {
 				// and contact to ProtoBeanMapper, and share it
 				// wiht other code, e.g. UserMapper
 				.setAddress(Address.newBuilder()
+				 .setId(rs.getInt("address.id"))
 				 .setName(rs.getString("address.name"))
 				 .setLatitude(rs.getFloat(
 				              "address.latitude"))
@@ -139,6 +145,7 @@ public interface RestaurantDao {
 				 .setZip(rs.getString("address.zip"))
 				 .build())
 				.setContact(Contact.newBuilder()
+				 .setId(rs.getInt("contact.id"))
 				 .setPhone(rs.getString("contact.phone"))
 				 .setEmail(rs.getString("contact.email"))
 				 .build())
@@ -189,11 +196,13 @@ public interface RestaurantDao {
 				 .setUsername(rs.getString("user.username"))
 				 .setFname(rs.getString("user.fname"))
 				 .setLname(rs.getString("user.lname"))
-				 .setPoints(rs.getInt("user.points"))
+				 .setPoints(rs.getInt("user.rewards_points"))
 				 .setContact(Contact.newBuilder()
 				  .setPhone(rs.getString("uscon.phone"))
 				  .setEmail(rs.getString("uscon.email"))
 				  .build())
+					//Todo: note that this will show user role as restaurant role
+					//May want user role to actually be the true user role
 				 .setRole(User.UserRole.valueOf(rs.getString("role").toUpperCase()))
 				 .build())
 				.setRole(Relationship.UserRole.valueOf(rs.getString("role").toUpperCase()))

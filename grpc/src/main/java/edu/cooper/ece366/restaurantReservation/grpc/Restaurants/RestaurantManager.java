@@ -153,15 +153,33 @@ public class RestaurantManager {
 		}
 	}
 
-	public void deleteRestaurant(int rest_id) throws AddressManager.InvalidAddressIdException {
+	public void deleteRestaurant(int rest_id) throws AddressManager.InvalidAddressIdException, ContactManager.InvalidContactIdException {
 		ContactManager cm = new ContactManager(db);
 		AddressManager am = new AddressManager(db);
 
 		Restaurant rest = getRestaurant(rest_id);
 
-		db.withExtension(RestaurantDao.class, dao -> {
+		//Delete Users
+		List<Relationship> restUsers = db.withExtension(RestaurantDao.class, dao -> {
+			return dao.getRelationshipByRestaurant(rest_id);
+		});
+
+		for (Relationship rel: restUsers) {
+			db.useExtension(RestaurantDao.class, dao -> {
+				dao.deleteRelationship(rel.getUser().getId(), rest_id);
+			});
+		}
+
+		//Delete Tables
+		List<Table> restTables = db.withExtension(RestaurantDao.class, dao -> {
+			return dao.getRestaurantTables(rest_id);
+		});
+		for(Table table: restTables){
+			deleteTableById(table.getId());
+		}
+
+		db.useExtension(RestaurantDao.class, dao -> {
 			dao.deleteRestaurant(rest_id);
-			return null;
 		});
 
 		cm.deleteContact(rest.getContact().getId());

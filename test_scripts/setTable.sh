@@ -6,7 +6,7 @@ tableName=$3
 capacity=$4
 grpcurl -H "Authorization:$authToken" -d @ -plaintext localhost:50051 RestaurantService.setTable <<EOM
 {
-	"id": $tableId
+	"id": $tableId,
 	"capacity": $capacity,
 	"label": "$tableName"
 }

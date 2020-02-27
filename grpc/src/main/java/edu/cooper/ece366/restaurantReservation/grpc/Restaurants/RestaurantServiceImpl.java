@@ -52,7 +52,14 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 	@Override
 	public void getRestaurant(Restaurant req, StreamObserver<Restaurant> responseObserver) {
-		responseObserver.onNext(manager.getRestaurant(req.getId()));
+		Restaurant restaurant = manager.getRestaurant(req.getId());
+		if(restaurant == null){
+			throw new StatusRuntimeException(Status.NOT_FOUND
+				.withDescription("Unable to find requested restaurant"));
+			//return;
+		}
+
+		responseObserver.onNext(restaurant);
 		responseObserver.onCompleted();
 	}
 
@@ -249,14 +256,15 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 	@Override
 	public void deleteRestaurant(Restaurant rest, StreamObserver<DeleteRestaurantResponse> responseObserver){
-		checkRestaurantPermission(rest, null, false);
+		//Deleting a restaurant should be a privileged operation
+		checkRestaurantPermission(rest, null, true);
 
 		DeleteRestaurantResponse deleteRestaurantResponse = DeleteRestaurantResponse
 				.newBuilder().build();
 
 		try {
 			manager.deleteRestaurant(rest.getId());
-		} catch (AddressManager.InvalidAddressIdException e) {
+		} catch (AddressManager.InvalidAddressIdException | ContactManager.InvalidContactIdException e) {
 			e.printStackTrace();
 			throw new StatusRuntimeException(Status.INTERNAL.withDescription("An error occurred."));
 		}
