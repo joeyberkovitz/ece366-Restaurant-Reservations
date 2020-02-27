@@ -28,10 +28,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             responseObserver.onNext(manager.setUser(req));
             responseObserver.onCompleted();
         }
-        catch (ContactManager.InvalidContactIdException |
-                ContactManager.InvalidPhoneException |
-                ContactManager.InvalidEmailException |
-                UserManager.InvalidNameException e) {
+        catch (ContactManager.InvalidContactIdException | ContactManager.InvalidPhoneException | ContactManager.InvalidEmailException | UserManager.InvalidNameException | UserManager.NoIdException | UserManager.InvalidUsernameException e) {
             e.printStackTrace();
         }
     }

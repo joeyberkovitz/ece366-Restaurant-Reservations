@@ -39,7 +39,7 @@ public interface UserDao {
     @RegisterRowMapper(UserMapper.class)
     User getUser(int id);
 
-    @SqlUpdate("UPDATE user SET fname=:fname, lname=:lname, contact_id=:contact_id, WHERE id = :id")
+    @SqlUpdate("UPDATE user SET fname=:fname, lname=:lname, contact_id=:contact_id WHERE id = :id")
     void setUser(@BindBean User user, int contact_id);
 
     @SqlUpdate("INSERT INTO user_login(user_id, refresh_token, user_agent, expiration_date) " +

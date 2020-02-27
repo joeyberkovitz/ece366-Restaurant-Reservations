@@ -3,8 +3,6 @@ package edu.cooper.ece366.restaurantReservation.grpc.Users;
 import edu.cooper.ece366.restaurantReservation.grpc.Contact;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
 import edu.cooper.ece366.restaurantReservation.grpc.User;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import org.jdbi.v3.core.Jdbi;
 
 public class UserManager {
@@ -16,13 +14,14 @@ public class UserManager {
     }
 
     public User setUser(User user) throws InvalidNameException, ContactManager.InvalidContactIdException,
-            ContactManager.InvalidPhoneException, ContactManager.InvalidEmailException {
+            ContactManager.InvalidPhoneException, ContactManager.InvalidEmailException, NoIdException, InvalidUsernameException {
         ContactManager cm = new ContactManager(db);
 
-        // todo should check id to username?
-        if (user.getId() == 0 || !existsUser(user.getUsername()))
-            throw new StatusRuntimeException(Status.PERMISSION_DENIED.withDescription("Invalid or revoked refresh " +
-                    "token"));
+        if (user.getId() == 0)
+            throw new NoIdException("User id not provided.");
+
+        if (!existsUser(user.getUsername()))
+            throw new InvalidUsernameException("Username does not exist.");
 
         checkName(user.getFname(),"First");
         checkName(user.getLname(),"Last");
@@ -65,6 +64,10 @@ public class UserManager {
         });
 
         return reply;
+    }
+
+    public static class NoIdException extends Exception {
+        public NoIdException(String message) { super(message); }
     }
 
     public static class InvalidUsernameException extends Exception {
