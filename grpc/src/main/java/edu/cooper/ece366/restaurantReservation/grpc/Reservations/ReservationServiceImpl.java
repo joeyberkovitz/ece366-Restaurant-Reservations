@@ -53,6 +53,7 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 			@Override
 			public void onCompleted() {
 				responseObserver.onNext(InviteResponse.newBuilder().build());
+				responseObserver.onCompleted();
 			}
 		};
 	}
@@ -76,6 +77,7 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 			@Override
 			public void onCompleted() {
 				responseObserver.onNext(InviteResponse.newBuilder().build());
+				responseObserver.onCompleted();
 			}
 		};
 	}
@@ -121,7 +123,7 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 	public void getReservationsByRestaurant(Restaurant request, StreamObserver<Reservation> responseObserver) {
 		RestaurantManager restaurantManager = new RestaurantManager(db);
 		int currUser = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
-		if(restaurantManager.canEditRestaurant(currUser, request.getId(), false)){
+		if(!restaurantManager.canEditRestaurant(currUser, request.getId(), false)){
 			throw new StatusRuntimeException(Status.PERMISSION_DENIED
 				.withDescription("Not allowed to access restaurant"));
 		}
@@ -184,5 +186,10 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 				.withDescription("Not allowed to change restaurant"));
 
 		manager.updateReservation(request);
+
+		List<Reservation> reservation = manager.searchReservations(request.getId(), null, null);
+
+		responseObserver.onNext(reservation.get(0));
+		responseObserver.onCompleted();
 	}
 }

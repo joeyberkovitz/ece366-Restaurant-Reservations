@@ -46,7 +46,7 @@ public interface ReservationDao {
 	int insertReservation(@BindBean("r") Reservation reservation,
 						  long endTime, int statusId);
 
-	@SqlUpdate("UPDATE reservation set start_time = :r.startTime, " +
+	@SqlUpdate("UPDATE reservation set start_time = FROM_UNIXTIME(:r.startTime), " +
 			"num_people = :r.numPeople, num_points = :r.points, " +
 			"status_id  = :statusId")
 	void updateReservation(@BindBean("r") Reservation reservation,
@@ -72,22 +72,22 @@ public interface ReservationDao {
 	Optional<Integer> getReservationUser(int userId, int reservationId);
 
 	@SqlQuery("SELECT u.id, u.username, u.fname, u.lname, " +
-			"u.rewards_points as points, c.phone, c.email, r.name as role " +
+			"u.rewards_points as points, c.phone, c.email, ro.name as role " +
 			"FROM reservation r " +
 			"INNER JOIN reservation_user ru on r.id = ru.reservation_id " +
 			"INNER JOIN user u on ru.user_id = u.id " +
 			"INNER JOIN contact c on c.id = u.contact_id " +
-			"INNER JOIN role r on r.id = u.role_id " +
+			"INNER JOIN role ro on ro.id = u.role_id " +
 			"WHERE r.id = :reservationId")
 	@RegisterRowMapper(UserMapper.class)
 	List<User> getReservationUsers(int reservationId);
 
-	@SqlQuery("SELECT r.*, st.name as statusName FROM reservation " +
-			"INNER JOIN status st on r.status_id = st.id" +
-			"WHERE (:reservationId IS NULL OR r.id = :reservationId) " +
-			"(:restaurantId IS NULL OR r.restaurant_id = :restaurantId) " +
+	@SqlQuery("SELECT r.*, st.name as statusName FROM reservation r " +
+			"INNER JOIN status st on r.status_id = st.id " +
+			"WHERE (:reservationId IS NULL OR r.id = :reservationId) AND " +
+			"(:restaurantId IS NULL OR r.restaurant_id = :restaurantId) AND " +
 			"(:userId IS NULL OR r.id IN (" +
-			"SELECT ru.reservation_id FROM reservation_user " +
+			"SELECT ru.reservation_id FROM reservation_user ru " +
 			"WHERE ru.reservation_id = r.id " +
 			"AND ru.user_id = :userId))")
 	@RegisterRowMapper(ReservationMapper.class)
