@@ -4,6 +4,7 @@ import edu.cooper.ece366.restaurantReservation.grpc.Addresses.AddressManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthInterceptor;
 import edu.cooper.ece366.restaurantReservation.grpc.*;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
+import edu.cooper.ece366.restaurantReservation.grpc.Role.RoleManager;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
@@ -29,7 +30,9 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			int restId = manager.checkAndInsertRestaurant(req);
 
 			// Insert current user as admin (owner) for new restaurant
-			int adminRoleId = db.withExtension(RoleDao.class, dao -> dao.getRoleIdByName("Admin"));
+			RoleManager rm = new RoleManager(db);
+			int adminRoleId = rm.getRoleById("Admin");
+
 			try {
 				manager.addRestaurantRelationship(restId, userId, adminRoleId);
 			}
@@ -90,9 +93,9 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 		checkRestaurantPermission(request.getRestaurant(), null, true);
 
+		RoleManager rm = new RoleManager(db);
 		String roleName = request.getRole().getValueDescriptor().getName();
-		int roleId = db.withExtension(RoleDao.class,
-			dao -> dao.getRoleIdByName(roleName));
+		int roleId = rm.getRoleById(roleName);
 
 		try {
 			manager.addRestaurantRelationship(request.getRestaurant().getId(),
@@ -136,8 +139,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			);
 			return;
 		}
-		responseObserver.onNext(db.withExtension(RestaurantDao.class,
-			dao -> dao.getTableById(tableId)));
+		responseObserver.onNext(this.manager.getTableById(tableId));
 		responseObserver.onCompleted();
 	}
 
@@ -152,8 +154,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		}
 
 		//Todo: do we want to handle invalid id with an Optional?
-		Table table = db.withExtension(RestaurantDao.class,
-			dao -> dao.getTableById(request.getId()));
+		Table table = this.manager.getTableById(request.getId());
 
 		responseObserver.onNext(table);
 		responseObserver.onCompleted();

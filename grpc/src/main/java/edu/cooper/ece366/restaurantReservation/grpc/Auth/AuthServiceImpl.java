@@ -4,7 +4,6 @@ import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
 import edu.cooper.ece366.restaurantReservation.grpc.*;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
-import edu.cooper.ece366.restaurantReservation.grpc.Users.UserDao;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserManager;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -101,8 +100,8 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 		//Todo: maybe validate retrieved user id against id in token
 		this.manager.validateToken(request.getRefreshToken());
 		//DAO verifies that refresh token isn't revoked
-		Optional<Integer> userId = db.withExtension(UserDao.class,
-			dao -> dao.checkRefreshToken(request.getRefreshToken()));
+		Optional<Integer> userId = this.manager.checkRefreshToken(request.getRefreshToken());
+
 		if(userId.isEmpty())
 			throw new StatusRuntimeException(Status.PERMISSION_DENIED
 				.withDescription("Invalid or revoked refresh token"));

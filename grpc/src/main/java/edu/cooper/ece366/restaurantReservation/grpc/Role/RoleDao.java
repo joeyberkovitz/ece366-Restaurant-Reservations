@@ -1,4 +1,4 @@
-package edu.cooper.ece366.restaurantReservation.grpc;
+package edu.cooper.ece366.restaurantReservation.grpc.Role;
 
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 

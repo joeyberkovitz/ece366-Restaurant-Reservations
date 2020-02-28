@@ -122,6 +122,11 @@ public class RestaurantManager {
 			dao -> dao.getRestaurantByTable(tableId));
 	}
 
+	public Table getTableById(int tableId) {
+		return db.withExtension(RestaurantDao.class,
+				dao -> dao.getTableById(tableId));
+	}
+
 	public Table setTable(Table table, Restaurant restaurant)
 		throws InvalidTableException {
 		Optional<Table> existingTable = db.withExtension(
@@ -138,8 +143,7 @@ public class RestaurantManager {
 
 		db.useExtension(RestaurantDao.class,
 		                dao -> dao.setTable(table));
-		return db.withExtension(RestaurantDao.class,
-		                        dao -> dao.getTableById(table.getId()));
+		return getTableById(table.getId());
 	}
 
 	public void deleteTableById(int table_id){

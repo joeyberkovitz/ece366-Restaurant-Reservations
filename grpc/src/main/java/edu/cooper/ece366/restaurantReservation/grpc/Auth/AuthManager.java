@@ -1,7 +1,7 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Auth;
 
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
-import edu.cooper.ece366.restaurantReservation.grpc.RoleDao;
+import edu.cooper.ece366.restaurantReservation.grpc.Role.RoleManager;
 import edu.cooper.ece366.restaurantReservation.grpc.User;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserDao;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserManager;
@@ -114,6 +114,11 @@ public class AuthManager {
 				dao -> dao.getUserHash(username));
 	}
 
+	public Optional<Integer> checkRefreshToken(String refreshToken) {
+		return db.withExtension(UserDao.class,
+				dao -> dao.checkRefreshToken(refreshToken));
+	}
+
 	public int createUser(User user, String password)
 	throws UserManager.InvalidUsernameException,
 	       UserManager.InvalidNameException,
@@ -130,9 +135,8 @@ public class AuthManager {
 		ContactManager cm = new ContactManager(db);
 		contId = cm.checkAndInsertContact(user.getContact());
 
-		int roleId = db.withExtension(RoleDao.class, dao -> {
-			return dao.getRoleIdByName("Customer");
-		});
+		RoleManager rm = new RoleManager(db);
+		int roleId = rm.getRoleById("Customer");
 
 		return db.withExtension(UserDao.class, dao -> {
 			return dao.insertUser(password, contId, user, roleId);
