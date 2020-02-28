@@ -59,11 +59,9 @@ public class UserManager {
     }
 
     public User getUser(int id) {
-        User reply = db.withExtension(UserDao.class, dao -> {
+        return db.withExtension(UserDao.class, dao -> {
             return dao.getUser(id);
         });
-
-        return reply;
     }
 
     public static class NoIdException extends Exception {

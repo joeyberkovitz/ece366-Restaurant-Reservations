@@ -38,6 +38,7 @@ public class AddressManager {
             addrId = checkAndInsertAddress(address);
         else {
             addrId = address.getId();
+            //TODO: checks?
             if (!existsAddress(addrId)) {
                 throw new InvalidAddressIdException("Address ID does not exist.");
             }
@@ -61,7 +62,7 @@ public class AddressManager {
 
     public void deleteAddress(int id) throws InvalidAddressIdException {
         if (!existsAddress(id))
-            throw new InvalidAddressIdException("An error occured.");
+            throw new InvalidAddressIdException("Can't find address ID");
 
         try {
             db.withExtension(AddressDao.class, dao -> {

@@ -11,6 +11,7 @@ grpcurl -H "Authorization:$authToken" -d @ -plaintext localhost:50051 UserServic
 	"points": 100,
 	"role": 2,
 	"contact": {
+	  "id": 0,
 		"phone": "7183334144",
 		"email": "test2@fake.com"
 	}

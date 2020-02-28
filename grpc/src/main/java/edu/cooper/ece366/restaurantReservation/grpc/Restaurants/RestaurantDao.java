@@ -48,9 +48,9 @@ public interface RestaurantDao {
 	int getRestaurantReservationTime(int id);
 
 	@SqlUpdate("update restaurant set name = :restaurant.name," +
-			"address_id = coalesce(:address_id, address_id)," +
-			"contact_id = coalesce(:contact_id, contact_id)," +
-			"category_id= coalesce(:restaurant.category.category, category_id)"+
+			"address_id = :address_id," +
+			"contact_id = :contact_id," +
+			"category_id = :restaurant.category.category"+
 			"where restaurant.id = :restaurant.id")
 	void setRestaurant(int address_id, int contact_id,
 	                         @BindBean("restaurant") Restaurant restaurant);

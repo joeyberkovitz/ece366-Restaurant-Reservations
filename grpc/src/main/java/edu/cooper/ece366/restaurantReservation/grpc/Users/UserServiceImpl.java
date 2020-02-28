@@ -3,6 +3,8 @@ package edu.cooper.ece366.restaurantReservation.grpc.Users;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
 import edu.cooper.ece366.restaurantReservation.grpc.User;
 import edu.cooper.ece366.restaurantReservation.grpc.UserServiceGrpc;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import org.jdbi.v3.core.Jdbi;
 
@@ -18,7 +20,13 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
     @Override
     public void getUser(User req, StreamObserver<User> responseObserver) {
-        responseObserver.onNext(manager.getUser(req.getId()));
+        User user = manager.getUser(req.getId());
+        if(user == null){
+            throw new StatusRuntimeException(Status.NOT_FOUND
+                    .withDescription("Unable to find requested user"));
+        }
+
+        responseObserver.onNext(user);
         responseObserver.onCompleted();
     }
 
