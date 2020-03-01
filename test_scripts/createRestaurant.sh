@@ -19,6 +19,6 @@ grpcurl -H "Authorization:$authToken" -d @ -plaintext localhost:50051 Restaurant
 	"category": {
 		"category": 1
 	},
-	"name": "TEST Restaurant 1"
+	"name": "TEST Restaurant 2"
 }
 EOM
