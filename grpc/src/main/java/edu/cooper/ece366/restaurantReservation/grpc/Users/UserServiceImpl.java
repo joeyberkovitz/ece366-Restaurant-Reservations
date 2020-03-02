@@ -32,6 +32,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
     @Override
     public void setUser(User req, StreamObserver<User> responseObserver) {
+        //todo permissions
         try {
             responseObserver.onNext(manager.setUser(req));
             responseObserver.onCompleted();

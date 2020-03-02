@@ -227,6 +227,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 	@Override
 	public void deleteTable(Table request, StreamObserver<DeleteTableResponse> responseObserver) {
+		//todo lazy delete if there were reservations
 		checkRestaurantPermission(null, request, false);
 
 		DeleteTableResponse deleteTableResponse = DeleteTableResponse

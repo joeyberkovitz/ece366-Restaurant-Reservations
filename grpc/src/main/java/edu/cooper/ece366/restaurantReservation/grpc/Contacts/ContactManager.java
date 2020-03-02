@@ -1,8 +1,6 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Contacts;
 
 import edu.cooper.ece366.restaurantReservation.grpc.Contact;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import org.jdbi.v3.core.Jdbi;
 
 import java.sql.SQLException;
@@ -17,6 +15,7 @@ public class ContactManager {
     }
 
     public int checkAndInsertContact(Contact contact) throws InvalidPhoneException, InvalidEmailException, InvalidContactIdException {
+        //todo create new contact every time
         int contId;
         if (contact.getId() == 0) {
             // throw exceptions
@@ -47,6 +46,7 @@ public class ContactManager {
             if(!existsContact(contId)) {
                 throw new InvalidContactIdException("Contact ID does not exist.");
             }
+            //todo remove nonnumeric
             if(!contact.getPhone().isEmpty())
                 checkPhone(contact.getPhone());
             if(!contact.getEmail().isEmpty())
