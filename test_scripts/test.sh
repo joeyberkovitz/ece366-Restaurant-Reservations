@@ -1,18 +1,18 @@
 #!/bin/bash
 
-echo Running ./authUser.sh.
-echo Will generate an authToken and a refreshToken.
-
-./authUser.sh | tee test.txt
-authToken=$(grep -oP '(?<="authToken": ").*(?=")' test.txt)
-
-read
-
 echo Running ./createUser.sh.
 echo Will create a new user and return an userId.
 
 ./createUser.sh | tee test.txt
 userId=$(grep -oP '(?<="id": )[0-9]*' test.txt)
+
+read
+
+echo Running ./authUser.sh.
+echo Will generate an authToken and a refreshToken.
+
+./authUser.sh | tee test.txt
+authToken=$(grep -oP '(?<="authToken": ").*(?=")' test.txt)
 
 read
 

@@ -4,7 +4,7 @@ grpcurl -d @ -plaintext localhost:50051 AuthService.createUser <<EOM
 {
 	"password": "testPassword",
 	"user": {
-		"username": "testUser9",
+		"username": "testUser1",
 		"fname": "testFname",
 		"lname": "testLname",
 		"points": 100,
