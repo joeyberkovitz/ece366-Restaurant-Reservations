@@ -108,7 +108,7 @@ public interface ReservationDao {
 				throws SQLException {
 			return Reservation.newBuilder()
 					.setId(rs.getInt("id"))
-					.setStartTime(rs.getDate("start_time").getTime() / 1000)
+					.setStartTime(rs.getTimestamp("start_time").getTime() / 1000)
 					// Divide by 1000 since Java time is in milliseconds, Unix time is in seconds
 					.setNumPeople(rs.getInt("num_people"))
 					.setPoints(rs.getInt("num_points"))
