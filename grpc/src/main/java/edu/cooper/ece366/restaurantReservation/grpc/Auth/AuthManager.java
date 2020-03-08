@@ -9,6 +9,9 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import org.jdbi.v3.core.Jdbi;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -21,17 +24,31 @@ import java.time.Duration;
 import java.util.*;
 
 public class AuthManager {
-	private Properties prop;
+	//private Properties prop;
 	private Jdbi db;
 
-	public AuthManager(Properties properties, Jdbi db){
-		this.prop = properties;
+	private static String privKeyName = "privKey.pem";
+	private static String pubKeyName = "pubKey.pem";
+
+	public AuthManager(Jdbi db){
 		this.db = db;
-		//Todo: get keys from pem and key files
 	}
 
-	private PrivateKey loadPrivKey(){
-		String privKey = prop.getProperty("auth.sKey");
+	private static String readFile(String filename){
+		InputStream inputStream = AuthManager.class.getClassLoader()
+			.getResourceAsStream(filename);
+
+		try {
+			assert inputStream != null;
+			return new String(inputStream.readAllBytes());
+		} catch (IOException e) {
+			throw new RuntimeException("Unable to load file: " + filename);
+		}
+	}
+
+	private static PrivateKey loadPrivKey(){
+		String privKey = readFile(privKeyName);
+
 		byte[] privateKey = Decoders.BASE64.decode(privKey);
 		KeySpec keySpec = new PKCS8EncodedKeySpec(privateKey);
 		KeyFactory keyFactory = null;
@@ -46,8 +63,8 @@ public class AuthManager {
 		return privateKey1;
 	}
 
-	private PublicKey loadPubKey(){
-		String pubKey = prop.getProperty("auth.pKey");
+	private static PublicKey loadPubKey(){
+		String pubKey = readFile(pubKeyName);
 		byte[] pubKeyBytes = Decoders.BASE64.decode(pubKey);
 		KeySpec keySpec = new X509EncodedKeySpec(pubKeyBytes);
 		KeyFactory keyFactory;
@@ -96,8 +113,7 @@ public class AuthManager {
 		return res;
 	}
 
-	public String validateToken(String authToken){
-		//Todo: make this static so db isn't needed in interceptor
+	public static String validateToken(String authToken){
 		Jws<Claims> jws;
 		try{
 			jws = Jwts.parserBuilder().setSigningKey(loadPubKey()).build()

@@ -20,15 +20,15 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ReservationDao {
-	//Todo: ignore cancelled reservations
 	@SqlQuery("select * from `table` t " +
 			"where t.restaurant_id = :r.restaurant.id  " +
 			"and t.id NOT IN ( " +
 			"select rt.table_id " +
 			"from reservation r " +
-			"inner join reservation_table rt on r.id = " +
-			"rt.reservation_id " +
+			"inner join reservation_table rt on r.id = rt.reservation_id " +
+			"inner join status st on r.status_id = st.id " +
 			"where r.restaurant_id = :r.restaurant.id " +
+			"AND st.name != 'Cancelled' " +
 			"AND r.end_time > FROM_UNIXTIME(:r.startTime) " +
 			"AND r.start_time < FROM_UNIXTIME(:endTime) " +
 			") ORDER BY t.capacity DESC")

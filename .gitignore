@@ -45,4 +45,5 @@ gradlew.bat
 gradle/
 
 grpc/src/main/resources/config.properties
+grpc/src/main/resources/*.pem
 .idea/*

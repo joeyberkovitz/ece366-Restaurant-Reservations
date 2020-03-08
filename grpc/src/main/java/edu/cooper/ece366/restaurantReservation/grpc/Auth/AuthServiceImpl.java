@@ -24,7 +24,7 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 	public AuthServiceImpl(Jdbi db, Properties prop){
 		this.db = db;
 		this.prop = prop;
-		this.manager = new AuthManager(prop, db);
+		this.manager = new AuthManager(db);
 		initHash();
 	}
 
@@ -47,8 +47,8 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 		         ContactManager.InvalidPhoneException |
 		         ContactManager.InvalidEmailException e) {
 			e.printStackTrace();
-			//Todo: On error, return it to gRPC
-			return;
+			throw new StatusRuntimeException(Status.INVALID_ARGUMENT
+				.withDescription(e.getMessage()));
 		}
 
 		User reply = User.newBuilder().setId(userId).build();
@@ -97,12 +97,12 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 
 	@Override
 	public void refreshToken(RefreshRequest request, StreamObserver<AuthResponse> responseObserver) {
-		//Todo: maybe validate retrieved user id against id in token
-		this.manager.validateToken(request.getRefreshToken());
+		int tokenUserId = Integer.parseInt(
+			AuthManager.validateToken(request.getRefreshToken()));
 		//DAO verifies that refresh token isn't revoked
 		Optional<Integer> userId = this.manager.checkRefreshToken(request.getRefreshToken());
 
-		if(userId.isEmpty())
+		if(userId.isEmpty() || userId.get() != tokenUserId)
 			throw new StatusRuntimeException(Status.PERMISSION_DENIED
 				.withDescription("Invalid or revoked refresh token"));
 
