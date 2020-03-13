@@ -47,3 +47,5 @@ gradle/
 grpc/src/main/resources/config.properties
 grpc/src/main/resources/*.pem
 .idea/*
+test_scripts/test.txt
+res/main.js

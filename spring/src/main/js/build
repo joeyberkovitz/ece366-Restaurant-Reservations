@@ -1,0 +1,5 @@
+#!/bin/sh
+cd $(dirname $0)
+protoc -I ../../../../grpc/src/main/proto ../../../../grpc/src/main/proto/RestaurantService.proto --grpc-web_out=mode=grpcweb,import_style=commonjs:. --js_out=import_style=commonjs:.
+npm install
+npx webpack client.js --output ../../../../res/main.js

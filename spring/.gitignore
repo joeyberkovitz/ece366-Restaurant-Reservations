@@ -32,3 +32,6 @@ out/
 .vscode/
 
 src/main/resources/application.properties
+src/main/js/node_modules
+src/main/js/*_pb.js
+src/main/js/package-lock.json

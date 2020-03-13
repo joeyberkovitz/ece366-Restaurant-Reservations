@@ -1,0 +1,12 @@
+{
+  "name": "reservdjs",
+  "dependencies": {
+    "google-protobuf": "*",
+    "grpc-web": "^1.0.7"
+  },
+  "devDependencies": {
+    "browserify": "*",
+    "webpack": "*",
+    "webpack-cli": "*"
+  }
+}

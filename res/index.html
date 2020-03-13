@@ -1,10 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<title>Title</title>
-</head>
-<body>
-	TEST
-</body>
+	<head>
+		<meta charset="UTF-8">
+		<title>Title</title>
+		<style type="text/css">
+			header {
+				position:sticky;
+				top:0;
+				color:red;
+				background:inherit;
+			}
+			form label { display:block }
+		</style>
+	</head>
+	<body>
+		<header>
+			<h1>reservd</h1>
+		</header>
+		<noscript><b>Please enable JavaScript.</b></noscript>
+		<form id="create_user">
+			<fieldset>
+				<legend>Registration:</legend>
+				<label>Username:<br>
+					<input type="text" name="user"/>
+				</label>
+				<label>First&nbsp;name:<br>
+					<input type="text" name="fname"/>
+				</label>
+				<label>Last&nbsp;name:<br>
+					<input type="text" name="lname"/>
+				</label>
+				<label>Phone&nbsp;number:<br>
+					<input type="tel" name="phone"/>
+				</label>
+				<label>Email:<br>
+					<input type="email" name="email"/>
+				</label>
+				<label>Password:<br>
+					<input type="password" name="password"/>
+				</label>
+				<p><input type="submit"/></p>
+			</fieldset>
+		</form>
+		<script type="text/javascript" src="main.js"></script>
+	</body>
 </html>
