@@ -8,7 +8,7 @@
 						</div>
 					</md-card-header>
 					<md-card-content>
-						<div v-if="type === 'Register'">
+						<span v-if="type === 'Register'">
 							<div class="md-layout md-gutter">
 								<div class="md-layout-item md-size-50 md-small-size-100">
 									<md-field :class="getValidationClass('firstName')">
@@ -27,7 +27,7 @@
 									</md-field>
 								</div>
 							</div>
-						</div>
+						</span>
 						<md-field :class="getValidationClass('username')">
 							<label for="username">Username</label>
 							<md-input name="username" id="username" v-model="form.username" />
@@ -40,9 +40,8 @@
 						</md-field>
 					</md-card-content>
 					<md-card-actions md-alignment="space-between">
-						<md-button type="button" @click="type = 'Register'" v-if="type !== 'Register'">No Account?
-							Register</md-button>
-						<md-button type="submit" class="md-primary md-raised">{{type}}</md-button>
+						<md-button type="button" class="button" @click="type = 'Register'" v-show="type !==	'Register'">No Account? Register</md-button>
+						<md-button type="submit" class="button md-primary md-raised">{{type}}</md-button>
 					</md-card-actions>
 				</md-card>
 			</form>
@@ -110,7 +109,7 @@
 	};
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 	.centered{
 		display: flex;
 		align-items: center;
