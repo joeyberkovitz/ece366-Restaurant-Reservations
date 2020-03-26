@@ -1,11 +1,16 @@
 <template>
   <div id="app">
-      <span id="nav">
-        <router-link to="/">Home</router-link> |
-        <router-link to="/about">About</router-link> |
-        <router-link to="/login">Login</router-link>
-      </span>
-      <router-view/>
+      <md-toolbar class="nav">
+          <h3 class="md-title" style="flex: 1;text-align: left;">RESERVD</h3>
+          <md-button to="/">Home</md-button>
+          <md-button to="/about">About</md-button>
+          <span v-show="loggedIn()">
+            <md-button to="/restaurant/new">Create Restaurant</md-button>
+            <md-button @click="logout()">Logout</md-button>
+          </span>
+          <md-button to="/login" v-show="!this.loggedIn()">Login</md-button>
+      </md-toolbar>
+      <router-view class="routerView"/>
   </div>
 </template>
 <script>
@@ -14,7 +19,18 @@
     export default {
         created() {
             const authClient = new client.AuthServiceClient(this.$store.getters.config.host,null,null);
-            this.$store.commit('setAuthClient', authClient)
+            const restaurantClient = new client.RestaurantServiceClient(this.$store.getters.config.host,null,null);
+            this.$store.commit('setAuthClient', authClient);
+            this.$store.commit('setRestaurantClient', restaurantClient);
+        },
+        methods: {
+            loggedIn(){
+                return !!this.$store.getters.user&&!!this.$store.getters.user.authToken;
+            },
+            logout(){
+                this.$store.commit('storeUserState', null);
+                this.$router.push("/login");
+            }
         }
     }
 </script>
@@ -27,16 +43,13 @@
   color: #2c3e50;
 }
 
-#nav {
-  padding: 30px;
+.nav{
+    position: fixed !important;
+    top: 0;
+    z-index: 3;
 }
 
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-#nav a.router-link-exact-active {
-    color: #42b983;
+.routerView{
+    margin-top:100px;
 }
 </style>

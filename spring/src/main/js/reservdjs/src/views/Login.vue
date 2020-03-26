@@ -168,7 +168,7 @@
 							userState.refreshToken = resp.getRefreshtoken();
 
 							this.$store.commit('storeUserState', userState);
-							//Todo: redirect somewhere
+							this.$router.push({ path: '/' })
 						}
 						else{
 							this.snackBarMessage = err.message;
@@ -190,7 +190,7 @@
 				user.setContact(contact);
 				createUserRequest.setUser(user);
 				createUserRequest.setPassword(this.form.password);
-				client.createUser(createUserRequest, {}, (err, response) => {
+				client.createUser(createUserRequest, {}, (err) => {
 					this.sending = false;
 					if(err){
 						this.snackBarMessage = err.message;
@@ -213,7 +213,7 @@
 		align-items: center;
 		justify-content: center;
 		position: relative;
-		height: 100vh;
+		height: 80vh;
 	}
 	form{
 		width: 100%;

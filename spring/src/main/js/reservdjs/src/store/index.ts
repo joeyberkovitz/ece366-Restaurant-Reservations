@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import {AuthServiceClient} from "@/proto/RestaurantServiceServiceClientPb";
+import {AuthServiceClient, RestaurantServiceClient} from "@/proto/RestaurantServiceServiceClientPb";
 import VuexPersistence from "vuex-persist";
 
 export class UserState {
@@ -14,6 +14,7 @@ export class ConfigState {
 
 export class GrpcState {
     public authClient!: AuthServiceClient;
+    public restaurantClient!: RestaurantServiceClient;
 }
 
 export interface State {
@@ -37,7 +38,8 @@ export default new Vuex.Store<State>({
   plugins: [vuexPersist.plugin],
   getters: {
       grpc: state => state.grpc,
-      config: state => state.config
+      config: state => state.config,
+      user: state => state.user
   },
   state: {
       user: new UserState(),
@@ -47,6 +49,9 @@ export default new Vuex.Store<State>({
   mutations: {
       setAuthClient(state, payload: AuthServiceClient){
           state.grpc.authClient = payload
+      },
+      setRestaurantClient(state, payload: RestaurantServiceClient){
+          state.grpc.restaurantClient = payload
       },
       storeUserState(state, payload: UserState){
           state.user = payload;
