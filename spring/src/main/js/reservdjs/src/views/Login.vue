@@ -51,6 +51,8 @@
 <script>
 	import {validationMixin} from "vuelidate";
 	import {required} from 'vuelidate/lib/validators';
+	import {AuthRequest} from "../proto/RestaurantService_pb";
+	import {UserState} from "../store";
 
 	export default {
 		name: "Login",
@@ -100,8 +102,31 @@
 			validateForm () {
 				this.$v.$touch();
 
-				if(!this.$v.$invalid)
+				if(!this.$v.$invalid) {
 					console.log("Form valid");
+					const client = this.$store.getters.grpc.authClient;
+					const authRequest = new AuthRequest();
+					authRequest.setUsername(this.form.username);
+					authRequest.setPassword(this.form.password);
+					authRequest.setUseragent(navigator.userAgent);
+
+					client.authenticate(authRequest, {},
+						(err, resp) => {
+							console.log(err);
+							console.log(resp);
+							if(!err){
+								const userState = new UserState();
+								userState.authToken = resp.getAuthtoken();
+								userState.refreshToken = resp.getRefreshtoken();
+
+								this.$store.commit('storeUserState', userState);
+							}
+							else{
+								console.log(err.message, err.code);
+							}
+						}
+					);
+				}
 				else
 					console.log("Invalid form");
 			}

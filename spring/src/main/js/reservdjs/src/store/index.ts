@@ -1,23 +1,56 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import VuexPersist from 'vuex-persist'
+import {AuthServiceClient} from "@/proto/RestaurantServiceServiceClientPb";
+import VuexPersistence from "vuex-persist";
 
-const vuexPersist = new VuexPersist({
-  key: 'reservdjs',
-  storage: window.localStorage
+export class UserState {
+    public authToken!: string;
+    public refreshToken!: string;
+}
+
+export class ConfigState {
+    public host = "http://localhost:8080";
+}
+
+export class GrpcState {
+    public authClient!: AuthServiceClient;
+}
+
+export interface State {
+  user: UserState;
+  grpc: GrpcState;
+  config: ConfigState;
+}
+
+
+const vuexPersist = new VuexPersistence<State>({
+      key: 'reservdjs',
+      storage: window.localStorage,
+      reducer: (state) => ({
+        user: state.user
+      })
 });
 
 Vue.use(Vuex);
 
-export default new Vuex.Store({
+export default new Vuex.Store<State>({
   plugins: [vuexPersist.plugin],
+  getters: {
+      grpc: state => state.grpc,
+      config: state => state.config
+  },
   state: {
-    version: '1.0.0',
-    authToken: null,
-    refreshToken: null,
-    expirationTime: 0
+      user: new UserState(),
+      grpc: new GrpcState(),
+      config: new ConfigState()
   },
   mutations: {
+      setAuthClient(state, payload: AuthServiceClient){
+          state.grpc.authClient = payload
+      },
+      storeUserState(state, payload: UserState){
+          state.user = payload;
+      }
   },
   actions: {
   },

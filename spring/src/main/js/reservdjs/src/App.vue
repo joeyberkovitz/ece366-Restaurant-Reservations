@@ -8,7 +8,16 @@
       <router-view/>
   </div>
 </template>
+<script>
+    import * as client from './proto/RestaurantServiceServiceClientPb';
 
+    export default {
+        created() {
+            const authClient = new client.AuthServiceClient(this.$store.getters.config.host,null,null);
+            this.$store.commit('setAuthClient', authClient)
+        }
+    }
+</script>
 <style>
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
