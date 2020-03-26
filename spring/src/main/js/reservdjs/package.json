@@ -49,11 +49,15 @@
       "eslint:recommended",
       "@vue/typescript/recommended"
     ],
-    "ignorePatterns": ["proto/"],
+    "ignorePatterns": [
+      "proto/"
+    ],
     "parserOptions": {
       "ecmaVersion": 2020
     },
-    "rules": {}
+    "rules": {
+      "no-mixed-spaces-and-tabs": "off"
+    }
   },
   "browserslist": [
     "> 1%",
