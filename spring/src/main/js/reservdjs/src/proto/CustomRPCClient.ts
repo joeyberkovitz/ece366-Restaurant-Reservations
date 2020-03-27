@@ -38,7 +38,8 @@ export class CustomRPCClient<T> {
 					Authorization: store.getters.user.authToken,
 				};
 				args[2] = (err, resp) => {
-					if(err.code == 16){
+					console.log(err, resp);
+					if(err != null && err.code == 16){
 						console.log(err, resp);
 						console.log("AUTH ERROR");
 						const authClient = store.getters.grpc.authClient;

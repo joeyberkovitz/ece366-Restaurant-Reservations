@@ -27,6 +27,11 @@ const routes = [
     path: '/restaurant/new',
     name: 'New Restaurant',
     component: () => import('../views/NewRestaurant.vue')
+  },
+  {
+    path: '/profile',
+    name: 'Manange User',
+    component: () => import('../views/ManageUser.vue')
   }
 ];
 

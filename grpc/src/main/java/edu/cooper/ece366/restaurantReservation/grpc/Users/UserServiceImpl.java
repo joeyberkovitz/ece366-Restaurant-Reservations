@@ -1,5 +1,6 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Users;
 
+import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthInterceptor;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
 import edu.cooper.ece366.restaurantReservation.grpc.User;
 import edu.cooper.ece366.restaurantReservation.grpc.UserServiceGrpc;
@@ -20,7 +21,11 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
     @Override
     public void getUser(User req, StreamObserver<User> responseObserver) {
-        User user = manager.getUser(req.getId());
+        int userId = req.getId();
+        if (userId == 0)
+            userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
+
+        User user = manager.getUser(userId);
         if(user == null){
             throw new StatusRuntimeException(Status.NOT_FOUND
                     .withDescription("Unable to find requested user"));
@@ -33,6 +38,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
     @Override
     public void setUser(User req, StreamObserver<User> responseObserver) {
         //todo permissions
+
         try {
             responseObserver.onNext(manager.setUser(req));
             responseObserver.onCompleted();

@@ -6,6 +6,7 @@
           <md-button to="/about">About</md-button>
           <span v-show="loggedIn()">
             <md-button to="/restaurant/new">Create Restaurant</md-button>
+            <md-button to="/profile">User Profile</md-button>
             <md-button @click="logout()">Logout</md-button>
           </span>
           <md-button to="/login" v-show="!this.loggedIn()">Login</md-button>
@@ -18,6 +19,7 @@
 
     export default {
         created() {
+            console.log("app running");
             const authClient = new client.AuthServiceClient(this.$store.getters.config.host,null,null);
             const restaurantClient = new client.RestaurantServiceClient(this.$store.getters.config.host,null,null);
             this.$store.commit('setAuthClient', authClient);
