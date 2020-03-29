@@ -41,7 +41,6 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			responseObserver.onCompleted();
 		}
 		catch (RestaurantManager.InvalidRestNameException |
-				ContactManager.InvalidContactIdException |
 				ContactManager.InvalidPhoneException |
 				ContactManager.InvalidEmailException |
 				AddressManager.InvalidAddrFormException |

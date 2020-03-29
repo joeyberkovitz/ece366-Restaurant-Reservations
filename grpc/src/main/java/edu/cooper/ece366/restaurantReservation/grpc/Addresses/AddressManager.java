@@ -59,8 +59,9 @@ public class AddressManager {
             InvalidAddrFormException,
             InvalidZipException {
         checkName(address.getName());
-        checkLat(address.getLatitude());
-        checkLong(address.getLongitude());
+        // todo are we using lat long?
+        //checkLat(address.getLatitude());
+        //checkLong(address.getLongitude());
 
         checkEmpty(address.getLine1(), "Line 1");
         checkEmpty(address.getCity(), "City");
