@@ -70,7 +70,7 @@ public class AddressManager {
     }
 
     public void checkName(String name) throws InvalidAddrNameException {
-        if (!name.matches("^[a-zA-Z0-9]*$")) {
+        if (!name.matches("(\\p{IsLatin}|[0-9 ])*$")) {
             throw new InvalidAddrNameException("Name must only include alphanumeric characters.");
         }
     }

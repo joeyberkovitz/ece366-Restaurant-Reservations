@@ -47,7 +47,7 @@ public class UserManager {
     }
 
     public void checkUsername(String username) throws InvalidUsernameException {
-        if (!username.matches("^[a-zA-Z0-9]*$")) {
+        if (!username.matches("(\\p{IsLatin}|[0-9 ])*$")) {
             throw new InvalidUsernameException("Username must only include alphanumeric characters.");
         }
 
