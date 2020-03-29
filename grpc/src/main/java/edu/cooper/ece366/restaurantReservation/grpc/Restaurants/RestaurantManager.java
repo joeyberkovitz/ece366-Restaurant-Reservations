@@ -189,4 +189,8 @@ public class RestaurantManager {
 		cm.deleteContact(rest.getContact().getId());
 		am.deleteAddress(rest.getAddress().getId());
 	}
+
+	public List<Category> getCategories(){
+		return db.withExtension(RestaurantDao.class, dao -> dao.getCategories());
+	}
 }

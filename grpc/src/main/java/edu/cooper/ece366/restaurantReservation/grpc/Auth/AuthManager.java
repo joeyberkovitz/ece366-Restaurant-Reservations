@@ -5,6 +5,8 @@ import edu.cooper.ece366.restaurantReservation.grpc.Role.RoleManager;
 import edu.cooper.ece366.restaurantReservation.grpc.User;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserDao;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserManager;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import org.jdbi.v3.core.Jdbi;
@@ -121,7 +123,7 @@ public class AuthManager {
 			return jws.getBody().getSubject();
 		}
 		catch (JwtException e){
-			throw new RuntimeException("Invalid token");
+			throw new StatusRuntimeException(Status.UNAUTHENTICATED.withDescription("Invalid token"));
 		}
 	}
 

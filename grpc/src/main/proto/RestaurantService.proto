@@ -19,6 +19,7 @@ service RestaurantService {
 	rpc setRestaurant (Restaurant) returns (Restaurant); // send info desired to change, returns result
 	rpc deleteRestaurant (Restaurant) returns (DeleteRestaurantResponse);
 	rpc searchByCategory (Category) returns (stream Restaurant);
+	rpc getCategoryList (GetCategoryRequest) returns (stream Category);
 
 	rpc createTable (CreateTableRequest) returns (Table); // returns just id
 	rpc getTablesByRestaurant (Restaurant) returns (stream Table);
@@ -172,4 +173,8 @@ message DeleteRestaurantResponse {
 }
 
 message DeleteTableResponse {
+}
+
+message GetCategoryRequest {
+
 }

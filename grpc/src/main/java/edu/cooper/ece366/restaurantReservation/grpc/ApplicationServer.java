@@ -50,6 +50,7 @@ public class ApplicationServer {
 			.registerRowMapper(ProtoBeanMapper.factory(Contact.class, Contact.Builder.class))
 			.registerRowMapper(ProtoBeanMapper.factory(Address.class, Address.Builder.class))
 			.registerRowMapper(ProtoBeanMapper.factory(Table.class, Table.Builder.class))
+			.registerRowMapper(ProtoBeanMapper.factory(Category.class, Category.Builder.class))
 			.installPlugin(new SqlObjectPlugin());
 		/* The port on which the RPC server should run */
 		int rpcPort = 50051;
