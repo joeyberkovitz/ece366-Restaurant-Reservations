@@ -3,7 +3,7 @@
         <md-card class="md-layout-item md-size-50 md-big-size-50 md-alignment-top-center">
             <md-card-header>
                 <div class="title">
-                    <h1>User Profile</h1>
+                    <h1>{{ $route.name }}</h1>
                     <md-button type="button" class="button md-dense md-raised md-primary" @click="type = 'Edit'"
                                v-if="type !==	'Edit'">EDIT</md-button>
                 </div>

@@ -4,7 +4,7 @@
 			<md-card class="md-layout-item md-size-50 md-small-size-50">
 				<md-card-header>
 					<div class="md-title">
-						Create Restaurant
+						{{ $route.name }}
 					</div>
 				</md-card-header>
 				<md-card-content>
