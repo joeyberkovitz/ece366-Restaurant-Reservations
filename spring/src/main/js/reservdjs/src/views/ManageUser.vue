@@ -6,14 +6,12 @@
                     <h1>{{ $route.name }}</h1>
                     <md-button type="button" class="button md-dense md-raised md-primary" @click="type = 'Edit'"
                                v-if="type !==	'Edit'">EDIT</md-button>
+                    <h2> User: {{ profile.username }}</h2>
                 </div>
             </md-card-header>
             <md-card-content>
                 <form novalidate class="md-layout md-alignment-center-center" @submit.prevent="validateForm">
-                    <md-field>
-                        <label for="username">Username</label>
-                        <md-input name="username" id="username" v-model="profile.username" readonly></md-input>
-                    </md-field>
+
                     <md-field :class="getValidationClass('firstName')">
                         <label for="firstName">First Name</label>
                         <md-input name="firstName" id="firstName" v-model="profile.firstName"

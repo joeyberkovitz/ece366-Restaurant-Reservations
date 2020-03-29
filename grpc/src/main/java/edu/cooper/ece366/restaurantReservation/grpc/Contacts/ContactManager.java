@@ -3,7 +3,6 @@ package edu.cooper.ece366.restaurantReservation.grpc.Contacts;
 import edu.cooper.ece366.restaurantReservation.grpc.Contact;
 import org.jdbi.v3.core.Jdbi;
 
-import java.sql.SQLException;
 import java.util.Optional;
 
 public class ContactManager {
@@ -72,19 +71,11 @@ public class ContactManager {
     public void deleteContact(int id) throws InvalidContactIdException {
         if (nonexistContact(id))
             throw new InvalidContactIdException("Can't find contact ID");
-        try {
-            db.withExtension(ContactDao.class, dao -> {
-                dao.deleteContact(id);
-                return null;
-            });
-        }
-        catch (Exception e) {
-            if (e.getCause() instanceof SQLException) {
-                // SQL error 1451 represents a foreign key constraint. We ignore this to not allow deletion of contact
-                // if another restaurant or user is using this contact
-                if (!((SQLException) e.getCause()).getSQLState().equals("1451")) throw e;
-            }
-        }
+
+        db.withExtension(ContactDao.class, dao -> {
+            dao.deleteContact(id);
+            return null;
+        });
     }
 
     public static class InvalidPhoneException extends Exception {

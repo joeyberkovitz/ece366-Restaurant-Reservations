@@ -3,7 +3,6 @@ package edu.cooper.ece366.restaurantReservation.grpc.Addresses;
 import edu.cooper.ece366.restaurantReservation.grpc.Address;
 import org.jdbi.v3.core.Jdbi;
 
-import java.sql.SQLException;
 import java.util.Optional;
 
 public class AddressManager {
@@ -111,19 +110,10 @@ public class AddressManager {
         if (nonexistAddress(id))
             throw new InvalidAddressIdException("Can't find address ID");
 
-        try {
-            db.withExtension(AddressDao.class, dao -> {
-                dao.deleteAddress(id);
-                return null;
-            });
-        }
-        catch (Exception e) {
-            if (e.getCause() instanceof SQLException) {
-                // SQL error 1451 represents a foreign key constraint. We ignore this to not allow deletion of address
-                // if another restaurant is using this address
-                if (!((SQLException) e.getCause()).getSQLState().equals("1451")) throw e;
-            }
-        }
+        db.withExtension(AddressDao.class, dao -> {
+            dao.deleteAddress(id);
+            return null;
+        });
     }
 
     public static class InvalidAddressIdException extends Exception {
