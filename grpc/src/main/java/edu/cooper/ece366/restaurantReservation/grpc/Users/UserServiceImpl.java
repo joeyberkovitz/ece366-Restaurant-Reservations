@@ -37,14 +37,27 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
     @Override
     public void setUser(User req, StreamObserver<User> responseObserver) {
-        //todo permissions
+        if (req.getId() != Integer.parseInt(AuthInterceptor.CURRENT_USER.get())) {
+            // todo add permissions for admin
+            throw new StatusRuntimeException(Status.PERMISSION_DENIED.withDescription("Not authorized to change this " +
+                    "user"));
+        }
 
         try {
             responseObserver.onNext(manager.setUser(req));
             responseObserver.onCompleted();
         }
-        catch (ContactManager.InvalidContactIdException | ContactManager.InvalidPhoneException | ContactManager.InvalidEmailException | UserManager.InvalidNameException | UserManager.NoIdException | UserManager.InvalidUsernameException e) {
+        catch (UserManager.NoIdException |
+                UserManager.InvalidUsernameException e) {
             e.printStackTrace();
+            throw new StatusRuntimeException(Status.NOT_FOUND.withDescription("Unable to find requested user"));
+        }
+        catch (UserManager.InvalidNameException |
+                ContactManager.InvalidContactIdException |
+                ContactManager.InvalidPhoneException |
+                ContactManager.InvalidEmailException e) {
+            e.printStackTrace();
+            throw new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription("User details are invalid"));
         }
     }
 }

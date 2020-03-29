@@ -33,14 +33,15 @@ public interface UserDao {
     @RegisterBeanMapper(DBHashResponse.class)
     Optional<DBHashResponse> getUserHash(String name);
 
-    @SqlQuery("SELECT u.id, u.username, u.fname, u.lname, u.rewards_points as points, c.phone, c.email, r.name as role"+
+    @SqlQuery("SELECT u.id, u.username, u.fname, u.lname, u.rewards_points as points, c.id, c.phone, c.email, " +
+            "r.name as role"+
             " FROM user u INNER JOIN contact c on c.id = u.contact_id INNER JOIN role r on r.id = u.role_id " +
             " WHERE u.id = :id")
     @RegisterRowMapper(UserMapper.class)
     User getUser(int id);
 
-    @SqlUpdate("UPDATE user SET fname=:fname, lname=:lname, contact_id=:contact_id WHERE id = :id")
-    void setUser(@BindBean User user, int contact_id);
+    @SqlUpdate("UPDATE user SET fname=:fname, lname=:lname WHERE id = :id")
+    void setUser(@BindBean User user);
 
     @SqlUpdate("INSERT INTO user_login(user_id, refresh_token, user_agent, expiration_date) " +
             "VALUES(:id, :token, :userAgent, :expirationDate)")
@@ -61,6 +62,7 @@ public interface UserDao {
                     .setLname(rs.getString("lname"))
                     .setPoints(rs.getInt("points"))
                     .setContact(Contact.newBuilder()
+                            .setId(rs.getInt("c.id"))
                             .setPhone(rs.getString("phone"))
                             .setEmail(rs.getString("email"))
                             .build())

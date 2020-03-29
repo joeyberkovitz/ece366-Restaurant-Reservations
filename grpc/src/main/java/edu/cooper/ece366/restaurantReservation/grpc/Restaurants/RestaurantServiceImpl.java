@@ -33,23 +33,28 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			RoleManager rm = new RoleManager(db);
 			int adminRoleId = rm.getRoleById("Admin");
 
-			try {
-				manager.addRestaurantRelationship(restId, userId, adminRoleId);
-			}
-			catch (UnableToExecuteStatementException ex){
-				ex.printStackTrace();
+			manager.addRestaurantRelationship(restId, userId, adminRoleId);
 
-			}
 			Restaurant reply =
 			Restaurant.newBuilder().setId(restId).build();
 			responseObserver.onNext(reply);
 			responseObserver.onCompleted();
 		}
-		catch (ContactManager.InvalidContactIdException |
-		       ContactManager.InvalidPhoneException |
-		       ContactManager.InvalidEmailException |
-		       AddressManager.InvalidAddressIdException e) {
+		catch (RestaurantManager.InvalidRestNameException |
+				ContactManager.InvalidContactIdException |
+				ContactManager.InvalidPhoneException |
+				ContactManager.InvalidEmailException |
+				AddressManager.InvalidAddrFormException |
+				AddressManager.InvalidLatException |
+				AddressManager.InvalidLongException |
+				AddressManager.InvalidAddrNameException |
+				AddressManager.InvalidZipException e) {
 			e.printStackTrace();
+			throw new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription("Restaurant details are invalid"));
+		}
+		catch (UnableToExecuteStatementException ex){
+			// todo include StatusRuntimeException?
+			ex.printStackTrace();
 		}
 	}
 
@@ -59,7 +64,6 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		if(restaurant == null){
 			throw new StatusRuntimeException(Status.NOT_FOUND
 				.withDescription("Unable to find requested restaurant"));
-			//return;
 		}
 
 		responseObserver.onNext(restaurant);
@@ -74,11 +78,18 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			responseObserver.onNext(manager.setRestaurant(req));
 			responseObserver.onCompleted();
 		}
-		catch (ContactManager.InvalidContactIdException |
-		       ContactManager.InvalidPhoneException |
-		       ContactManager.InvalidEmailException |
-		       AddressManager.InvalidAddressIdException e) {
+		catch (RestaurantManager.InvalidRestNameException |
+				ContactManager.InvalidContactIdException |
+				ContactManager.InvalidPhoneException |
+				ContactManager.InvalidEmailException |
+				AddressManager.InvalidAddressIdException |
+				AddressManager.InvalidAddrFormException |
+				AddressManager.InvalidLatException |
+				AddressManager.InvalidLongException |
+				AddressManager.InvalidAddrNameException |
+				AddressManager.InvalidZipException e) {
 			e.printStackTrace();
+			throw new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription("Restaurant details are invalid"));
 		}
 	}
 

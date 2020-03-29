@@ -6,11 +6,9 @@ import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthServiceImpl;
 import edu.cooper.ece366.restaurantReservation.grpc.Reservations.ReservationServiceImpl;
 import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantServiceImpl;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserServiceImpl;
-import edu.cooper.ece366.restaurantReservation.grpc.ProtoBeanMapper;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.protobuf.services.ProtoReflectionService;
-import io.grpc.stub.StreamObserver;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
@@ -60,7 +58,7 @@ public class ApplicationServer {
 				.addService(ProtoReflectionService.newInstance())
 				.addService(intercept(new RestaurantServiceImpl(jdbi), new AuthInterceptor()))
 				.addService(intercept(new ReservationServiceImpl(jdbi), new AuthInterceptor()))
-				.addService(new UserServiceImpl(jdbi))
+				.addService(intercept(new UserServiceImpl(jdbi), new AuthInterceptor()))
 				.addService(new AuthServiceImpl(jdbi, prop))
 				.build()
 				.start();

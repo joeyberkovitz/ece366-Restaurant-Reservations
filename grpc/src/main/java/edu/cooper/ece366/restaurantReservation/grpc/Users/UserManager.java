@@ -1,6 +1,5 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Users;
 
-import edu.cooper.ece366.restaurantReservation.grpc.Contact;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
 import edu.cooper.ece366.restaurantReservation.grpc.User;
 import org.jdbi.v3.core.Jdbi;
@@ -13,8 +12,13 @@ public class UserManager {
         this.db = db;
     }
 
-    public User setUser(User user) throws InvalidNameException, ContactManager.InvalidContactIdException,
-            ContactManager.InvalidPhoneException, ContactManager.InvalidEmailException, NoIdException, InvalidUsernameException {
+    public User setUser(User user)
+            throws  NoIdException,
+            InvalidUsernameException,
+            InvalidNameException,
+            ContactManager.InvalidContactIdException,
+            ContactManager.InvalidPhoneException,
+            ContactManager.InvalidEmailException {
         ContactManager cm = new ContactManager(db);
 
         if (user.getId() == 0)
@@ -26,10 +30,10 @@ public class UserManager {
         checkName(user.getFname(),"First");
         checkName(user.getLname(),"Last");
 
-        Contact newContact = cm.setContact(user.getContact());
+        cm.setContact(user.getContact());
 
         db.withExtension(UserDao.class, dao -> {
-            dao.setUser(user, newContact.getId());
+            dao.setUser(user);
             return null;
         });
 

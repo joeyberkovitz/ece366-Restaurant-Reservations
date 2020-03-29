@@ -15,11 +15,18 @@ public class RestaurantManager {
 	}
 
 	public int checkAndInsertRestaurant(Restaurant restaurant)
-	throws ContactManager.InvalidContactIdException,
-	       ContactManager.InvalidPhoneException,
-	       ContactManager.InvalidEmailException,
-	       AddressManager.InvalidAddressIdException {
-		// TODO restaurant checks
+			throws InvalidRestNameException,
+			ContactManager.InvalidContactIdException,
+			ContactManager.InvalidPhoneException,
+			ContactManager.InvalidEmailException,
+			AddressManager.InvalidAddrFormException,
+			AddressManager.InvalidLatException,
+			AddressManager.InvalidLongException,
+			AddressManager.InvalidAddrNameException,
+			AddressManager.InvalidZipException {
+		// TODO restaurant checks on category (and capacity factor and rTime?)
+		checkName(restaurant.getName());
+
 		ContactManager cm = new ContactManager(db);
 		int contId = cm.checkAndInsertContact(restaurant.getContact());
 		AddressManager am = new AddressManager(db);
@@ -68,24 +75,26 @@ public class RestaurantManager {
 	}
 
 	public Restaurant setRestaurant(Restaurant target)
-	throws ContactManager.InvalidContactIdException,
-	       ContactManager.InvalidPhoneException,
-	       ContactManager.InvalidEmailException,
-	       AddressManager.InvalidAddressIdException {
-		int contId;
-		int addrId;
-		// TODO support changes to name only
-		//if(target.getContact() != null) {
-			ContactManager cm = new ContactManager(db);
-			contId = cm.setContact(target.getContact()).getId();
-		//}
-		//if(target.getAddress() != null) {
-			AddressManager am = new AddressManager(db);
-			addrId = am.setAddress(target.getAddress()).getId();
-		//}
+			throws InvalidRestNameException,
+			ContactManager.InvalidContactIdException,
+			ContactManager.InvalidPhoneException,
+			ContactManager.InvalidEmailException,
+			AddressManager.InvalidAddressIdException,
+			AddressManager.InvalidAddrFormException,
+			AddressManager.InvalidLatException,
+			AddressManager.InvalidLongException,
+			AddressManager.InvalidAddrNameException,
+			AddressManager.InvalidZipException {
+		// TODO checks for category (and capacity factor and rTime?)
+		checkName(target.getName());
+
+		ContactManager cm = new ContactManager(db);
+		cm.setContact(target.getContact());
+		AddressManager am = new AddressManager(db);
+		am.setAddress(target.getAddress());
 
 		return db.withExtension(RestaurantDao.class, dao -> {
-			dao.setRestaurant(addrId, contId, target);
+			dao.setRestaurant(target);
 			return dao.getRestaurant(target.getId());
 		});
 	}
@@ -188,5 +197,17 @@ public class RestaurantManager {
 
 		cm.deleteContact(rest.getContact().getId());
 		am.deleteAddress(rest.getAddress().getId());
+	}
+
+	public void checkName(String name) throws InvalidRestNameException {
+		if (!name.matches("^[a-zA-Z0-9]*$")) {
+			throw new InvalidRestNameException("Name must only include alphanumeric characters.");
+		}
+	}
+
+	public static class InvalidRestNameException extends Exception {
+		public InvalidRestNameException(String message) {
+			super(message);
+		}
 	}
 }

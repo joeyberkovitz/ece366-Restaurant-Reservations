@@ -48,12 +48,9 @@ public interface RestaurantDao {
 	int getRestaurantReservationTime(int id);
 
 	@SqlUpdate("update restaurant set name = :restaurant.name," +
-			"address_id = :address_id," +
-			"contact_id = :contact_id," +
 			"category_id = :restaurant.category.category"+
 			"where restaurant.id = :restaurant.id")
-	void setRestaurant(int address_id, int contact_id,
-	                         @BindBean("restaurant") Restaurant restaurant);
+	void setRestaurant(@BindBean("restaurant") Restaurant restaurant);
 	// TODO figure out why this complains when category is unset
 
 	@SqlQuery("select restaurant.*,address.*,contact.* from restaurant " +

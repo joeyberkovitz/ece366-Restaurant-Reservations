@@ -39,6 +39,10 @@
                         <span class="md-error" v-if="!$v.profile.phone.numeric">Phone number may only
 									consist of numbers</span>
                     </md-field>
+                    <md-snackbar md-position="center" :md-duration="snackBarDuration"
+                                 :md-active.sync="showSnackBar" md-persistent>
+                        <span>{{snackBarMessage}}</span>
+                    </md-snackbar>
                     <md-button type="button" class="button md-dense md-raised md-primary" @click="cancel()"
                                :disabled="sending" v-if="type !==	'View'">Cancel</md-button>
                     <md-button type="submit" class="button md-dense md-raised md-primary" :disabled="sending"
@@ -61,6 +65,8 @@
         mixins: [validationMixin],
         data: () => ({
             type: "View",
+            id: null,
+            contId: null,
             profile: {
                 username: null,
                 firstName: null,
@@ -108,17 +114,21 @@
             const client = new CustomRPCClient(UserServiceClient, this.$store.getters.config.host);
             //const client = this.$store.getters.grpc.restaurantClient;
             const user = new User();
-            user.setId(2);
+            //user.setId(2);
             client.client.getUser(user, {}, (err, response) => {
                 if (!err){
                     console.log(response);
+                    this.id = response.getId();
                     this.profile.username = response.getUsername();
                     this.profile.firstName = response.getFname();
                     this.profile.lastName = response.getLname();
+                    this.contId = response.getContact().getId();
                     this.profile.email = response.getContact().getEmail();
                     this.profile.phone = response.getContact().getPhone();
 
                     this.initialProfile = JSON.parse(JSON.stringify(this.profile));
+
+                    console.log(this.contId);
                 }
                 else{
                     console.log(err);
@@ -156,10 +166,11 @@
 
                 const user = new User();
                 const contact = new Contact();
-                user.setId(2);
+                user.setId(this.id);
                 user.setUsername(this.profile.username);
                 user.setFname(this.profile.firstName);
                 user.setLname(this.profile.lastName);
+                contact.setId(this.contId);
                 contact.setEmail(this.profile.email);
                 contact.setPhone(this.profile.phone);
                 user.setContact(contact);

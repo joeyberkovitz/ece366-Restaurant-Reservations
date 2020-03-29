@@ -14,63 +14,51 @@ public class ContactManager {
         this.db = db;
     }
 
-    public int checkAndInsertContact(Contact contact) throws InvalidPhoneException, InvalidEmailException, InvalidContactIdException {
-        //todo create new contact every time
+    public int checkAndInsertContact(Contact contact)
+            throws InvalidPhoneException,
+            InvalidEmailException {
         int contId;
-        if (contact.getId() == 0) {
-            // throw exceptions
-            checkPhone(contact.getPhone());
-            checkEmail(contact.getEmail());
+        // throw exceptions
+        // todo further limit phone
+        checkPhone(contact.getPhone());
+        checkEmail(contact.getEmail());
 
-            contId = db.withExtension(ContactDao.class, dao -> {
-                return dao.insertContact(contact);
-            });
-        }
-        else {
-            // Check if id exists
-            if (!existsContact(contact.getId())) {
-                throw new InvalidContactIdException("Contact ID does not exist.");
-            }
-            contId = contact.getId();
-        }
+        contId = db.withExtension(ContactDao.class, dao -> {
+            return dao.insertContact(contact);
+        });
 
         return contId;
     }
 
-    public Contact setContact(Contact contact) throws InvalidPhoneException, InvalidEmailException, InvalidContactIdException {
-        int contId;
-        if(contact.getId() == 0)
-            contId = checkAndInsertContact(contact);
-        else {
-            contId = contact.getId();
-            if(!existsContact(contId)) {
-                throw new InvalidContactIdException("Contact ID does not exist.");
-            }
-            //todo remove nonnumeric
-            if(!contact.getPhone().isEmpty())
-                checkPhone(contact.getPhone());
-            if(!contact.getEmail().isEmpty())
-                checkEmail(contact.getEmail());
+    public void setContact(Contact contact)
+            throws InvalidPhoneException,
+            InvalidEmailException,
+            InvalidContactIdException {
+        int contId = contact.getId();
 
-            db.withExtension(ContactDao.class, dao -> {
-                dao.setContact(contact);
-                return null;
-            });
+        if (contId == 0 || nonexistContact(contId)) {
+            throw new InvalidContactIdException("Contact ID does not exist.");
         }
-        return db.withExtension(ContactDao.class, dao -> {
-            return dao.getContact(contId);
+
+        //todo remove nonnumeric
+        checkPhone(contact.getPhone());
+        checkEmail(contact.getEmail());
+
+        db.withExtension(ContactDao.class, dao -> {
+            dao.setContact(contact);
+            return null;
         });
     }
 
-    private boolean existsContact(int id) {
+    private boolean nonexistContact(int id) {
         Optional<Integer> valContId = db.withExtension(ContactDao.class, dao -> {
             return dao.checkContact(id);
         });
-        return valContId.isPresent();
+        return valContId.isEmpty();
     }
 
     private void checkPhone(String phone) throws InvalidPhoneException{
-        if (phone.isBlank()) {
+        if (phone.isBlank() || phone.matches("[a-zA-Z]")) {
             throw new InvalidPhoneException("Phone number field must be filled.");
         }
     }
@@ -82,7 +70,7 @@ public class ContactManager {
     }
 
     public void deleteContact(int id) throws InvalidContactIdException {
-        if (!existsContact(id))
+        if (nonexistContact(id))
             throw new InvalidContactIdException("Can't find contact ID");
         try {
             db.withExtension(ContactDao.class, dao -> {
