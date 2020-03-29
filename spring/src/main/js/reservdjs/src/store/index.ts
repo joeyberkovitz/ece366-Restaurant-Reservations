@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import {AuthServiceClient, RestaurantServiceClient} from "@/proto/RestaurantServiceServiceClientPb";
 import VuexPersistence from "vuex-persist";
+import {CustomRPCClient} from "@/proto/CustomRPCClient";
 
 export class UserState {
     public authToken!: string;
@@ -14,7 +15,7 @@ export class ConfigState {
 
 export class GrpcState {
     public authClient!: AuthServiceClient;
-    public restaurantClient!: RestaurantServiceClient;
+    public restaurantClient!: CustomRPCClient<RestaurantServiceClient>;
 }
 
 export interface State {
@@ -50,7 +51,7 @@ export default new Vuex.Store<State>({
       setAuthClient(state, payload: AuthServiceClient){
           state.grpc.authClient = payload
       },
-      setRestaurantClient(state, payload: RestaurantServiceClient){
+      setRestaurantClient(state, payload: CustomRPCClient<RestaurantServiceClient>){
           state.grpc.restaurantClient = payload
       },
       storeUserState(state, payload: UserState){

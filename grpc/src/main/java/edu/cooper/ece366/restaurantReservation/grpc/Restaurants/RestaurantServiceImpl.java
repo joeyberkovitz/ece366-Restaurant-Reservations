@@ -285,4 +285,13 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		responseObserver.onNext(deleteRestaurantResponse);
 		responseObserver.onCompleted();
 	}
+
+	@Override
+	public void getCategoryList(GetCategoryRequest request, StreamObserver<Category> responseObserver) {
+		List<Category> categories = manager.getCategories();
+		for(Category category: categories){
+			responseObserver.onNext(category);
+		}
+		responseObserver.onCompleted();
+	}
 }

@@ -16,7 +16,6 @@ public class RestaurantManager {
 
 	public int checkAndInsertRestaurant(Restaurant restaurant)
 			throws InvalidRestNameException,
-			ContactManager.InvalidContactIdException,
 			ContactManager.InvalidPhoneException,
 			ContactManager.InvalidEmailException,
 			AddressManager.InvalidAddrFormException,
@@ -209,5 +208,9 @@ public class RestaurantManager {
 		public InvalidRestNameException(String message) {
 			super(message);
 		}
+	}
+
+	public List<Category> getCategories(){
+		return db.withExtension(RestaurantDao.class, dao -> dao.getCategories());
 	}
 }

@@ -4,6 +4,7 @@ import edu.cooper.ece366.restaurantReservation.grpc.*;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
+import org.jdbi.v3.sqlobject.config.RegisterBeanMapper;
 import org.jdbi.v3.sqlobject.config.RegisterRowMapper;
 import org.jdbi.v3.sqlobject.customizer.BindBean;
 import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys;
@@ -116,6 +117,9 @@ public interface RestaurantDao {
 
 	@SqlUpdate("DELETE FROM restaurant WHERE id = :id")
 	void deleteRestaurant(int id);
+
+	@SqlQuery("select id as category, name from category")
+	List<Category> getCategories();
 
 	class RestaurantMapper implements RowMapper<Restaurant> {
 		@Override
