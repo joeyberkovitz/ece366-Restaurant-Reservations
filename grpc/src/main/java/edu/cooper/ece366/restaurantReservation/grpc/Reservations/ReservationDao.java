@@ -1,9 +1,6 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Reservations;
 
-import edu.cooper.ece366.restaurantReservation.grpc.Reservation;
-import edu.cooper.ece366.restaurantReservation.grpc.Restaurant;
-import edu.cooper.ece366.restaurantReservation.grpc.Table;
-import edu.cooper.ece366.restaurantReservation.grpc.User;
+import edu.cooper.ece366.restaurantReservation.grpc.*;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserDao.UserMapper;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
@@ -82,8 +79,11 @@ public interface ReservationDao {
 	@RegisterRowMapper(UserMapper.class)
 	List<User> getReservationUsers(int reservationId);
 
-	@SqlQuery("SELECT r.*, st.name as statusName FROM reservation r " +
+	@SqlQuery("SELECT r.*, st.name as statusName, rest.*, a.*, c.* FROM reservation r " +
 			"INNER JOIN status st on r.status_id = st.id " +
+			"INNER JOIN restaurant rest on r.restaurant_id = rest.id " +
+			"INNER JOIN address a on rest.address_id = a.id " +
+			"INNER JOIN contact c on rest.contact_id = c.id " +
 			"WHERE (:reservationId IS NULL OR r.id = :reservationId) AND " +
 			"(:restaurantId IS NULL OR r.restaurant_id = :restaurantId) AND " +
 			"(:userId IS NULL OR r.id IN (" +
@@ -115,7 +115,26 @@ public interface ReservationDao {
 					.setStatus(Reservation.ReservationStatus.valueOf(rs.getString("statusName").toUpperCase()))
 					.setRestaurant(Restaurant.newBuilder()
 							.setId(rs.getInt("restaurant_id"))
-							//Todo: maybe pull full restaurant info
+							.setName(rs.getString("rest.name"))
+							.setAddress(Address.newBuilder()
+									.setName(rs.getString("a.name"))
+									.setLatitude(rs.getFloat("a.latitude"))
+									.setLongitude(rs.getFloat("a.longitude"))
+									.setLine1(rs.getString("a.line1"))
+									.setLine2(rs.getString("a.line2"))
+									.setCity(rs.getString("a.city"))
+									.setState(rs.getString("a.state"))
+									.setZip(rs.getString("a.zip"))
+									.build())
+							.setContact(Contact.newBuilder()
+									.setEmail(rs.getString("c.email"))
+									.setPhone(rs.getString("c.phone"))
+									.build())
+							.setCapacity(rs.getInt("rest.capacity_factor"))
+							.setCategory(Category.newBuilder()
+									.setCategory(rs.getInt("rest.category_id"))
+									.build())
+							.setRtime(rs.getInt("rest.reservation_time"))
 							.build())
 					.build();
 		}

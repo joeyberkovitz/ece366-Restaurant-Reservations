@@ -110,9 +110,7 @@
         },
         created() {
             const client = new CustomRPCClient(UserServiceClient, this.$store.getters.config.host);
-            //const client = this.$store.getters.grpc.restaurantClient;
             const user = new User();
-            //user.setId(2);
             client.client.getUser(user, {}, (err, response) => {
                 if (!err){
                     console.log(response);
@@ -198,7 +196,6 @@
         align-items: center;
         justify-content: center;
         position: relative;
-
     }
 
     .title {
