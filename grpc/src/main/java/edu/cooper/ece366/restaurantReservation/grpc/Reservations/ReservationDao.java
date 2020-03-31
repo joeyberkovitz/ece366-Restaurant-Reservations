@@ -69,12 +69,12 @@ public interface ReservationDao {
 	Optional<Integer> getReservationUser(int userId, int reservationId);
 
 	@SqlQuery("SELECT u.id, u.username, u.fname, u.lname, " +
-			"u.rewards_points as points, c.phone, c.email, ro.name as role " +
+			"u.rewards_points as points, c.id, c.phone, c.email, ro.name as role " +
 			"FROM reservation r " +
 			"INNER JOIN reservation_user ru on r.id = ru.reservation_id " +
 			"INNER JOIN user u on ru.user_id = u.id " +
-			"INNER JOIN contact c on c.id = u.contact_id " +
-			"INNER JOIN role ro on ro.id = u.role_id " +
+			"INNER JOIN contact c on u.contact_id = c.id " +
+			"INNER JOIN role ro on u.role_id = ro.id " +
 			"WHERE r.id = :reservationId")
 	@RegisterRowMapper(UserMapper.class)
 	List<User> getReservationUsers(int reservationId);
