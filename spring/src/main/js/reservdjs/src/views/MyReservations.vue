@@ -1,22 +1,28 @@
 <template>
     <div class="centered">
-        <md-card class="md-layout-item md-size-50 md-big-size-50 md-alignment-top-center">
+        <md-card class="md-layout-item md-size-55 md-big-size-50 md-alignment-top-center">
             <md-card-header>
                 <div class="title">
                     <h1>{{ $route.name }}</h1>
-                    <md-button class="bold md-primary" @click="test()">Test</md-button>
-                    <div class="md-layout">
-                        <md-menu md-direction="bottom-start" class="md-layout-item">
-                            <md-button md-menu-trigger>Bottom Start</md-button>
-                            <md-menu-content>
-                                <md-menu-item>My Item 1</md-menu-item>
-                                <md-menu-item>My Item 2</md-menu-item>
-                                <md-menu-item>My Item 3</md-menu-item>
-                            </md-menu-content>
-                        </md-menu>
-                        <md-datepicker class="md-layout-item" v-model="date" />
-                        <md-datepicker class="md-layout-item" v-model="futureDate" />
-                        <md-button class="bold md-primary" @click="filter()">Filter</md-button>
+                    <div class="md-layout md-gutter">
+                        <div class="md-layout-item">
+                        <md-field>
+                            <label for="status">Status</label>
+                            <md-select name="status" id="status" v-model="status">
+                                    <md-option v-for="(status) in statuses" :key="status" :value="status">{{ status }}</md-option>
+                                    <md-option value="all">ALL</md-option>
+                            </md-select>
+                        </md-field>
+                        </div>
+                        <div class="md-layout-item">
+                            <md-datepicker name="start date" id="start date" v-model="date"><label for="start date">Start Date</label></md-datepicker>
+                        </div>
+                        <div class="md-layout-item">
+                            <md-datepicker name="end date" id="end date" v-model="futureDate"><label for="end date">End Date</label></md-datepicker>
+                        </div>
+                        <div class="md-layout-item">
+                            <md-button class="bold md-primary" @click="filter()">Filter</md-button>
+                        </div>
                     </div>
                 </div>
             </md-card-header>
@@ -25,12 +31,12 @@
                     <div v-for="(reservation) in filteredReservations" :key="reservation.details.getId()" :value="reservation.details.getId()">
                         <md-list-item>
                             <div class="md-list-item-text">
-                                <span>{{ reservation.details.getRestaurant().getName() }}</span>
+                                <span>{{ reservation.details.getRestaurant().getName() }} - {{ getStatus(reservation.details.getStatus() )}}</span>
                                 <span class="filter">{{ reservation.details.getStarttime() | momentStart(reservation.details.getRestaurant().getRtime()) }}</span>
                                 <span>{{ reservation.invites | expand }}</span>
                             </div>
 
-                            <md-button class="bold md-primary">Edit Reservation</md-button>
+                            <md-button class="bold md-primary" @click="redirect()">Edit Reservation</md-button>
 
                         </md-list-item>
                         <md-divider></md-divider>
@@ -44,7 +50,7 @@
 <script>
     import {CustomRPCClient} from "../proto/CustomRPCClient";
     import {ReservationServiceClient} from "../proto/RestaurantServiceServiceClientPb";
-    import {ReservationUserRequest} from "../proto/RestaurantService_pb";
+    import {Reservation, ReservationUserRequest} from "../proto/RestaurantService_pb";
     import moment from "moment";
 
     export default {
@@ -52,6 +58,7 @@
         created() {
             this.date = new Date();
             this.futureDate = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate()+7);
+            this.statuses = Object.keys(Reservation.ReservationStatus);
 
             const client = new CustomRPCClient(ReservationServiceClient, this.$store.getters.config.host);
             const request = new ReservationUserRequest();
@@ -74,6 +81,8 @@
         data: () => ({
             date: null,
             futureDate: null,
+            status: "all",
+            statuses: [],
             reservations: [],
             filteredReservations: []
         }),
@@ -102,19 +111,30 @@
             }
         },
         methods: {
-            test() {
-                console.log(this.date);
-                console.log(this.futureDate);
-                console.log(this.reservations);
-            },
             filter() {
                 const date = this.date;
                 const futureDate = this.futureDate;
+                const status = this.status;
                 this.filteredReservations = this.reservations.filter(function (a) {
                     const resDate = new Date(a.details.getStarttime()*1000);
-                    return (resDate >= date && resDate <= futureDate);
+                    const resStatus = a.details.getStatus();
+                    if (status === "all")
+                        return (resDate >= date && resDate <= futureDate);
+                    else
+                        return (resDate >= date && resDate <= futureDate && resStatus === Reservation.ReservationStatus[status]);
                 });
                 this.filteredReservations.sort(function (a,b){return a.details.getStarttime()-b.details.getStarttime()});
+            },
+            getStatus(val) {
+               for (let i = 0; i < this.statuses.length; i++){
+                   if (Reservation.ReservationStatus[this.statuses[i]] === val){
+                       return this.statuses[i];
+                   }
+               }
+               return "";
+            },
+            redirect() {
+                return null;
             }
         }
     }
