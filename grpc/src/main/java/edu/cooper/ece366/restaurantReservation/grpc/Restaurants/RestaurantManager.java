@@ -213,4 +213,9 @@ public class RestaurantManager {
 	public List<Category> getCategories(){
 		return db.withExtension(RestaurantDao.class, dao -> dao.getCategories());
 	}
+
+	public List<RestaurantSearchResponse> searchRestaurants(RestaurantSearchRequest request){
+		return db.withExtension(RestaurantDao.class,
+			dao -> dao.searchRestaurants(request));
+	}
 }

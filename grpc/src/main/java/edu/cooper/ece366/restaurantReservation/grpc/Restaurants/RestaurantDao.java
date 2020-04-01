@@ -2,18 +2,24 @@ package edu.cooper.ece366.restaurantReservation.grpc.Restaurants;
 
 import edu.cooper.ece366.restaurantReservation.grpc.*;
 import org.jdbi.v3.core.mapper.RowMapper;
+import org.jdbi.v3.core.result.LinkedHashMapRowReducer;
+import org.jdbi.v3.core.result.RowReducer;
+import org.jdbi.v3.core.result.RowView;
 import org.jdbi.v3.core.statement.StatementContext;
 import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 import org.jdbi.v3.sqlobject.config.RegisterBeanMapper;
 import org.jdbi.v3.sqlobject.config.RegisterRowMapper;
+import org.jdbi.v3.sqlobject.config.RegisterRowMapperFactory;
 import org.jdbi.v3.sqlobject.customizer.BindBean;
 import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
+import org.jdbi.v3.sqlobject.statement.UseRowReducer;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface RestaurantDao {
@@ -120,6 +126,42 @@ public interface RestaurantDao {
 
 	@SqlQuery("select id as category, name from category")
 	List<Category> getCategories();
+
+	//Todo: implement search for lat/long + miles
+	@SqlQuery("SELECT sum(t.capacity) as 'availableCapacity', restaurant.*," +
+		" address.*, contact.* from `table` t " +
+		"INNER JOIN restaurant on restaurant.id = t.restaurant_id " +
+		"inner join address on restaurant.address_id = address.id " +
+		"inner join contact on restaurant.contact_id = contact.id " +
+		"where t.id NOT IN (  " +
+			"select rt.table_id " +
+			"from reservation r " +
+			"inner join reservation_table rt on r.id = rt.reservation_id " +
+			"    INNER JOIN restaurant rest on r.restaurant_id = rest.id " +
+			"inner join status st on r.status_id = st.id " +
+			"where r.restaurant_id = t.restaurant_id " +
+			"AND st.name != 'Cancelled' " +
+			"AND r.end_time > :r.requestedDate " +
+			"AND r.start_time < DATE_ADD(:r.requestedDate, INTERVAL rest.reservation_time HOUR) " +
+		") " +
+		" AND (:r.category.category = 0 OR restaurant.category_id = :r.category.category)"+
+		"GROUP BY t.restaurant_id " +
+		"HAVING availableCapacity >= :r.numPeople")
+	@RegisterRowMapper(RestaurantSearchMapper.class)
+	List<RestaurantSearchResponse> searchRestaurants(@BindBean("r")
+                                    RestaurantSearchRequest request);
+
+	class RestaurantSearchMapper implements RowMapper<RestaurantSearchResponse> {
+
+		@Override
+		public RestaurantSearchResponse map(ResultSet rs, StatementContext ctx) throws SQLException {
+			RestaurantMapper restaurantMapper = new RestaurantMapper();
+			return RestaurantSearchResponse.newBuilder()
+				.setAvailableCapacity(rs.getInt("availableCapacity"))
+				.setRestaurant(restaurantMapper.map(rs, ctx))
+				.build();
+		}
+	}
 
 	class RestaurantMapper implements RowMapper<Restaurant> {
 		@Override

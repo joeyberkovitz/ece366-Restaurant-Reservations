@@ -20,6 +20,7 @@ service RestaurantService {
 	rpc deleteRestaurant (Restaurant) returns (DeleteRestaurantResponse);
 	rpc searchByCategory (Category) returns (stream Restaurant);
 	rpc getCategoryList (GetCategoryRequest) returns (stream Category);
+	rpc searchRestaurants(RestaurantSearchRequest) returns (stream RestaurantSearchResponse);
 
 	rpc createTable (CreateTableRequest) returns (Table); // returns just id
 	rpc getTablesByRestaurant (Restaurant) returns (stream Table);
@@ -177,4 +178,18 @@ message DeleteTableResponse {
 
 message GetCategoryRequest {
 
+}
+
+message RestaurantSearchRequest {
+	uint64 requestedDate = 1;
+	uint32 numPeople = 2;
+	float lat = 3;
+	float long = 4;
+	uint32 numMiles = 5;
+	Category category = 6;
+}
+
+message RestaurantSearchResponse {
+	Restaurant restaurant = 1;
+	uint32 availableCapacity = 2;
 }

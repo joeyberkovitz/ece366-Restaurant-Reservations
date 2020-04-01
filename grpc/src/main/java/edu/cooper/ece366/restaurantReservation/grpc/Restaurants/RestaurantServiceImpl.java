@@ -293,4 +293,14 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		}
 		responseObserver.onCompleted();
 	}
+
+	@Override
+	public void searchRestaurants(RestaurantSearchRequest request, StreamObserver<RestaurantSearchResponse> responseObserver) {
+		List<RestaurantSearchResponse> restaurants = manager.searchRestaurants(request);
+
+		for (RestaurantSearchResponse restaurant: restaurants) {
+			responseObserver.onNext(restaurant);
+		}
+		responseObserver.onCompleted();
+	}
 }
