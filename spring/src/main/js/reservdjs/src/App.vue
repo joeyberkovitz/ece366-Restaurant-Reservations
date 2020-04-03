@@ -8,11 +8,14 @@
             <md-button to="/restaurant/new">Create Restaurant</md-button>
             <md-button to="/reservation">My Reservations</md-button>
             <md-button to="/profile">User Profile</md-button>
+            <md-button to="/search">Search</md-button>
             <md-button @click="logout()">Logout</md-button>
           </span>
           <md-button to="/login" v-show="!this.loggedIn()">Login</md-button>
       </md-toolbar>
-      <router-view class="routerView"/>
+      <v-app>
+        <router-view class="routerView"/>
+      </v-app>
   </div>
 </template>
 <script>
