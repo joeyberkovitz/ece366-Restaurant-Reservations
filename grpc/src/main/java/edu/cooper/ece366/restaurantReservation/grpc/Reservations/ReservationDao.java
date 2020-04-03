@@ -88,12 +88,19 @@ public interface ReservationDao {
 			"(:restaurantId IS NULL OR r.restaurant_id = :restaurantId) AND " +
 			"(:userId IS NULL OR r.id IN (" +
 			"SELECT ru.reservation_id FROM reservation_user ru " +
-			"WHERE ru.reservation_id = r.id " +
-			"AND ru.user_id = :userId))")
+			"WHERE ru.reservation_id = r.id AND " +
+			"ru.user_id = :userId)) AND " +
+			"(:beginTime IS NULL OR (r.start_time >= FROM_UNIXTIME(:beginTime) AND " +
+			"r.start_time <= FROM_UNIXTIME(:futureTime))) AND " +
+			"(:statusId IS NULL OR r.status_id = :statusId) " +
+			"ORDER BY r.start_time")
 	@RegisterRowMapper(ReservationMapper.class)
 	List<Reservation> searchReservations(Integer reservationId,
 	                                     Integer userId,
-	                                     Integer restaurantId);
+	                                     Integer restaurantId,
+										 Long beginTime,
+										 Long futureTime,
+										 Integer statusId);
 
 	@SqlQuery("select t.id, t.capacity, t.label " +
 			"from reservation r " +

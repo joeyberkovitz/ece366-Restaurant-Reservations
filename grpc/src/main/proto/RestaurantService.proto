@@ -46,7 +46,7 @@ service ReservationService {
 	rpc getReservation (Reservation) returns (Reservation);
 	rpc setReservation (Reservation) returns (Reservation); // status or num people or points
 	rpc getReservationsByUser (ReservationUserRequest) returns (stream Reservation);
-	rpc getReservationsByRestaurant (Restaurant) returns (stream Reservation);
+	rpc getReservationsByRestaurant (ReservationRestaurantRequest) returns (stream Reservation);
 	rpc getReservationTables (Reservation) returns (stream Table);
 }
 
@@ -155,8 +155,17 @@ message Relationship {
 	User user = 3; // for setting
 }
 
-message ReservationUserRequest{
+message ReservationUserRequest {
+	int64 beginTime = 1;
+	int64 futureTime = 2;
+	string status = 3;
+}
 
+message ReservationRestaurantRequest {
+	Restaurant restaurant = 1;
+	int64 beginTime = 2;
+	int64 futureTime = 3;
+	string status = 4;
 }
 
 message RelationshipResponse {

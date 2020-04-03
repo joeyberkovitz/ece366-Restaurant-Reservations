@@ -100,7 +100,8 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 		//No need for auth check because only getting reservations for currUser
 		// TODO do we need to allow admins to request reservation lists
 		// of arbitrary users from the frontend?
-		List<Reservation> reservations = manager.searchReservations(null, currUser, null);
+		List<Reservation> reservations = manager.searchReservations(null, currUser, null,
+				request.getBeginTime(), request.getFutureTime(), request.getStatus());
 
 		for (Reservation reservation: reservations) {
 			responseObserver.onNext(reservation);
@@ -113,22 +114,25 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 		//This function will guarantee that the reservation exists
 		checkReservationPermission(request);
 
-		List<Reservation> reservations = manager.searchReservations(request.getId(), null, null);
+		List<Reservation> reservations = manager.searchReservations(request.getId(), null, null,
+				null, null, null);
 
 		responseObserver.onNext(reservations.get(0));
 		responseObserver.onCompleted();
 	}
 
 	@Override
-	public void getReservationsByRestaurant(Restaurant request, StreamObserver<Reservation> responseObserver) {
+	public void getReservationsByRestaurant(ReservationRestaurantRequest request, StreamObserver<Reservation> responseObserver) {
 		RestaurantManager restaurantManager = new RestaurantManager(db);
 		int currUser = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
-		if(!restaurantManager.canEditRestaurant(currUser, request.getId(), false)){
+		if(!restaurantManager.canEditRestaurant(currUser, request.getRestaurant().getId(), false)){
 			throw new StatusRuntimeException(Status.PERMISSION_DENIED
 				.withDescription("Not allowed to access restaurant"));
 		}
 
-		List<Reservation> reservations = manager.searchReservations(null, null, request.getId());
+		List<Reservation> reservations = manager.searchReservations(null, null,
+				request.getRestaurant().getId(), request.getBeginTime(), request.getFutureTime(),
+				request.getStatus());
 
 		for (Reservation reservation: reservations) {
 			responseObserver.onNext(reservation);
@@ -161,7 +165,8 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 		//After calling this, reservation is guaranteed to exist
 		checkReservationPermission(request);
 
-		List<Reservation> reservationList = manager.searchReservations(request.getId(), null, null);
+		List<Reservation> reservationList = manager.searchReservations(request.getId(), null, null,
+				null, null, null);
 
 		Reservation originalReservation = reservationList.get(0);
 
@@ -187,7 +192,8 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 
 		manager.updateReservation(request);
 
-		List<Reservation> reservation = manager.searchReservations(request.getId(), null, null);
+		List<Reservation> reservation = manager.searchReservations(request.getId(), null, null,
+				null, null, null);
 
 		responseObserver.onNext(reservation.get(0));
 		responseObserver.onCompleted();
