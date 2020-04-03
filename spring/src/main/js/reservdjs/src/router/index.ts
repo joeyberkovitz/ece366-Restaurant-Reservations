@@ -29,13 +29,18 @@ const routes = [
   },
   {
     path: '/profile',
-    name: 'Manange User',
+    name: 'Manage User',
     component: () => import('../views/ManageUser.vue')
   },
   {
     path: '/reservation',
     name: 'My Reservations',
     component: () => import('../views/MyReservations.vue')
+  },
+  {
+    path: '/search',
+    name: 'Search',
+    component: () => import('../views/Search.vue')
   }
 ];
 

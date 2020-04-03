@@ -124,8 +124,12 @@
 			}
 			return ret;
 		},
+		created() {
+			//If logged in, redirect to search
+			if(!!this.$store.getters.user&&!!this.$store.getters.user.authToken)
+				this.$router.push("/search");
+		},
 		methods: {
-			//Todo: if logged in, redirect to home page
 			getValidationClass(elem){
 				const field = this.$v.form[elem];
 				if(field)
@@ -168,7 +172,7 @@
 							userState.refreshToken = resp.getRefreshtoken();
 
 							this.$store.commit('storeUserState', userState);
-							this.$router.push({ path: '/' })
+							this.$router.push({ path: '/search' })
 						}
 						else{
 							this.snackBarMessage = err.message;
