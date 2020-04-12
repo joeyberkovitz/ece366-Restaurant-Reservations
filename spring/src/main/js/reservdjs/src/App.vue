@@ -22,14 +22,17 @@
     import * as client from './proto/RestaurantServiceServiceClientPb';
     import {CustomRPCClient} from "@/proto/CustomRPCClient";
     import {RestaurantServiceClient} from "./proto/RestaurantServiceServiceClientPb";
+    import {ReservationServiceClient} from "@/proto/RestaurantServiceServiceClientPb";
 
     export default {
         created() {
             console.log("app running");
             const authClient = new client.AuthServiceClient(this.$store.getters.config.host,null,null);
             const restaurantClient = new CustomRPCClient(RestaurantServiceClient, this.$store.getters.config.host);
+            const reservationClient = new CustomRPCClient(ReservationServiceClient, this.$store.getters.config.host);
             this.$store.commit('setAuthClient', authClient);
             this.$store.commit('setRestaurantClient', restaurantClient);
+            this.$store.commit('setReservationClient', reservationClient);
         },
         methods: {
             loggedIn(){

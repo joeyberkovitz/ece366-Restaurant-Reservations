@@ -59,7 +59,8 @@
 								<span>{{getCategory(result.getRestaurant().getCategory().getCategory())}}</span>
 								<span>Available Capacity: {{result.getAvailablecapacity()}}</span>
 							</div>
-							<md-button class="bold md-primary">Reserve</md-button>
+							<md-button class="bold md-primary" v-on:click="createReservation(result.getRestaurant())">Reserve
+							</md-button>
 						</md-list-item>
 						<md-divider></md-divider>
 					</div>
@@ -73,13 +74,15 @@
 	import {GetCategoryRequest, RestaurantSearchRequest} from "@/proto/RestaurantService_pb";
 	import {required, integer, minValue} from "vuelidate/lib/validators";
 	import {validationMixin} from "vuelidate";
-	import {Category} from "../proto/RestaurantService_pb";
+	import {Category, Reservation} from "../proto/RestaurantService_pb";
+	import {ReservationServiceClient, RestaurantServiceClient} from "../proto/RestaurantServiceServiceClientPb";
 
 	export default {
 		name: "Search",
 		mixins: [validationMixin],
 		created() {
 			this.client = this.$store.getters.grpc.restaurantClient;
+			this.reservationClient = this.$store.getters.grpc.reservationClient;
 			const promise = this.client.client.getCategoryList(new GetCategoryRequest(), {});
 			promise.on('data', (data) => {
 				this.categories.push(data);
@@ -102,6 +105,7 @@
 		},
 		data: () => ({
 			client: null,
+			reservationClient: null,
 			categories: [],
 			form: {
 				date: null,
@@ -113,6 +117,19 @@
 			results: []
 		}),
 		methods: {
+			createReservation(restaurant){
+				const newReservation = new Reservation();
+				newReservation.setRestaurant(restaurant);
+				newReservation.setNumpeople(this.form.numPeople);
+				newReservation.setStarttime(this.form.date.getTime()/1000 +
+					this.timeToSeconds(this.form.time));
+				newReservation.setStatus(Reservation.ReservationStatus.OPENED);
+
+				this.reservationClient.client.createReservation(newReservation, {}, (err, response) => {
+					console.log(err, response);
+					//Todo: redirect to manage reservation
+				});
+			},
 			getCategory(categoryId){
 				for(let i = 0; i < this.categories.length; i++){
 					if(this.categories[i].getCategory() === categoryId)
