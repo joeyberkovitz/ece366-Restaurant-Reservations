@@ -5,6 +5,7 @@ import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthInterceptor;
 import edu.cooper.ece366.restaurantReservation.grpc.*;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Role.RoleManager;
+import edu.cooper.ece366.restaurantReservation.grpc.Users.UserManager;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
@@ -33,7 +34,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			RoleManager rm = new RoleManager(db);
 			int adminRoleId = rm.getRoleById("Admin");
 
-			manager.addRestaurantRelationship(restId, userId, adminRoleId);
+			manager.addRestaurantRelationship(restId, userId, null, adminRoleId);
 
 			Restaurant reply =
 			Restaurant.newBuilder().setId(restId).build();
@@ -54,6 +55,10 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		catch (UnableToExecuteStatementException ex){
 			// todo include StatusRuntimeException?
 			ex.printStackTrace();
+		}
+		catch (UserManager.InvalidUsernameException e) {
+			// should never occur
+			throw new StatusRuntimeException(Status.UNKNOWN.withDescription("Unknown error occurred."));
 		}
 	}
 
@@ -93,9 +98,9 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 	}
 
 	@Override
-	public void setRelationship(Relationship request, StreamObserver<RelationshipResponse> responseObserver) {
+	public void addRelationship(Relationship request, StreamObserver<RelationshipResponse> responseObserver) {
 		if(!request.hasRestaurant() || request.getRestaurant().getId() == 0
-			|| request.getUser().getId() == 0) {
+			|| (request.getUser().getId() == 0 && request.getUser().getUsername().isBlank())) {
 			responseObserver.onError(new StatusRuntimeException(
 				Status.NOT_FOUND.withDescription("Invalid Restaurant")));
 			return;
@@ -109,7 +114,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 		try {
 			manager.addRestaurantRelationship(request.getRestaurant().getId(),
-				request.getUser().getId(), roleId);
+				request.getUser().getId(), request.getUser().getUsername(), roleId);
 		}
 		catch (UnableToExecuteStatementException ex){
 			ex.printStackTrace();
@@ -118,6 +123,32 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 				.withDescription("Relationship already exists or invalid key")));
 			return;
 		}
+		catch (UserManager.InvalidUsernameException ex){
+			ex.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT
+					.withDescription("Invalid username")
+			));
+			return;
+		}
+
+		RelationshipResponse res = RelationshipResponse.newBuilder().build();
+		responseObserver.onNext(res);
+		responseObserver.onCompleted();
+	}
+
+	@Override
+	public void deleteRelationship(Relationship request, StreamObserver<RelationshipResponse> responseObserver) {
+		if(!request.hasRestaurant() || request.getRestaurant().getId() == 0
+				|| request.getUser().getId() == 0) {
+			responseObserver.onError(new StatusRuntimeException(
+					Status.NOT_FOUND.withDescription("Invalid Restaurant")));
+			return;
+		}
+
+		checkRestaurantPermission(request.getRestaurant(), null, true);
+
+		manager.deleteRestaurantRelationship(request.getRestaurant().getId(), request.getUser().getId());
 
 		RelationshipResponse res = RelationshipResponse.newBuilder().build();
 		responseObserver.onNext(res);

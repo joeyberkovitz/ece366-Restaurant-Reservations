@@ -4,6 +4,8 @@ import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
 import edu.cooper.ece366.restaurantReservation.grpc.User;
 import org.jdbi.v3.core.Jdbi;
 
+import java.util.Optional;
+
 public class UserManager {
 
     private Jdbi db;
@@ -66,6 +68,16 @@ public class UserManager {
         return db.withExtension(UserDao.class, dao -> {
             return dao.getUser(id);
         });
+    }
+    
+    public int getIdByUsername(String username) throws InvalidUsernameException {
+        Optional<Integer> userId = db.withExtension(UserDao.class, dao -> {
+            return dao.getIdByUsername(username);
+        });
+        if (userId.isPresent())
+            return userId.get().intValue();
+        else
+            throw new InvalidUsernameException("Username does not exist.");
     }
 
     public static class NoIdException extends Exception {

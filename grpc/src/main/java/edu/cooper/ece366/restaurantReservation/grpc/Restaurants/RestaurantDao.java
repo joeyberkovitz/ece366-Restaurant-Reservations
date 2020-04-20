@@ -2,24 +2,17 @@ package edu.cooper.ece366.restaurantReservation.grpc.Restaurants;
 
 import edu.cooper.ece366.restaurantReservation.grpc.*;
 import org.jdbi.v3.core.mapper.RowMapper;
-import org.jdbi.v3.core.result.LinkedHashMapRowReducer;
-import org.jdbi.v3.core.result.RowReducer;
-import org.jdbi.v3.core.result.RowView;
 import org.jdbi.v3.core.statement.StatementContext;
 import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
-import org.jdbi.v3.sqlobject.config.RegisterBeanMapper;
 import org.jdbi.v3.sqlobject.config.RegisterRowMapper;
-import org.jdbi.v3.sqlobject.config.RegisterRowMapperFactory;
 import org.jdbi.v3.sqlobject.customizer.BindBean;
 import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
-import org.jdbi.v3.sqlobject.statement.UseRowReducer;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public interface RestaurantDao {
@@ -41,10 +34,10 @@ public interface RestaurantDao {
 			"WHERE user_id = :user_id AND restaurant_id = :restaurant_id")
 	Optional<String> getRestaurantUserRole(int user_id, int restaurant_id);
 
-	@SqlQuery("select restaurant.*,address.*,contact.* from restaurant " +
-	          "inner join address on restaurant.address_id = address.id " +
-	          "inner join contact on restaurant.contact_id = contact.id " +
-	          "where restaurant.id=:id")
+	@SqlQuery("SELECT restaurant.*,address.*,contact.* FROM restaurant " +
+	          "INNER JOIN address ON restaurant.address_id = address.id " +
+	          "INNER JOIN contact ON restaurant.contact_id = contact.id " +
+	          "WHERE restaurant.id=:id")
 	@RegisterRowMapper(RestaurantMapper.class)
 	Restaurant getRestaurant(int id);
 
@@ -54,34 +47,34 @@ public interface RestaurantDao {
 	@SqlQuery("SELECT reservation_time FROM restaurant WHERE id = :id")
 	int getRestaurantReservationTime(int id);
 
-	@SqlUpdate("update restaurant set name = :restaurant.name," +
+	@SqlUpdate("UPDATE restaurant SET name = :restaurant.name," +
 			"category_id = :restaurant.category.category "+
-			"where restaurant.id = :restaurant.id")
+			"WHERE restaurant.id = :restaurant.id")
 	void setRestaurant(@BindBean("restaurant") Restaurant restaurant);
 	// TODO figure out why this complains when category is unset
 
-	@SqlQuery("select restaurant.*,address.*,contact.* from restaurant " +
-	          "inner join address on restaurant.address_id = address.id " +
-	          "inner join contact on restaurant.contact_id = contact.id " +
-	          "where restaurant.category_id=:id")
+	@SqlQuery("SELECT restaurant.*,address.*,contact.* FROM restaurant " +
+	          "INNER JOIN address ON restaurant.address_id = address.id " +
+	          "INNER JOIN contact ON restaurant.contact_id = contact.id " +
+	          "WHERE restaurant.category_id=:id")
 	@RegisterRowMapper(RestaurantMapper.class)
 	List<Restaurant> searchByCategory(int id);
 
 	static final String RELSQL =
-	"select rel.*,restaurant.*,address.*,rscon.*,user.*,uscon.*," +
-	"role.name as role from restaurant_user rel " +
-	"inner join restaurant on rel.restaurant_id = restaurant.id "+
-	"inner join address on restaurant.address_id = address.id " +
-	"inner join contact rscon on restaurant.contact_id = rscon.id " +
-	"inner join user on rel.user_id = user.id " +
-	"inner join contact uscon on user.contact_id = uscon.id " +
-	"inner join role on rel.role_id = role.id ";
+	"SELECT rel.*,restaurant.*,address.*,rscon.*,user.*,uscon.*," +
+	"role.name AS role FROM restaurant_user rel " +
+	"INNER JOIN restaurant ON rel.restaurant_id = restaurant.id "+
+	"INNER JOIN address ON restaurant.address_id = address.id " +
+	"INNER JOIN contact rscon ON restaurant.contact_id = rscon.id " +
+	"INNER JOIN user ON rel.user_id = user.id " +
+	"INNER JOIN contact uscon ON user.contact_id = uscon.id " +
+	"INNER JOIN role ON rel.role_id = role.id ";
 	// TODO merge those two functions
-	@SqlQuery(RELSQL + "where rel.restaurant_id=:id")
+	@SqlQuery(RELSQL + "WHERE rel.restaurant_id=:id")
 	@RegisterRowMapper(RelationshipMapper.class)
 	List<Relationship> getRelationshipByRestaurant(int id);
 
-	@SqlQuery(RELSQL + "where rel.user_id=:id")
+	@SqlQuery(RELSQL + "WHERE rel.user_id=:id")
 	@RegisterRowMapper(RelationshipMapper.class)
 	List<Relationship> getRelationshipByUser(int id);
 
@@ -99,10 +92,10 @@ public interface RestaurantDao {
 	@SqlQuery("SELECT * FROM `table` WHERE restaurant_id = :restaurant_id")
 	List<Table> getRestaurantTables(int restaurant_id);
 
-	@SqlQuery("SELECT restaurant.*, address.*, contact.* from restaurant " +
-		"INNER JOIN `table` t on t.restaurant_id = restaurant.id " +
-		"inner join address on restaurant.address_id = address.id " +
-		"inner join contact on restaurant.contact_id = contact.id " +
+	@SqlQuery("SELECT restaurant.*, address.*, contact.* FROM restaurant " +
+		"INNER JOIN `table` t ON t.restaurant_id = restaurant.id " +
+		"INNER JOIN address ON restaurant.address_id = address.id " +
+		"INNER JOIN contact ON restaurant.contact_id = contact.id " +
 		"WHERE t.id = :table_id")
 	@RegisterRowMapper(RestaurantMapper.class)
 	Optional<Restaurant> getRestaurantByTable(int table_id);
@@ -124,22 +117,22 @@ public interface RestaurantDao {
 	@SqlUpdate("DELETE FROM restaurant WHERE id = :id")
 	void deleteRestaurant(int id);
 
-	@SqlQuery("select id as category, name from category")
+	@SqlQuery("SELECT id AS category, name FROM category")
 	List<Category> getCategories();
 
 	//Todo: implement search for lat/long + miles
 	@SqlQuery("SELECT sum(t.capacity) as 'availableCapacity', restaurant.*," +
-		" address.*, contact.* from `table` t " +
-		"INNER JOIN restaurant on restaurant.id = t.restaurant_id " +
-		"inner join address on restaurant.address_id = address.id " +
-		"inner join contact on restaurant.contact_id = contact.id " +
-		"where t.id NOT IN (  " +
-			"select rt.table_id " +
-			"from reservation r " +
-			"inner join reservation_table rt on r.id = rt.reservation_id " +
-			"    INNER JOIN restaurant rest on r.restaurant_id = rest.id " +
-			"inner join status st on r.status_id = st.id " +
-			"where r.restaurant_id = t.restaurant_id " +
+		" address.*, contact.* FROM `table` t " +
+		"INNER JOIN restaurant ON restaurant.id = t.restaurant_id " +
+		"INNER JOIN address ON restaurant.address_id = address.id " +
+		"INNER JOIN contact ON restaurant.contact_id = contact.id " +
+		"WHERE t.id NOT IN (  " +
+			"SELECT rt.table_id " +
+			"FROM reservation r " +
+			"INNER JOIN reservation_table rt ON r.id = rt.reservation_id " +
+			"    INNER JOIN restaurant rest ON r.restaurant_id = rest.id " +
+			"INNER JOIN status st ON r.status_id = st.id " +
+			"WHERE r.restaurant_id = t.restaurant_id " +
 			"AND st.name != 'Cancelled' " +
 			"AND r.end_time > :r.requestedDate " +
 			"AND r.start_time < DATE_ADD(:r.requestedDate, INTERVAL rest.reservation_time HOUR) " +

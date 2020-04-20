@@ -30,7 +30,8 @@ service RestaurantService {
 
 	rpc getRestaurantsByUser (User) returns (stream Relationship);
 	rpc getUsersByRestaurant (Restaurant) returns (stream Relationship);
-	rpc setRelationship (Relationship) returns (RelationshipResponse);
+	rpc addRelationship (Relationship) returns (RelationshipResponse);
+	rpc deleteRelationship (Relationship) returns (RelationshipResponse);
 }
 
 service UserService {

@@ -40,6 +40,9 @@ public interface UserDao {
     @RegisterRowMapper(UserMapper.class)
     User getUser(int id);
 
+    @SqlQuery("SELECT u.id FROM user u WHERE u.username = :username")
+    Optional<Integer> getIdByUsername(String username);
+
     @SqlUpdate("UPDATE user SET fname=:fname, lname=:lname WHERE id = :id")
     void setUser(@BindBean User user);
 

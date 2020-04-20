@@ -3,6 +3,7 @@ package edu.cooper.ece366.restaurantReservation.grpc.Restaurants;
 import edu.cooper.ece366.restaurantReservation.grpc.Addresses.AddressManager;
 import edu.cooper.ece366.restaurantReservation.grpc.*;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
+import edu.cooper.ece366.restaurantReservation.grpc.Users.UserManager;
 import org.jdbi.v3.core.Jdbi;
 
 import java.util.List;
@@ -36,11 +37,22 @@ public class RestaurantManager {
 		});
 	}
 
-	public void addRestaurantRelationship(int restId, int userId,
-	                                      int adminRoleId) {
+	public void addRestaurantRelationship(int restId, int userId, String username, int adminRoleId)
+			throws UserManager.InvalidUsernameException {
+		if (userId == 0) {
+			UserManager um = new UserManager(db);
+			userId = um.getIdByUsername(username);
+		}
+		int finalUserId = userId;
 		db.useExtension(RestaurantDao.class, dao -> {
-			dao.addRestaurantRelationship(restId, userId,
+			dao.addRestaurantRelationship(restId, finalUserId,
 			                              adminRoleId);
+		});
+	}
+
+	public void deleteRestaurantRelationship(int restId, int userId) {
+		db.useExtension(RestaurantDao.class, dao -> {
+			dao.deleteRelationship(userId, restId);
 		});
 	}
 
