@@ -1,6 +1,8 @@
 <template>
 	<div class="centered">
-		<RestaurantForm :client="this.client" :categories="this.categories"/>
+		<RestaurantForm :client="this.client"
+		                :categories="this.categories"
+		                button="Create Restaurant"/>
 	</div>
 </template>
 
@@ -18,8 +20,8 @@ export default {
 		categories: [],
 	}),
 	created() {
-		const client = this.$store.getters.grpc.restaurantClient;
-		const promise = client.client.getCategoryList(new GetCategoryRequest(), {}, err => {
+		this.client = this.$store.getters.grpc.restaurantClient;
+		const promise = this.client.client.getCategoryList(new GetCategoryRequest(), {}, err => {
 			console.log(err);
 		});
 		promise.on('data', (data) => {

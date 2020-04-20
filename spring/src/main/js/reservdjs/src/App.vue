@@ -6,6 +6,8 @@
           <md-button to="/about">About</md-button>
           <span v-show="loggedIn()">
             <md-button to="/restaurant/new">Create Restaurant</md-button>
+            <md-button to="/restaurant/manage">Manage Restaurants</md-button>
+            <!-- TODO only show if user has restaurants -->
             <md-button to="/reservation">My Reservations</md-button>
             <md-button to="/profile">User Profile</md-button>
             <md-button to="/search">Search</md-button>

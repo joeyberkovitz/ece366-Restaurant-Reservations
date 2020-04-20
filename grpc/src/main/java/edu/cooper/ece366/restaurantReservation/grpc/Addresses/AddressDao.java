@@ -26,11 +26,11 @@ public interface AddressDao {
     @SqlUpdate("UPDATE address SET name = :name," +
                                   "latitude = :latitude," +
                                   "longitude = :longitude," +
-                                  "line1 = :line1,line1," +
+                                  "line1 = :line1," +
                                   "line2 = :line2," +
                                   "city = :city," +
                                   "state = :state," +
-                                  "zip = :zip" +
+                                  "zip = :zip " +
                                   "WHERE id = :id")
     void setAddress(@BindBean Address address);
     // TODO not set if values same

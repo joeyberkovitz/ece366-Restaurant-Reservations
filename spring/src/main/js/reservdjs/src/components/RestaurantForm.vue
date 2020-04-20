@@ -57,6 +57,7 @@
 					<label for="address2">Address 2nd Line</label>
 					<md-input name="address2" id="address2" type="text" v-model="form.address2"/>
 				</md-field>
+				<input type="hidden" v-model="form.addrId" value="0">
 				<md-field :class="getValidationClass('phone')">
 					<label for="phone">Phone Number</label>
 					<md-input name="phone" id="phone" type="tel" v-model="form.phone"/>
@@ -72,14 +73,15 @@
 								required</span>
 					<span class="md-error" v-if="!$v.form.email.email">Invalid email address</span>
 				</md-field>
+				<input type="hidden" v-model="form.contId" value="0"/>
 				<md-snackbar md-position="center" :md-duration="snackBarDuration"
 				             :md-active.sync="showSnackBar" md-persistent>
 					<span>{{snackBarMessage}}</span>
 				</md-snackbar>
 			</md-card-content>
 			<md-card-actions md-alignment="space-between">
-				<md-button type="submit" class="button md-primary md-raised" :disabled="sending">Create
-					Restaurant</md-button>
+				<md-button type="submit" class="button md-primary md-raised" :disabled="sending">{{button}}
+					</md-button>
 			</md-card-actions>
 		</md-card>
 
@@ -94,9 +96,10 @@
 
 	export default {
 		name: 'RestaurantForm',
-		props: ['client', 'categories'],
+		props: ['client', 'categories', 'button'],
 		mixins: [validationMixin],
 		data: () => ({
+		        curId: 0,
 			type: 'Login',
 			options: {
 				countries: ['US'],
@@ -170,10 +173,9 @@
 					};
 			},
 			test(){
-				const client = this.$store.getters.grpc.restaurantClient;
 				const restaurant = new Restaurant();
 				restaurant.setId(1);
-				client.client.getRestaurant(restaurant, {}, (err, response) => {
+				this.client.client.getRestaurant(restaurant, {}, (err, response) => {
 					console.log(err, response);
 				});
 			},
@@ -182,7 +184,6 @@
 				this.$v.$touch();
 				if(!this.$v.$invalid){
 					console.log("VALID");
-					const client = this.$store.getters.grpc.restaurantClient;
 					const restaurant = new Restaurant();
 					restaurant.setCapacity(this.form.capacity);
 					restaurant.setName(this.form.name);
@@ -201,26 +202,76 @@
 					address.setState(this.form.address.data.administrative);
 					address.setZip(this.form.address.data.postcode);
 					address.setName(this.form.name);
+					address.setId(this.form.addrId);
 					restaurant.setAddress(address);
 
 					const contact = new Contact();
 					contact.setPhone(this.form.phone);
 					contact.setEmail(this.form.email);
+					contact.setId(this.form.contId);
 					restaurant.setContact(contact);
 
-					client.client.createRestaurant(restaurant, {}, (err, response) => {
-						console.log(err, response);
-					});
+					if(this.curId == 0) {
+					        this.client.client.createRestaurant(restaurant, {}, (err, response) => {
+						        console.log(err, response);
+					        });
+					} else {
+						restaurant.setId(this.curId);
+						this.client.client.setRestaurant(restaurant, {}, (err, response) => {
+							console.log(err, response);
+						});
+					}
 
 				}
 				else{
 					console.log("INVALID");
 				}
+			},
+			populate: function(event){
+				const id = event.target.value;
+				if(id != this.curId) {
+					this.curId = id;
+					const req = new Restaurant();
+					req.setId(id);
+					this.client.client.getRestaurant(req, {}, (err, response) => {
+						this.form.name = response.getName();
+						this.form.capacity = response.getCapacity();
+						this.form.name = response.getName();
+						this.form.rtime = response.getRtime();
+
+						const category = response.getCategory();
+						this.form.category = category.getCategory();
+
+						const address = response.getAddress();
+						this.form.address.data = {};
+						this.form.address.data.city = address.getCity();
+						this.form.address.data.latlng = {};
+						this.form.address.data.latlng.lat = address.getLatitude();
+						this.form.address.data.latlng.lng = address.getLongitude();
+						this.form.address.data.name = address.getLine1();
+						this.form.address.label = address.getLine1();
+						this.form.address2 = address.getLine2();
+						this.form.address.data.administrative = address.getState();
+						this.form.address.data.postcode = address.getZip();
+						this.form.name = address.getName();
+						this.form.addrId = address.getId();
+
+						const contact = response.getContact();
+						this.form.phone = contact.getPhone();
+						this.form.email = contact.getEmail();
+						this.form.contId = contact.getId();
+					});
+				}
 			}
 		},
 		components: {
 			Places
-		}
+		},
+		mounted() {
+			this.$root.$on('restaurant', (event) => {
+				this.populate(event);
+			});
+		},
 	}
 </script>
 
