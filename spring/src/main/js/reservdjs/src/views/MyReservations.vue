@@ -1,7 +1,7 @@
 <template>
     <div class="centered">
         <ReservationList :reservations="this.reservations"
-                         @load="load(arguments)"/>
+                         @load="load($event)"/>
 
     </div>
 </template>
@@ -9,7 +9,7 @@
 <script>
     import {CustomRPCClient} from "../proto/CustomRPCClient";
     import {ReservationServiceClient} from "../proto/RestaurantServiceServiceClientPb";
-    import ReservationUserRequest from "../proto/RestaurantService_pb";
+    import {ReservationUserRequest} from "../proto/RestaurantService_pb";
     import ReservationList from "../components/ReservationList";
 
     export default {
@@ -26,13 +26,13 @@
             this.client = new CustomRPCClient(ReservationServiceClient, this.$store.getters.config.host);
         },
         methods: {
-            load(args) {
+            load(filterData) {
                 this.reservations = [];
 
                 const request = new ReservationUserRequest();
-                request.setBegintime(args[0].getTime()/1000);
-                request.setFuturetime(args[1].getTime()/1000);
-                request.setStatus(args[2]);
+                request.setBegintime(filterData.date.getTime()/1000);
+                request.setFuturetime(filterData.futureDate.getTime()/1000);
+                request.setStatus(filterData.status);
                 const promise1 = this.client.client.getReservationsByUser(request,{}, err => {
                     console.log(err);
                 });

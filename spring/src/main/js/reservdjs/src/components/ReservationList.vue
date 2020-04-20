@@ -7,17 +7,17 @@
                     <div class="md-layout-item">
                         <md-field>
                             <label for="status">Status</label>
-                            <md-select name="status" id="status" v-model="status">
+                            <md-select name="status" id="status" v-model="filterData.status">
                                 <md-option v-for="(status) in statuses" :key="status" :value="status">{{ status }}</md-option>
                                 <md-option value="ALL">ALL</md-option>
                             </md-select>
                         </md-field>
                     </div>
                     <div class="md-layout-item">
-                        <md-datepicker name="start date" id="start date" v-model="date"><label for="start date">Start Date</label></md-datepicker>
+                        <md-datepicker name="start date" id="start date" v-model="filterData.date"><label for="start date">Start Date</label></md-datepicker>
                     </div>
                     <div class="md-layout-item">
-                        <md-datepicker name="end date" id="end date" v-model="futureDate"><label for="end date">End Date</label></md-datepicker>
+                        <md-datepicker name="end date" id="end date" v-model="filterData.futureDate"><label for="end date">End Date</label></md-datepicker>
                     </div>
                     <div class="md-layout-item">
                         <md-button class="bold md-primary" @click="load()">Filter</md-button>
@@ -51,21 +51,24 @@
         name: "ReservationList",
         props: ['reservations'],
         created() {
-            this.date = new Date();
-            this.date.setHours(0);
-            this.date.setMinutes(0);
-            this.date.setSeconds(0);
-            this.date.setMilliseconds(0);
-            this.futureDate = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate()+7);
-            this.status = "ALL";
+            this.filterData.date = new Date();
+            this.filterData.date.setHours(0);
+            this.filterData.date.setMinutes(0);
+            this.filterData.date.setSeconds(0);
+            this.filterData.date.setMilliseconds(0);
+            this.filterData.futureDate = new Date(this.filterData.date.getFullYear(), this.filterData.date.getMonth(),
+                this.filterData.date.getDate()+7);
+            this.filterData.status = "ALL";
             this.statuses = Object.keys(Reservation.ReservationStatus);
 
             this.load();
         },
         data: () => ({
-            date: null,
-            futureDate: null,
-            status: null,
+            filterData: {
+                date: null,
+                futureDate: null,
+                status: null
+            },
             statuses: []
         }),
         filters: {
@@ -94,7 +97,7 @@
         },
         methods: {
             load() {
-                this.$emit('load',this.date,this.futureDate,this.status);
+                this.$emit('load',this.filterData);
             },
             getStatus(val) {
                 for (let i = 0; i < this.statuses.length; i++){
