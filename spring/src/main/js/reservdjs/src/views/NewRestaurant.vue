@@ -2,7 +2,8 @@
 	<div class="centered">
 		<RestaurantForm :client="this.client"
 		                :categories="this.categories"
-		                button="Create Restaurant"/>
+		                button="Create Restaurant"
+		                canEdit="true"/>
 	</div>
 </template>
 
