@@ -3,7 +3,6 @@
       <md-toolbar class="nav">
           <h3 class="md-title" style="flex: 1;text-align: left;">RESERVD</h3>
           <md-button to="/">Home</md-button>
-          <md-button to="/about">About</md-button>
           <span v-show="loggedIn()">
             <md-button to="/restaurant/new">Create Restaurant</md-button>
             <md-button to="/restaurant/manage/0">Manage Restaurants</md-button>
