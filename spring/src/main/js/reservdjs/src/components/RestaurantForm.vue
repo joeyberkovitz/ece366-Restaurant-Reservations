@@ -213,11 +213,17 @@
 					restaurant.setContact(contact);
 
 					if(this.manageBool == 0) {
+							console.log(restaurant)
 					        this.client.client.createRestaurant(restaurant, {}, (err, response) => {
 						        console.log(err, response);
+						        if(!err){
+							        this.$router.push("/restaurant/manage/" + response.getId());
+						        }
 					        });
 					} else {
 						restaurant.setId(this.$route.params.id);
+						console.log(this.$route.params.id);
+						console.log(restaurant);
 						this.client.client.setRestaurant(restaurant, {}, (err, response) => {
 							console.log(err, response);
 						});
