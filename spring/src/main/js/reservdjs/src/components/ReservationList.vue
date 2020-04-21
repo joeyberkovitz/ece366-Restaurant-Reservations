@@ -1,8 +1,9 @@
 <template>
-    <md-card class="md-layout-item md-size-55 md-big-size-50 md-alignment-top-center">
+  <div class="md-layout md-alignment-center-center">
+    <md-card class="md-layout-item md-size-50 md-big-size-50">
         <md-card-header>
             <div class="title">
-                <h1>{{ $route.name }}</h1>
+                <h1>Reservations</h1>
                 <div class="md-layout md-gutter">
                     <div class="md-layout-item">
                         <md-field>
@@ -41,6 +42,7 @@
             </md-list>
         </md-card-content>
     </md-card>
+  </div>
 </template>
 
 <script>
