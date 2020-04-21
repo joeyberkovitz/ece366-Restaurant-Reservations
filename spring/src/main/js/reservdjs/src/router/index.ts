@@ -28,7 +28,7 @@ const routes = [
     component: () => import('../views/NewRestaurant.vue')
   },
   {
-    path: '/restaurant/manage',
+    path: '/restaurant/manage/:id',
     name: 'Manage Restaurant',
     component: () => import('../views/ManageRestaurant.vue')
   },

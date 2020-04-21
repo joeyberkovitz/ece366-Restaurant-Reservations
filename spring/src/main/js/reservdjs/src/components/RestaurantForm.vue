@@ -99,7 +99,7 @@
 		props: ['client', 'categories', 'button'],
 		mixins: [validationMixin],
 		data: () => ({
-		        curId: 0,
+		        manageBool: 0,
 			type: 'Login',
 			options: {
 				countries: ['US'],
@@ -211,12 +211,12 @@
 					contact.setId(this.form.contId);
 					restaurant.setContact(contact);
 
-					if(this.curId == 0) {
+					if(this.manageBool == 0) {
 					        this.client.client.createRestaurant(restaurant, {}, (err, response) => {
 						        console.log(err, response);
 					        });
 					} else {
-						restaurant.setId(this.curId);
+						restaurant.setId(this.$route.params.id);
 						this.client.client.setRestaurant(restaurant, {}, (err, response) => {
 							console.log(err, response);
 						});
@@ -227,12 +227,11 @@
 					console.log("INVALID");
 				}
 			},
-			populate: function(event){
-				const id = event.target.value;
-				if(id != this.curId) {
-					this.curId = id;
+			populate: function(){
+				if(this.$route.params.id) {
+					this.manageBool = 1;
 					const req = new Restaurant();
-					req.setId(id);
+					req.setId(this.$route.params.id);
 					this.client.client.getRestaurant(req, {}, (err, response) => {
 						this.form.name = response.getName();
 						this.form.capacity = response.getCapacity();
@@ -268,9 +267,12 @@
 			Places
 		},
 		mounted() {
-			this.$root.$on('restaurant', (event) => {
-				this.populate(event);
-			});
+			this.populate();
+		},
+		watch: {
+			$route(to, from) {
+				this.populate();
+			}
 		},
 	}
 </script>

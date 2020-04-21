@@ -43,19 +43,15 @@
 			toAdd: '',
 		}),
 		methods: {
-			populate: function(event){
-				const id = event.target.value;
-				if(id != this.curId) {
-					this.curId = id;
-					const req = new Restaurant();
-					req.setId(id);
-					const promise = this.client.client.getUsersByRestaurant(req, {}, err => {
-						console.log(err);
-					});
-					promise.on('data', (data) => {
-						this.users.push(data);
-					});
-				}
+			populate: function(){
+				const req = new Restaurant();
+				req.setId(this.$route.params.id);
+				const promise = this.client.client.getUsersByRestaurant(req, {}, err => {
+					console.log(err);
+				});
+				promise.on('data', (data) => {
+					this.users.push(data);
+				});
 			},
 			delRel: function(toDelete) {
 				const req = new Relationship();
@@ -68,7 +64,7 @@
 			addRel: function(toAdd) {
 				const req = new Relationship();
 				const restaurant = new Restaurant();
-				restaurant.setId(this.curId);
+				restaurant.setId(this.$route.params.id);
 				req.setRestaurant(restaurant);
 				const user = new User();
 				user.setUsername(toAdd);
@@ -81,9 +77,12 @@
 			}
 		},
 		mounted() {
-			this.$root.$on('restaurant', (event) => {
-				this.populate(event);
-			});
+			this.populate();
+		},
+		watch: {
+			$route(to, from) {
+				this.populate();
+			}
 		},
 	}
 </script>

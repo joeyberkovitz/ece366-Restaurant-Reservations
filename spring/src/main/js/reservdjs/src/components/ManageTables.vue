@@ -70,19 +70,15 @@
 			}
 		},
 		methods: {
-			populate: function(event){
-				const id = event.target.value;
-				if(id != this.curId) {
-					this.curId = id;
-					const req = new Restaurant();
-					req.setId(id);
-					const promise = this.client.client.getTablesByRestaurant(req, {}, err => {
-						console.log(err);
-					});
-					promise.on('data', (data) => {
-						this.tables.push(data);
-					});
-				}
+			populate: function(){
+				const req = new Restaurant();
+				req.setId(this.$route.params.id);
+				const promise = this.client.client.getTablesByRestaurant(req, {}, err => {
+					console.log(err);
+				});
+				promise.on('data', (data) => {
+					this.tables.push(data);
+				});
 			},
 			getValidationClass(elem){
 				const field = this.$v.form[elem];
@@ -116,9 +112,12 @@
 			},
 		},
 		mounted() {
-			this.$root.$on('restaurant', (event) => {
-				this.populate(event);
-			});
+			this.populate();
+		},
+		watch: {
+			$route(to, from) {
+				this.populate();
+			}
 		},
 	}
 </script>

@@ -45,7 +45,6 @@ export default {
 		restaurants: [],
 		users: [],
 		reservations: [],
-		curId: 0,
 	}),
 	created() {
 		this.client = this.$store.getters.grpc.restaurantClient;
@@ -66,8 +65,8 @@ export default {
 	mounted() {
 		this.$root.$on('restaurant', (event) => {
 			const id = event.target.value;
-			if(id != this.curId) {
-				this.curId = id;
+			if(id != this.$route.params.id) {
+				this.$router.push({params: {id:id}})
 			}
 		});
 	},
@@ -79,7 +78,7 @@ export default {
 	                request.setFuturetime(filterData.futureDate.getTime()/1000);
 	                request.setStatus(filterData.status);
 	                const restaurant = new Restaurant();
-	                restaurant.setId(this.curId);
+	                restaurant.setId(this.$route.params.id);
 	                request.setRestaurant(restaurant);
 	                const promise1 = resClient.client.getReservationsByRestaurant(request,{}, err => {
 	                    console.log(err);
