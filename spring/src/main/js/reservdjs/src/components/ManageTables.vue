@@ -50,7 +50,6 @@
 		props: ['client'],
 		mixins: [validationMixin],
 		data: () => ({
-			curId: 0,
 			tables: [],
 			toDelete: [],
 			form: {

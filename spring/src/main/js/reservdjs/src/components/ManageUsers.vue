@@ -37,7 +37,6 @@
 		name: 'ManageUsers',
 		props: ['client'],
 		data: () => ({
-			curId: 0,
 			users: [],
 			toDelete: [],
 			toAdd: '',
