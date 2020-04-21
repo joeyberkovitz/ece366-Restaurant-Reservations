@@ -17,6 +17,8 @@
 		                button="Set Restaurant"/>
                 <ManageUsers :client="this.client"/>
 		<ManageTables :client="this.client"/>
+	        <ReservationList :reservations="this.reservations"
+	                         @load="load($event)"/>
 	</div>
 </template>
 
@@ -24,7 +26,10 @@
 import RestaurantForm from '@/components/RestaurantForm.vue'
 import ManageUsers from '@/components/ManageUsers.vue'
 import ManageTables from '@/components/ManageTables.vue'
-import {GetCategoryRequest, User} from "../proto/RestaurantService_pb";
+import ReservationList from "../components/ReservationList";
+import {GetCategoryRequest, User, ReservationRestaurantRequest, Restaurant} from "../proto/RestaurantService_pb";
+import {CustomRPCClient} from "../proto/CustomRPCClient";
+import {ReservationServiceClient} from "../proto/RestaurantServiceServiceClientPb";
 
 export default {
 	name: "SetRestaurant",
@@ -32,12 +37,15 @@ export default {
 		RestaurantForm,
 		ManageUsers,
 		ManageTables,
+		ReservationList
 	},
 	data: () => ({
 		client: null,
 		categories: [],
 		restaurants: [],
 		users: [],
+		reservations: [],
+		curId: 0,
 	}),
 	created() {
 		this.client = this.$store.getters.grpc.restaurantClient;
@@ -54,6 +62,40 @@ export default {
 	        promise2.on('data', (data) => {
 	                this.restaurants.push(data.getRestaurant());
 	        });
+	},
+	mounted() {
+		this.$root.$on('restaurant', (event) => {
+			const id = event.target.value;
+			if(id != this.curId) {
+				this.curId = id;
+			}
+		});
+	},
+	methods: {
+		load(filterData) {
+			const resClient = new CustomRPCClient(ReservationServiceClient, this.$store.getters.config.host);
+	                const request = new ReservationRestaurantRequest();
+	                request.setBegintime(filterData.date.getTime()/1000);
+	                request.setFuturetime(filterData.futureDate.getTime()/1000);
+	                request.setStatus(filterData.status);
+	                const restaurant = new Restaurant();
+	                restaurant.setId(this.curId);
+	                request.setRestaurant(restaurant);
+	                const promise1 = resClient.client.getReservationsByRestaurant(request,{}, err => {
+	                    console.log(err);
+	                });
+	                promise1.on('data', (data1) => {
+	                    const usersR = [];
+	                    const promise2 = resClient.client.listReservationUsers(data1, {}, err => {
+	                        console.log(err);
+	                    });
+	                    promise2.on('data', (data2) => {
+	                        usersR.push(data2.getFname() + " " + data2.getLname());
+	                    });
+	                    this.reservations.push({details: data1,
+	                        invites: usersR});
+	                });
+                }
 	},
 }
 </script>
