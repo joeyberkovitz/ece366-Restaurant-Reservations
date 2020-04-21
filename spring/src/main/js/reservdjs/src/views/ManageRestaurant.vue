@@ -50,6 +50,7 @@ export default {
 		users: [],
 		reservations: [],
 		canEdit: false,
+		userId: 0,
 	}),
 	created() {
 		this.client = this.$store.getters.grpc.restaurantClient;
@@ -60,24 +61,15 @@ export default {
 			this.categories.push(data);
 		});
 		const user = new User();
-		const userId = JSON.parse(atob(this.$store.getters.user.authToken.split('.')[1])).sub;
-		user.setId(userId);
+		this.userId = JSON.parse(atob(this.$store.getters.user.authToken.split('.')[1])).sub;
+		user.setId(this.userId);
 		const promise2 = this.client.client.getRestaurantsByUser(user, {},
 		        err => { console.log(err); });
 	        promise2.on('data', (data) => {
 	                this.restaurants.push(data.getRestaurant());
 	        });
 
-		const req = new Restaurant();
-		req.setId(this.$route.params.id);
-		const promise3 = this.client.client.getUsersByRestaurant(req, {}, err => {
-			console.log(err);
-		});
-		promise3.on('data', (data) => {
-			if(data.getUser().getId() == userId) {
-				this.canEdit = true;
-			}
-		});
+		this.checkEdit();
 	},
 	mounted() {
 		this.$root.$on('restaurant', (event) => {
@@ -111,7 +103,24 @@ export default {
 	                    this.reservations.push({details: data1,
 	                        invites: usersR});
 	                });
+                },
+                checkEdit() {
+			const req = new Restaurant();
+			req.setId(this.$route.params.id);
+			const promise3 = this.client.client.getUsersByRestaurant(req, {}, err => {
+				console.log(err);
+			});
+			promise3.on('data', (data) => {
+				if(data.getUser().getId() == this.userId) {
+					this.canEdit = true;
+				}
+			});
                 }
+	},
+	watch: {
+		$route(to, from) {
+			this.checkEdit();
+		}
 	},
 }
 </script>
