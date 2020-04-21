@@ -14,11 +14,15 @@
 		</div>
 		<RestaurantForm :client="this.client"
 		                :categories="this.categories"
-		                button="Set Restaurant"/>
-                <ManageUsers :client="this.client"/>
-		<ManageTables :client="this.client"/>
+		                button="Set Restaurant"
+		                :canEdit="this.canEdit"/>
+                <ManageUsers :client="this.client"
+                             v-if="this.canEdit"/>
+		<ManageTables :client="this.client"
+		              v-if="this.canEdit"/>
 	        <ReservationList :reservations="this.reservations"
-	                         @load="load($event)"/>
+	                         @load="load($event)"
+	                         v-if="this.canEdit"/>
 	</div>
 </template>
 
@@ -45,6 +49,7 @@ export default {
 		restaurants: [],
 		users: [],
 		reservations: [],
+		canEdit: false,
 	}),
 	created() {
 		this.client = this.$store.getters.grpc.restaurantClient;
@@ -55,12 +60,24 @@ export default {
 			this.categories.push(data);
 		});
 		const user = new User();
-		user.setId(JSON.parse(atob(this.$store.getters.user.authToken.split('.')[1])).sub);
+		const userId = JSON.parse(atob(this.$store.getters.user.authToken.split('.')[1])).sub;
+		user.setId(userId);
 		const promise2 = this.client.client.getRestaurantsByUser(user, {},
 		        err => { console.log(err); });
 	        promise2.on('data', (data) => {
 	                this.restaurants.push(data.getRestaurant());
 	        });
+
+		const req = new Restaurant();
+		req.setId(this.$route.params.id);
+		const promise3 = this.client.client.getUsersByRestaurant(req, {}, err => {
+			console.log(err);
+		});
+		promise3.on('data', (data) => {
+			if(data.getUser().getId() == userId) {
+				this.canEdit = true;
+			}
+		});
 	},
 	mounted() {
 		this.$root.$on('restaurant', (event) => {

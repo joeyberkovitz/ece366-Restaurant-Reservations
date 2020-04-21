@@ -9,13 +9,13 @@
 			<md-card-content>
 				<md-field :class="getValidationClass('name')">
 					<label for="name">Restaurant Name</label>
-					<md-input name="name" id="name" v-model="form.name"/>
+					<md-input name="name" id="name" v-model="form.name" :disabled="!this.canEdit"/>
 					<span class="md-error" v-if="!$v.form.name.required">Restaurant name is
 						required</span>
 				</md-field>
 				<md-field :class="getValidationClass('rtime')">
 					<label for="rtime">Default Reservation Time (Hours)</label>
-					<md-input name="rtime" id="rtime" type="number" v-model="form.rtime"/>
+					<md-input name="rtime" id="rtime" type="number" v-model="form.rtime" :disabled="!this.canEdit"/>
 					<span class="md-error" v-if="!$v.form.rtime.required">Default reservation time is
 						required</span>
 					<span class="md-error" v-if="!$v.form.rtime.numeric">Default reservation time must be a
@@ -23,7 +23,7 @@
 				</md-field>
 				<md-field :class="getValidationClass('category')">
 					<label for="category">Category</label>
-					<md-select name="category" id="category" v-model="form.category">
+					<md-select name="category" id="category" v-model="form.category" :disabled="!this.canEdit">
 						<md-option v-for="(category) in categories"
 						           :key="category.getCategory()"
 						           :value="category.getCategory()">{{category.getName()}}</md-option>
@@ -33,7 +33,7 @@
 				</md-field>
 				<md-field :class="getValidationClass('capacity')">
 					<label for="capacity">Minimum Table Capacity (%)</label>
-					<md-input name="capacity" id="capacity" type="number" v-model="form.capacity"/>
+					<md-input name="capacity" id="capacity" type="number" v-model="form.capacity" :disabled="!this.canEdit"/>
 					<span class="md-error" v-if="!$v.form.capacity.required">Minimum table capacity is
 						required</span>
 					<span class="md-error" v-if="!$v.form.capacity.numeric">Minimum table capacity must be a
@@ -48,19 +48,20 @@
 							@change="val => { form.address.data = val }"
 							@focus="form.address.focused = true"
 							@blur="form.address.focused = false"
-							:options="options">
+							:options="options"
+							:disabled="!this.canEdit">
 					</places>
 					<span class="md-error" v-if="!$v.form.address.data.latlng.required">Valid address
 						required</span>
 				</md-field>
 				<md-field>
 					<label for="address2">Address 2nd Line</label>
-					<md-input name="address2" id="address2" type="text" v-model="form.address2"/>
+					<md-input name="address2" id="address2" type="text" v-model="form.address2" :disabled="!this.canEdit"/>
 				</md-field>
 				<input type="hidden" v-model="form.addrId" value="0">
 				<md-field :class="getValidationClass('phone')">
 					<label for="phone">Phone Number</label>
-					<md-input name="phone" id="phone" type="tel" v-model="form.phone"/>
+					<md-input name="phone" id="phone" type="tel" v-model="form.phone" :disabled="!this.canEdit"/>
 					<span class="md-error" v-if="!$v.form.phone.required">Phone number is
 								required</span>
 					<span class="md-error" v-if="!$v.form.phone.numeric">Phone number may only
@@ -68,7 +69,7 @@
 				</md-field>
 				<md-field :class="getValidationClass('email')">
 					<label for="email">Email</label>
-					<md-input name="email" id="email" type="email" v-model="form.email"/>
+					<md-input name="email" id="email" type="email" v-model="form.email" :disabled="!this.canEdit"/>
 					<span class="md-error" v-if="!$v.form.email.required">Email address is
 								required</span>
 					<span class="md-error" v-if="!$v.form.email.email">Invalid email address</span>
@@ -79,7 +80,7 @@
 					<span>{{snackBarMessage}}</span>
 				</md-snackbar>
 			</md-card-content>
-			<md-card-actions md-alignment="space-between">
+			<md-card-actions md-alignment="space-between" v-if="this.canEdit">
 				<md-button type="submit" class="button md-primary md-raised" :disabled="sending">{{button}}
 					</md-button>
 			</md-card-actions>
@@ -96,7 +97,7 @@
 
 	export default {
 		name: 'RestaurantForm',
-		props: ['client', 'categories', 'button'],
+		props: ['client', 'categories', 'button', 'canEdit'],
 		mixins: [validationMixin],
 		data: () => ({
 		        manageBool: 0,
