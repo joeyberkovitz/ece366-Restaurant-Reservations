@@ -91,7 +91,7 @@
 				this.$v.$touch();
 				const req = new CreateTableRequest();
 				const restaurant = new Restaurant();
-				restaurant.setId(this.curId);
+				restaurant.setId(this.$route.params.id);
 				req.setTarget(restaurant);
 				const table = new Table();
 				table.setLabel(this.form.label);
