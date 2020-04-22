@@ -2,14 +2,20 @@
 	<div class="centered">
 		<div class="md-layout md-alignment-center-center">
 			<md-card class="md-layout-item md-size-50 md-small-size-50">
-		        	<label for="restaurant">My restaurants</label>
-			        <select name="restaurant" id="restaurantSel"
-			                v-on:change="$root.$emit('restaurant', $event)">
-			                <option selected key="0" value="0">---</option>
-				        <option v-for="(restaurant) in restaurants"
-			        	        :key="restaurant.getId()"
-        			        	:value="restaurant.getId()">{{restaurant.getName()}}</option>
-		        	</select>
+				<md-card-header>
+					Jump to restaurant
+				</md-card-header>
+				<md-card-content>
+					<md-field>
+				        	<label for="restaurant">My restaurants</label>
+					        <md-select name="restaurant" id="restaurantSel"
+					                v-on:change="$root.$emit('restaurant', $event)">
+						        <option v-for="(restaurant) in restaurants"
+					        	        :key="restaurant.getId()"
+		        			        	:value="restaurant.getId()">{{restaurant.getName()}}</option>
+				        	</md-select>
+			        	</md-field>
+		        	</md-card-content>
 			</md-card>
 		</div>
 		<RestaurantForm :client="this.client"
