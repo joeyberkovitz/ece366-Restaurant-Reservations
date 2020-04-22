@@ -132,7 +132,10 @@
 		reservation.setId(reservationOrig.details.getId());
 		request.setReservation(reservation);
 		const user = new User();
-		user.setUsername(username);
+		if(inviteBool)
+			user.setUsername(username);
+		else
+			user.setId(username);
 		request.setUser(user);
 		const callback = err => {
                     reservationOrig.invites = [];
