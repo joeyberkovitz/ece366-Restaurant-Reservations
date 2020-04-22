@@ -52,27 +52,14 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 	}
 
 	@Override
-	public StreamObserver<InviteMessage> removeReservationUser(StreamObserver<InviteResponse> responseObserver) {
-		return new StreamObserver<InviteMessage>() {
-			@Override
-			public void onNext(InviteMessage value) {
-				checkReservationPermission(value.getReservation());
+	public void removeReservationUser(InviteMessage request, StreamObserver<InviteResponse> responseObserver) {
+		checkReservationPermission(request.getReservation());
 
-				manager.removeReservationUser(value.getReservation().getId(),
-					value.getUser().getId());
-			}
+		manager.removeReservationUser(request.getReservation().getId(),
+			request.getUser().getId());
 
-			@Override
-			public void onError(Throwable t) {
-				responseObserver.onError(t);
-			}
-
-			@Override
-			public void onCompleted() {
-				responseObserver.onNext(InviteResponse.newBuilder().build());
-				responseObserver.onCompleted();
-			}
-		};
+		responseObserver.onNext(InviteResponse.newBuilder().build());
+		responseObserver.onCompleted();
 	}
 
 	@Override

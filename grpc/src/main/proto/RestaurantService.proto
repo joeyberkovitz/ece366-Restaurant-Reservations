@@ -42,7 +42,7 @@ service UserService {
 service ReservationService {
 	rpc createReservation (Reservation) returns (Reservation);
 	rpc inviteReservation (InviteMessage) returns (InviteResponse);
-	rpc removeReservationUser (stream InviteMessage) returns (InviteResponse);
+	rpc removeReservationUser (InviteMessage) returns (InviteResponse);
 	rpc listReservationUsers (Reservation) returns (stream User);
 	rpc getReservation (Reservation) returns (Reservation);
 	rpc setReservation (Reservation) returns (Reservation); // status or num people or points
