@@ -10,9 +10,9 @@
 				        	<label for="restaurant">My restaurants</label>
 					        <md-select name="restaurant" id="restaurantSel"
 					                v-on:change="$root.$emit('restaurant', $event)">
-						        <option v-for="(restaurant) in restaurants"
+						        <md-option v-for="(restaurant) in restaurants"
 					        	        :key="restaurant.getId()"
-		        			        	:value="restaurant.getId()">{{restaurant.getName()}}</option>
+		        			        	:value="restaurant.getId()">{{restaurant.getName()}}</md-option>
 				        	</md-select>
 			        	</md-field>
 		        	</md-card-content>
