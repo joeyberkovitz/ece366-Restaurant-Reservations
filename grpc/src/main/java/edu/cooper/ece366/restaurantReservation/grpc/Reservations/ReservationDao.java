@@ -45,7 +45,7 @@ public interface ReservationDao {
 
 	@SqlUpdate("UPDATE reservation set start_time = FROM_UNIXTIME(:r.startTime), " +
 			"num_people = :r.numPeople, num_points = :r.points, " +
-			"status_id  = :statusId")
+			"status_id  = :statusId WHERE id = :r.id")
 	void updateReservation(@BindBean("r") Reservation reservation,
 						   int statusId);
 
@@ -98,9 +98,9 @@ public interface ReservationDao {
 	List<Reservation> searchReservations(Integer reservationId,
 	                                     Integer userId,
 	                                     Integer restaurantId,
-										 Long beginTime,
-										 Long futureTime,
-										 Integer statusId);
+	                                     Long beginTime,
+	                                     Long futureTime,
+	                                     Integer statusId);
 
 	@SqlQuery("select t.id, t.capacity, t.label " +
 			"from reservation r " +
