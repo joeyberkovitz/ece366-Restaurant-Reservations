@@ -48,7 +48,7 @@
                         </div>
                         <md-button v-if="getStatus(reservation.details.getStatus()) == 'OPENED'"
                                    class="bold md-primary"
-                                   @click="cancel(reservation.details); load()">
+                                   @click="cancel(reservation.details);">
                                    Cancel Reservation</md-button>
                     </md-list-item>
                     <md-divider></md-divider>
@@ -123,6 +123,7 @@
 		reservation.setStatus(Reservation.ReservationStatus.CANCELLED);
 		resClient.client.setReservation(reservation, {}, err => {
 		    console.log(err);
+		    this.load();
 		});
             },
             invite(username, reservationOrig, inviteBool) {
