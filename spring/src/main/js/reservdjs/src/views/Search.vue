@@ -65,6 +65,10 @@
 						<md-divider></md-divider>
 					</div>
 				</md-list>
+				<md-snackbar md-position="center" :md-duration="snackBarDuration"
+				             :md-active.sync="showSnackBar" md-persistent>
+					<span>{{snackBarMessage}}</span>
+				</md-snackbar>
 			</md-card-content>
 		</md-card>
 	</div>
@@ -114,7 +118,10 @@
 				category: null
 			},
 			menu2: false,
-			results: []
+			results: [],
+			showSnackBar: false,
+			snackBarMessage: "",
+			snackBarDuration: 4000
 		}),
 		methods: {
 			createReservation(restaurant){
@@ -127,7 +134,13 @@
 
 				this.reservationClient.client.createReservation(newReservation, {}, (err, response) => {
 					console.log(err, response);
-					this.$router.push("/reservation/" + response.getId());
+					if(err)
+						this.snackBarMessage = err.message;
+					else
+						this.snackBarMessage = "Reservation created, go to my reservations to view it";
+					this.showSnackBar = true;
+					this.results = [];
+					this.validateForm();
 				});
 			},
 			getCategory(categoryId){

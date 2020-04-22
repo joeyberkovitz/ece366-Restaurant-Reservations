@@ -134,8 +134,8 @@ public interface RestaurantDao {
 			"INNER JOIN status st ON r.status_id = st.id " +
 			"WHERE r.restaurant_id = t.restaurant_id " +
 			"AND st.name != 'Cancelled' " +
-			"AND r.end_time > :r.requestedDate " +
-			"AND r.start_time < DATE_ADD(:r.requestedDate, INTERVAL rest.reservation_time HOUR) " +
+			"AND r.end_time > FROM_UNIXTIME(:r.requestedDate) " +
+			"AND r.start_time < DATE_ADD(FROM_UNIXTIME(:r.requestedDate), INTERVAL rest.reservation_time HOUR) " +
 		") " +
 		" AND (:r.category.category = 0 OR restaurant.category_id = :r.category.category)"+
 		"GROUP BY t.restaurant_id " +

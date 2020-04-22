@@ -35,11 +35,6 @@ const routes = [
     component: () => import('../views/MyReservations.vue')
   },
   {
-    path: '/reservation/:id',
-    name: 'My Reservations',
-    component: () => import('../views/MyReservations.vue')
-  },
-  {
     path: '/search',
     name: 'Search',
     component: () => import('../views/Search.vue')
