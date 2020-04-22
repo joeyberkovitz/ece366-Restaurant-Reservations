@@ -77,6 +77,7 @@
 		},
 		methods: {
 			populate: function(){
+				this.tables = [];
 				const req = new Restaurant();
 				req.setId(this.$route.params.id);
 				const promise = this.client.client.getTablesByRestaurant(req, {}, err => {

@@ -43,6 +43,7 @@
 		}),
 		methods: {
 			populate: function(){
+				this.users = [];
 				const req = new Restaurant();
 				req.setId(this.$route.params.id);
 				const promise = this.client.client.getUsersByRestaurant(req, {}, err => {
