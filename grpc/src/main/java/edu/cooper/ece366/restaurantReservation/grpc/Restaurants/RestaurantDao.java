@@ -17,9 +17,9 @@ import java.util.Optional;
 
 public interface RestaurantDao {
 	@SqlUpdate("INSERT INTO " +
-			"restaurant(name, address_id,contact_id, category_id) " +
+			"restaurant(name, address_id,contact_id, category_id, capacity_factor, reservation_time) " +
 			"VALUES(:restaurant.name,:address_id, :contact_id," +
-			":restaurant.category.category)")
+			":restaurant.category.category, :restaurant.capacity, :restaurant.rtime)")
 	@GetGeneratedKeys("id")
 	int insertRestaurant(int address_id, int contact_id,
 	                     @BindBean("restaurant") Restaurant restaurant);
@@ -48,7 +48,9 @@ public interface RestaurantDao {
 	int getRestaurantReservationTime(int id);
 
 	@SqlUpdate("UPDATE restaurant SET name = :restaurant.name," +
-			"category_id = :restaurant.category.category "+
+			"category_id = :restaurant.category.category, "+
+			"capacity_factor = :restaurant.capacity, "+
+			"reservation_time = :restaurant.rtime "+
 			"WHERE restaurant.id = :restaurant.id")
 	void setRestaurant(@BindBean("restaurant") Restaurant restaurant);
 	// TODO figure out why this complains when category is unset
