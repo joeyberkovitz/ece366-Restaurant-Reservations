@@ -81,15 +81,19 @@ public class ReservationManager {
 	public List<Reservation> searchReservations(Integer resId,
 	                                            Integer userId,
 	                                            Integer restId,
-												Long beginTime,
-												Long futureTime,
-												String status) {
+	                                            Long beginTime,
+	                                            Long futureTime,
+	                                            String status) {
 		Integer statusId;
-		if (status != null && status.equals("ALL"))
-			statusId = null;
+		if(status != null) {
+			if(status.equals("ALL"))
+				statusId = null;
+			else
+				statusId = db.withExtension(StatusDao.class,
+					dao -> dao.getStatusIdByName(status));
+		}
 		else
-			statusId = db.withExtension(StatusDao.class,
-				dao -> dao.getStatusIdByName(status));
+			statusId = null;
 		return db.withExtension(ReservationDao.class, dao -> {
 			return dao.searchReservations(resId, userId, restId, beginTime, futureTime, statusId);
 		});
