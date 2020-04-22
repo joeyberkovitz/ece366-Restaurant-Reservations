@@ -34,6 +34,10 @@
 					<md-button type="submit" class="button md-primary md-raised">Add
 						</md-button>
 				</form>
+				<md-snackbar md-position="center" :md-duration="snackBarDuration"
+				             :md-active.sync="showSnackBar" md-persistent>
+					<span>{{snackBarMessage}}</span>
+				</md-snackbar>
 			</md-card-content>
 		</md-card>
 
@@ -56,6 +60,9 @@
 				label: '',
 				capacity: 0,
 			},
+			showSnackBar: false,
+			snackBarMessage: "",
+			snackBarDuration: 4000
 		}),
 		validations: {
 			form: {
@@ -96,10 +103,16 @@
 				table.setLabel(this.form.label);
 				table.setCapacity(this.form.capacity);
 				req.setTable(table);
-				this.client.client.createTable(req, {}, err => {
-					console.log(err);
+				this.client.client.createTable(req, {}, (err, res) => {
+					console.log(res, err);
+					if(!err)
+						this.tables.push(res);
+					else {
+						this.showSnackBar = true;
+						this.snackBarMessage = err.message;
+					}
 				});
-				this.tables.push(table);
+				//this.tables.push(table);
 			},
 			delTab: function(toDelete) {
 				const req = new Table();
