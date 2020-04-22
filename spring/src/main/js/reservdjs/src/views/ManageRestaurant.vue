@@ -89,6 +89,7 @@ export default {
 	},
 	methods: {
 		load(filterData) {
+			this.reservations = [];
 			const resClient = new CustomRPCClient(ReservationServiceClient, this.$store.getters.config.host);
 	                const request = new ReservationRestaurantRequest();
 	                request.setBegintime(filterData.date.getTime()/1000);
