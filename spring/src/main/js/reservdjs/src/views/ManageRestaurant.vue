@@ -9,7 +9,7 @@
 					<md-field>
 				        	<label for="restaurant">My restaurants</label>
 					        <md-select name="restaurant" id="restaurantSel"
-					                v-on:change="$root.$emit('restaurant', $event)">
+					                v-on:md-selected="$root.$emit('restaurant', $event)">
 						        <md-option v-for="(restaurant) in restaurants"
 					        	        :key="restaurant.getId()"
 		        			        	:value="restaurant.getId()">{{restaurant.getName()}}</md-option>
@@ -80,7 +80,8 @@ export default {
 	},
 	mounted() {
 		this.$root.$on('restaurant', (event) => {
-			const id = event.target.value;
+			console.log(event);
+			const id = event;
 			if(id != this.$route.params.id) {
 				this.$router.push({params: {id:id}})
 			}

@@ -127,7 +127,7 @@
 
 				this.reservationClient.client.createReservation(newReservation, {}, (err, response) => {
 					console.log(err, response);
-					//Todo: redirect to manage reservation
+					this.$router.push("/reservation/" + response.getId());
 				});
 			},
 			getCategory(categoryId){
