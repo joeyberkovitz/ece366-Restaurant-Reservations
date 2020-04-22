@@ -85,7 +85,7 @@ public class ReservationManager {
 												Long futureTime,
 												String status) {
 		Integer statusId;
-		if (status.equals("ALL"))
+		if (status != null && status.equals("ALL"))
 			statusId = null;
 		else
 			statusId = db.withExtension(StatusDao.class,
