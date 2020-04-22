@@ -2,6 +2,7 @@ package edu.cooper.ece366.restaurantReservation.grpc.Reservations;
 
 import edu.cooper.ece366.restaurantReservation.grpc.*;
 import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantDao;
+import edu.cooper.ece366.restaurantReservation.grpc.Users.UserManager;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import org.jdbi.v3.core.Jdbi;
@@ -51,7 +52,11 @@ public class ReservationManager {
 			dao -> dao.updateReservation(reservation, statusId));
 	}
 
-	public void addReservationUser(int resId, int userId) {
+	public void addReservationUser(int resId, String username)
+			throws UserManager.InvalidUsernameException {
+		UserManager um = new UserManager(db);
+		int userId = um.getIdByUsername(username);
+
 		db.useExtension(ReservationDao.class,
 			dao -> dao.addReservationUser(resId, userId));
 	}

@@ -126,7 +126,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		catch (UserManager.InvalidUsernameException ex){
 			ex.printStackTrace();
 			responseObserver.onError(new StatusRuntimeException(
-					Status.INVALID_ARGUMENT
+					Status.NOT_FOUND
 					.withDescription("Invalid username")
 			));
 			return;

@@ -3,6 +3,7 @@ package edu.cooper.ece366.restaurantReservation.grpc.Reservations;
 import edu.cooper.ece366.restaurantReservation.grpc.*;
 import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthInterceptor;
 import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantManager;
+import edu.cooper.ece366.restaurantReservation.grpc.Users.UserManager;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
@@ -35,27 +36,19 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 	}
 
 	@Override
-	public StreamObserver<InviteMessage> inviteReservation(StreamObserver<InviteResponse> responseObserver) {
-		return new StreamObserver<InviteMessage>() {
-			@Override
-			public void onNext(InviteMessage value) {
-				checkReservationPermission(value.getReservation());
+	public void inviteReservation(InviteMessage request, StreamObserver<InviteResponse> responseObserver) {
+		checkReservationPermission(request.getReservation());
 
-				manager.addReservationUser(value.getReservation().getId(),
-					value.getUser().getId());
-			}
+		try {
+			manager.addReservationUser(request.getReservation().getId(),
+				request.getUser().getUsername());
+		} catch (UserManager.InvalidUsernameException e) {
+			e.printStackTrace();
+			throw new StatusRuntimeException(Status.NOT_FOUND.withDescription("Invalid username."));
+		}
 
-			@Override
-			public void onError(Throwable t) {
-				responseObserver.onError(t);
-			}
-
-			@Override
-			public void onCompleted() {
-				responseObserver.onNext(InviteResponse.newBuilder().build());
-				responseObserver.onCompleted();
-			}
-		};
+		responseObserver.onNext(InviteResponse.newBuilder().build());
+		responseObserver.onCompleted();
 	}
 
 	@Override
