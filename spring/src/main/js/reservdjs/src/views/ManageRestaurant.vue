@@ -22,7 +22,8 @@
 		              v-if="this.canEdit"/>
 	        <ReservationList :reservations="this.reservations"
 	                         @load="load($event)"
-	                         v-if="this.canEdit"/>
+	                         v-if="this.canEdit"
+	                         showTables="true"/>
 	</div>
 </template>
 
@@ -98,10 +99,17 @@ export default {
 	                        console.log(err);
 	                    });
 	                    promise2.on('data', (data2) => {
-	                        usersR.push(data2.getFname() + " " + data2.getLname());
+	                        usersR.push(data2);
+	                    });
+	                    const tables = [];
+	                    const promise3 = resClient.client.getReservationTables(data1, {}, err => {
+	                    	console.log(err);
+	                    });
+	                    promise3.on('data', (data3) => {
+	                        tables.push(data3);
 	                    });
 	                    this.reservations.push({details: data1,
-	                        invites: usersR});
+	                        invites: usersR, tables: tables});
 	                });
                 },
                 checkEdit() {

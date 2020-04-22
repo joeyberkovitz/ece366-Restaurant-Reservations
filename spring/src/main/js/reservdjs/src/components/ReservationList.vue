@@ -33,9 +33,23 @@
                         <div class="md-list-item-text">
                             <span>{{ reservation.details.getRestaurant().getName() }} - {{ getStatus(reservation.details.getStatus()) }}</span>
                             <span class="filter">{{ reservation.details.getStarttime() | momentStart(reservation.details.getRestaurant().getRtime()) }}</span>
-                            <span>{{ reservation.invites | expand }}</span>
+                            <div class="user-entry"><span v-for="user in reservation.invites" :key="user.getId()"><span @click="invite(user.getId(), reservation, 0)" v-if="curUser != user.getId() && getStatus(reservation.details.getStatus()) == 'OPENED'">&#9940;</span>{{ user.getFname() }} {{ user.getLname() }}</span></div>
+                            <form @submit.prevent="invite($event.target[0].value, reservation, 1)"
+                                  v-if="getStatus(reservation.details.getStatus()) == 'OPENED'">
+                            	<md-field>
+                            	    <label :for="'invite-'+reservation.details.getId()">Invite user</label>
+                            	    <md-input :id="'invite-'+reservation.details.getId()"/>
+                            	</md-field>
+                            	<md-button type="submit" class="button md-primary">Go</md-button>
+                            </form>
+                            <div v-if="showTables">
+                            	<div v-for="table in reservation.tables" :key="table.getLabel()">Table: {{ table.getLabel() }} ({{ table.getCapacity() }})</div>
+                            </div>
                         </div>
-                        <md-button class="bold md-primary" @click="redirect()">Edit Reservation</md-button>
+                        <md-button v-if="getStatus(reservation.details.getStatus()) == 'OPENED'"
+                                   class="bold md-primary"
+                                   @click="cancel(reservation.details); load()">
+                                   Cancel Reservation</md-button>
                     </md-list-item>
                     <md-divider></md-divider>
                 </div>
@@ -46,13 +60,16 @@
 </template>
 
 <script>
-    import {Reservation} from "../proto/RestaurantService_pb";
+    import {Reservation, User, InviteMessage} from "../proto/RestaurantService_pb";
+    import {CustomRPCClient} from "../proto/CustomRPCClient";
+    import {ReservationServiceClient} from "../proto/RestaurantServiceServiceClientPb";
     import moment from "moment";
 
     export default {
         name: "ReservationList",
-        props: ['reservations'],
+        props: ['reservations', 'showTables'],
         created() {
+            this.curUser = JSON.parse(atob(this.$store.getters.user.authToken.split('.')[1])).sub;
             this.filterData.date = new Date();
             this.filterData.date.setHours(0);
             this.filterData.date.setMinutes(0);
@@ -71,7 +88,8 @@
                 futureDate: null,
                 status: null
             },
-            statuses: []
+            statuses: [],
+            curUser: 0,
         }),
         filters: {
             momentStart: function (date, Rtime) {
@@ -87,15 +105,6 @@
                     endTimeString = endTime.format('h:mm a');
                 return startTimeString + "-" + endTimeString;
             },
-            expand: function (invites) {
-                let invitesString = "";
-                for (let i = 0; i < invites.length; i++) {
-                    invitesString += invites[i];
-                    if (i !== invites.length - 1)
-                        invitesString += ", ";
-                }
-                return invitesString;
-            }
         },
         methods: {
             load() {
@@ -109,13 +118,45 @@
                 }
                 return "";
             },
-            redirect() {
-                return null;
-            }
+            cancel(reservation) {
+		const resClient = new CustomRPCClient(ReservationServiceClient, this.$store.getters.config.host);
+		reservation.setStatus(Reservation.ReservationStatus.CANCELLED);
+		resClient.client.setReservation(reservation, {}, err => {
+		    console.log(err);
+		});
+            },
+            invite(username, reservationOrig, inviteBool) {
+		const resClient = new CustomRPCClient(ReservationServiceClient, this.$store.getters.config.host);
+		const request = new InviteMessage();
+		const reservation = new Reservation();
+		reservation.setId(reservationOrig.details.getId());
+		request.setReservation(reservation);
+		const user = new User();
+		user.setUsername(username);
+		request.setUser(user);
+		const callback = err => {
+                    reservationOrig.invites = [];
+                    const promise2 = resClient.client.listReservationUsers(reservation, {}, err => {
+                        console.log(err);
+                    });
+                    promise2.on('data', (data) => {
+                        reservationOrig.invites.push(data);
+                    });
+		}
+		if(inviteBool)
+			resClient.client.inviteReservation(request, {}, callback);
+		else
+			resClient.client.removeReservationUser(request, {}, callback);
+            },
         }
     }
 </script>
 
 <style scoped>
-
+.user-entry > span:not(:last-child)::after {
+	content: ', ';
+}
+.user-entry > span > span {
+	cursor: pointer;
+}
 </style>

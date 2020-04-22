@@ -1,7 +1,8 @@
 <template>
     <div class="centered">
         <ReservationList :reservations="this.reservations"
-                         @load="load($event)"/>
+                         @load="load($event)"
+                         showTables="false"/>
 
     </div>
 </template>
@@ -42,7 +43,7 @@
                         console.log(err);
                     });
                     promise2.on('data', (data2) => {
-                        users.push(data2.getFname() + " " + data2.getLname());
+                        users.push(data2);
                     });
                     this.reservations.push({details: data1,
                         invites: users});
