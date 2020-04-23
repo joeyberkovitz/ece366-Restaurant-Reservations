@@ -1,7 +1,10 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Reservations;
 
-import edu.cooper.ece366.restaurantReservation.grpc.*;
+import edu.cooper.ece366.restaurantReservation.grpc.Reservation;
 import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantDao;
+import edu.cooper.ece366.restaurantReservation.grpc.StatusDao;
+import edu.cooper.ece366.restaurantReservation.grpc.Table;
+import edu.cooper.ece366.restaurantReservation.grpc.User;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserManager;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -13,6 +16,7 @@ import java.util.Optional;
 
 public class ReservationManager {
 	private Jdbi db;
+	private List<Table> retTables;
 
 	public ReservationManager(Jdbi db){
 		this.db = db;
@@ -27,7 +31,7 @@ public class ReservationManager {
 			dao -> dao.getStatusIdByName("Opened"));
 
 		//This will throw a runtime exception if tables unavailable
-		List<Table> tables = computeReservationTables(reservation, endTime);
+		List<Table> tables = computeReservationTables(reservation, endTime, reservationTime);
 
 		//Todo: do we want to put all inserts in a transaction?
 		int reservationId = db.withExtension(ReservationDao.class,
@@ -100,7 +104,51 @@ public class ReservationManager {
 	}
 
 
-	private List<Table> computeReservationTables(Reservation reservation, long endTime){
+	private List<Table> computeReservationTables(Reservation reservation, long endTime, int reservationTime){
+		//Todo: this algorithm may be too simple, always chooses largest table first
+		int capFactor = db.withExtension(RestaurantDao.class,
+				dao -> dao.getRestaurantCapFactor(reservation.getRestaurant().getId()));
+
+		int requestCap = reservation.getNumPeople();
+		int maxSize = requestCap*100/capFactor;
+
+		retTables = new ArrayList<Table>();
+
+		getBestTable(reservation, requestCap, requestCap, capFactor, maxSize, endTime);
+
+		return retTables;
+	}
+
+	private void getBestTable(Reservation reservation, int target, int currTarget, int capFactor, int maxSize,
+							  long endTime){
+		if (target <= 0)
+			return;
+
+		if (currTarget == 0)
+			throw new StatusRuntimeException(Status.ABORTED
+					.withDescription("Requested capacity unavailable"));
+
+		int finalCurrTarget = currTarget;
+		int finalMaxSize = maxSize;
+		Optional<Table> table = db.withExtension(ReservationDao.class,
+				dao -> dao.getBestTable(reservation, endTime, finalCurrTarget, finalMaxSize));
+
+		if (table.isPresent()) {
+			retTables.add(table.get());
+
+			target -= table.get().getCapacity();
+			currTarget = target;
+			maxSize = currTarget*100/capFactor;
+		}
+		else {
+			currTarget--;
+			maxSize = currTarget;
+		}
+
+		getBestTable(reservation, target, currTarget, capFactor, maxSize, endTime);
+	}
+
+	/*private List<Table> computeReservationTables(Reservation reservation, long endTime){
 		//Todo: this algorithm may be too simple, always chooses largest table first
 		List<Table> tables = db.withExtension(ReservationDao.class,
 			dao -> dao.getAvailableTables(reservation, endTime));
@@ -123,7 +171,7 @@ public class ReservationManager {
 		}
 
 		return retTables;
-	}
+	}*/
 
 	public boolean canEditReservation(int userId, Reservation reservation){
 		Optional<Integer> resUser = db.withExtension(ReservationDao.class,
