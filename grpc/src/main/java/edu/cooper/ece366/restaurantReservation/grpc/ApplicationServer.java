@@ -51,7 +51,7 @@ public class ApplicationServer {
 			.registerRowMapper(ProtoBeanMapper.factory(Category.class, Category.Builder.class))
 			.installPlugin(new SqlObjectPlugin());
 		/* The port on which the RPC server should run */
-		int rpcPort = 50051;
+		int rpcPort = Integer.parseInt(prop.getProperty("rpc.port"));
 
 		//Todo: Add interceptor to services
 		server = ServerBuilder.forPort(rpcPort)

@@ -4,3 +4,4 @@ db.pass=password
 argon.iter=7
 argon.mem=65536
 argon.par=1
+rpc.port=50051
