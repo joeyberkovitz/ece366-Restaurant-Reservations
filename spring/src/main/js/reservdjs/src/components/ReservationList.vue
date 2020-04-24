@@ -43,7 +43,7 @@
                             	<md-button type="submit" class="button md-primary">Go</md-button>
                             </form>
                             <div v-if="showTables">
-                            	<div v-for="table in reservation.tables" :key="table.getLabel()">Table: {{ table.getLabel() }} ({{ table.getCapacity() }})</div>
+                            	<div v-for="table in reservation.tables" :key="table.getLabel()">Table(s): {{ table.getLabel() }} ({{ table.getCapacity() }})</div>
                             </div>
                         </div>
                         <md-button v-if="getStatus(reservation.details.getStatus()) == 'OPENED'"

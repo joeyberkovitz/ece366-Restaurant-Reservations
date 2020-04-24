@@ -17,87 +17,39 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ReservationDao {
-	/*@SqlQuery("select * from `table` t " +
-			"where t.restaurant_id = :r.restaurant.id  " +
-			"and t.id NOT IN ( " +
-			"select rt.table_id " +
-			"from reservation r " +
-			"inner join reservation_table rt on r.id = rt.reservation_id " +
-			"inner join status st on r.status_id = st.id " +
-			"where r.restaurant_id = :r.restaurant.id " +
-			"AND st.name != 'Cancelled' " +
-			"AND r.end_time > FROM_UNIXTIME(:r.startTime) " +
-			"AND r.start_time < FROM_UNIXTIME(:endTime) " +
-			") ORDER BY t.capacity DESC")
-	List<Table> getAvailableTables(@BindBean("r") Reservation reservation,
-								   long endTime);*/
-
-	@SqlQuery("SELECT t.* FROM `table` t " +
-			"INNER JOIN (" +
+		@SqlQuery("SELECT t.* FROM `table` t " +
+			"LEFT JOIN (" +
 				"SELECT rt.table_id AS tid, MAX(r.end_time) AS maxEnd " +
-				"FROM reservation_tables rt " +
+				"FROM reservation_table rt " +
 				"INNER JOIN reservation r ON rt.reservation_id = r.id " +
 				"WHERE r.end_time < FROM_UNIXTIME(:r.startTime) " +
 				"GROUP BY tid) a ON t.id = a.tid " +
-			"INNER JOIN (" +
+			"LEFT JOIN (" +
 				"SELECT rt.table_id AS tid, MIN(r.start_time) AS minStart " +
-				"FROM reservation_tables rt " +
+				"FROM reservation_table rt " +
 				"INNER JOIN reservation r ON rt.reservation_id = r.id " +
-				"WHERE r.start_time < FROM_UNIXTIME(:endtime) " +
+				"WHERE r.start_time > FROM_UNIXTIME(:endTime) " +
 				"GROUP BY tid) b ON t.id = b.tid " +
 			"WHERE t.restaurant_id = :r.restaurant.id  " +
-			"AND t.id NOT IN ( " +
-			"SELECT rt.table_id " +
-			"FROM reservation r " +
-			"INNER JOIN reservation_table rt ON r.id = rt.reservation_id " +
-			"INNER JOIN status st ON r.status_id = st.id " +
-			"WHERE r.restaurant_id = :r.restaurant.id " +
-			"AND st.name != 'Cancelled' " +
-			"AND r.end_time > FROM_UNIXTIME(:r.startTime) " +
-			"AND r.start_time < FROM_UNIXTIME(:endTime)) " +
+			"AND t.id NOT IN (" +
+				"SELECT rt.table_id " +
+				"FROM reservation r " +
+				"INNER JOIN reservation_table rt ON r.id = rt.reservation_id " +
+				"INNER JOIN status st ON r.status_id = st.id " +
+				"WHERE r.restaurant_id = :r.restaurant.id " +
+				"AND st.name != 'Cancelled' " +
+				"AND r.end_time > FROM_UNIXTIME(:r.startTime) " +
+				"AND r.start_time < FROM_UNIXTIME(:endTime)) " +
 			"AND t.capacity >= :requestCap " +
-			"AND t.capacity < :maxSize " +
-			"ORDER BY t.capacity ASC, " +
-			"DATEDIFF(minute, FROM_UNIXTIME(:r.startTime), a.maxEnd) " +
-			"% (reservationTime*3600) " +
-			"+ DATEDIFF(minute, FROM_UNIXTIME(:endtime), b.minStart) " +
-			"% (reservationTime*3600) ASC " +
+			"AND t.capacity <= :maxSize " +
+			"ORDER BY t.capacity ASC," +
+				"COALESCE(TIMESTAMPDIFF(MINUTE, a.maxEnd, FROM_UNIXTIME(:r.startTime)),0) " +
+				"% (:reservationTime*60) " +
+				"+ COALESCE(TIMESTAMPDIFF(MINUTE, FROM_UNIXTIME(:endTime), b.minStart),0) " +
+				"% (:reservationTime*60) ASC " +
 			"LIMIT 1")
 	Optional<Table> getBestTable(@BindBean("r") Reservation reservation,
-								   long endTime, int requestCap, int maxSize);
-
-	@SqlQuery("SELECT t.* FROM `table` t " +
-			"INNER JOIN (" +
-			"SELECT rt.table_id AS tid, MAX(r.end_time) AS maxEnd " +
-			"FROM reservation_tables rt " +
-			"INNER JOIN reservation r ON rt.reservation_id = r.id " +
-			"WHERE r.end_time < FROM_UNIXTIME(:r.startTime) " +
-			"GROUP BY tid) a ON t.id = a.tid " +
-			"INNER JOIN (" +
-			"SELECT rt.table_id AS tid, MIN(r.start_time) AS minStart " +
-			"FROM reservation_tables rt " +
-			"INNER JOIN reservation r ON rt.reservation_id = r.id " +
-			"WHERE r.start_time < FROM_UNIXTIME(:endtime) " +
-			"GROUP BY tid) b ON t.id = b.tid " +
-			"WHERE t.restaurant_id = :r.restaurant.id  " +
-			"AND t.id NOT IN ( " +
-			"SELECT rt.table_id " +
-			"FROM reservation r " +
-			"INNER JOIN reservation_table rt ON r.id = rt.reservation_id " +
-			"INNER JOIN status st ON r.status_id = st.id " +
-			"WHERE r.restaurant_id = :r.restaurant.id " +
-			"AND st.name != 'Cancelled' " +
-			"AND r.end_time > FROM_UNIXTIME(:r.startTime) " +
-			"AND r.start_time < FROM_UNIXTIME(:endTime)) " +
-			"AND t.capacity >= :requestCap " +
-			"AND t.capacity < :maxSize " +
-			"ORDER BY t.capacity DESC, " +
-			"DATEDIFF(minute, FROM_UNIXTIME(:r.startTime), a.maxEnd) " +
-			"% (reservationTime*3600) " +
-			"+ DATEDIFF(minute, FROM_UNIXTIME(:endtime), b.minStart) " +
-			"% (reservationTime*3600) ASC ")
-	List<Table> getAvailableTables(@BindBean("r") Reservation reservation,
-								 long endTime, int requestCap, int maxSize);
+								   long endTime, int requestCap, int maxSize, int reservationTime);
 
 
 	//Reservation always starts with 0 points
@@ -111,7 +63,7 @@ public interface ReservationDao {
 	int insertReservation(@BindBean("r") Reservation reservation,
 						  long endTime, int statusId);
 
-	@SqlUpdate("UPDATE reservation set start_time = FROM_UNIXTIME(:r.startTime), " +
+	@SqlUpdate("UPDATE reservation SET start_time = FROM_UNIXTIME(:r.startTime), " +
 			"num_people = :r.numPeople, num_points = :r.points, " +
 			"status_id  = :statusId WHERE id = :r.id")
 	void updateReservation(@BindBean("r") Reservation reservation,
@@ -131,27 +83,27 @@ public interface ReservationDao {
 	void removeReservationUser(int resId, int userId);
 
 	@SqlQuery("SELECT u.id FROM reservation r " +
-			"INNER JOIN reservation_user ru on r.id = ru.reservation_id " +
-			"INNER JOIN user u on ru.user_id = u.id " +
+			"INNER JOIN reservation_user ru ON r.id = ru.reservation_id " +
+			"INNER JOIN user u ON ru.user_id = u.id " +
 			"WHERE r.id = :reservationId AND u.id = :userId")
 	Optional<Integer> getReservationUser(int userId, int reservationId);
 
 	@SqlQuery("SELECT u.id, u.username, u.fname, u.lname, " +
-			"u.rewards_points as points, c.id, c.phone, c.email, ro.name as role " +
+			"u.rewards_points AS points, c.id, c.phone, c.email, ro.name AS role " +
 			"FROM reservation r " +
-			"INNER JOIN reservation_user ru on r.id = ru.reservation_id " +
-			"INNER JOIN user u on ru.user_id = u.id " +
-			"INNER JOIN contact c on u.contact_id = c.id " +
-			"INNER JOIN role ro on u.role_id = ro.id " +
+			"INNER JOIN reservation_user ru ON r.id = ru.reservation_id " +
+			"INNER JOIN user u ON ru.user_id = u.id " +
+			"INNER JOIN contact c ON u.contact_id = c.id " +
+			"INNER JOIN role ro ON u.role_id = ro.id " +
 			"WHERE r.id = :reservationId")
 	@RegisterRowMapper(UserMapper.class)
 	List<User> getReservationUsers(int reservationId);
 
-	@SqlQuery("SELECT r.*, st.name as statusName, rest.*, a.*, c.* FROM reservation r " +
-			"INNER JOIN status st on r.status_id = st.id " +
-			"INNER JOIN restaurant rest on r.restaurant_id = rest.id " +
-			"INNER JOIN address a on rest.address_id = a.id " +
-			"INNER JOIN contact c on rest.contact_id = c.id " +
+	@SqlQuery("SELECT r.*, st.name AS statusName, rest.*, a.*, c.* FROM reservation r " +
+			"INNER JOIN status st ON r.status_id = st.id " +
+			"INNER JOIN restaurant rest ON r.restaurant_id = rest.id " +
+			"INNER JOIN address a ON rest.address_id = a.id " +
+			"INNER JOIN contact c ON rest.contact_id = c.id " +
 			"WHERE (:reservationId IS NULL OR r.id = :reservationId) AND " +
 			"(:restaurantId IS NULL OR r.restaurant_id = :restaurantId) AND " +
 			"(:userId IS NULL OR r.id IN (" +
@@ -159,7 +111,7 @@ public interface ReservationDao {
 			"WHERE ru.reservation_id = r.id AND " +
 			"ru.user_id = :userId)) AND " +
 			"(:beginTime IS NULL OR (r.start_time >= FROM_UNIXTIME(:beginTime) AND " +
-			"r.start_time <= FROM_UNIXTIME(:futureTime))) AND " +
+			"r.start_time <= DATE_ADD(FROM_UNIXTIME(:futureTime), INTERVAL 1 DAY))) AND " +
 			"(:statusId IS NULL OR r.status_id = :statusId) " +
 			"ORDER BY r.start_time")
 	@RegisterRowMapper(ReservationMapper.class)
@@ -170,10 +122,10 @@ public interface ReservationDao {
 	                                     Long futureTime,
 	                                     Integer statusId);
 
-	@SqlQuery("select t.id, t.capacity, t.label " +
-			"from reservation r " +
-			"INNER JOIN reservation_table rt on r.id = rt.reservation_id " +
-			"INNER JOIN `table` t on rt.table_id = t.id " +
+	@SqlQuery("SELECT t.id, t.capacity, t.label " +
+			"FROM reservation r " +
+			"INNER JOIN reservation_table rt ON r.id = rt.reservation_id " +
+			"INNER JOIN `table` t ON rt.table_id = t.id " +
 			"WHERE r.id = :reservationId")
 	List<Table> getReservationTables(int reservationId);
 

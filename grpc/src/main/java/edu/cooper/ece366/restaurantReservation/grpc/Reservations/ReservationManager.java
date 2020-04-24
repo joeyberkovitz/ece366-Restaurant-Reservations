@@ -105,7 +105,6 @@ public class ReservationManager {
 
 
 	private List<Table> computeReservationTables(Reservation reservation, long endTime, int reservationTime){
-		//Todo: this algorithm may be too simple, always chooses largest table first
 		int capFactor = db.withExtension(RestaurantDao.class,
 				dao -> dao.getRestaurantCapFactor(reservation.getRestaurant().getId()));
 
@@ -114,13 +113,13 @@ public class ReservationManager {
 
 		retTables = new ArrayList<Table>();
 
-		getBestTable(reservation, requestCap, requestCap, capFactor, maxSize, endTime);
+		getBestTable(reservation, requestCap, requestCap, maxSize, maxSize, endTime, reservationTime);
 
 		return retTables;
 	}
 
-	private void getBestTable(Reservation reservation, int target, int currTarget, int capFactor, int maxSize,
-							  long endTime){
+	private void getBestTable(Reservation reservation, int target, int currTarget, int maxSize, int overallMaxSize,
+							  long endTime, int reservationTime){
 		if (target <= 0)
 			return;
 
@@ -131,47 +130,23 @@ public class ReservationManager {
 		int finalCurrTarget = currTarget;
 		int finalMaxSize = maxSize;
 		Optional<Table> table = db.withExtension(ReservationDao.class,
-				dao -> dao.getBestTable(reservation, endTime, finalCurrTarget, finalMaxSize));
+				dao -> dao.getBestTable(reservation, endTime, finalCurrTarget, finalMaxSize, reservationTime));
 
 		if (table.isPresent()) {
 			retTables.add(table.get());
 
 			target -= table.get().getCapacity();
 			currTarget = target;
-			maxSize = currTarget*100/capFactor;
+			overallMaxSize -= table.get().getCapacity();
+			maxSize = Math.min(overallMaxSize, table.get().getCapacity());
 		}
 		else {
 			currTarget--;
 			maxSize = currTarget;
 		}
 
-		getBestTable(reservation, target, currTarget, capFactor, maxSize, endTime);
+		getBestTable(reservation, target, currTarget, maxSize, overallMaxSize, endTime, reservationTime);
 	}
-
-	/*private List<Table> computeReservationTables(Reservation reservation, long endTime){
-		//Todo: this algorithm may be too simple, always chooses largest table first
-		List<Table> tables = db.withExtension(ReservationDao.class,
-			dao -> dao.getAvailableTables(reservation, endTime));
-		int capFactor = db.withExtension(RestaurantDao.class,
-			dao -> dao.getRestaurantCapFactor(reservation.getRestaurant().getId()));
-
-		List<Table> retTables = new ArrayList<Table>();
-
-		int requestCap = reservation.getNumPeople();
-		while(requestCap > 0){
-			if(tables.size() == 0){
-				throw new StatusRuntimeException(Status.ABORTED
-					.withDescription("Requested capacity unavailable"));
-			}
-			Table currTable = tables.remove(0);
-			if(requestCap >= currTable.getCapacity()*capFactor/100) {
-				retTables.add(currTable);
-				requestCap -= currTable.getCapacity();
-			}
-		}
-
-		return retTables;
-	}*/
 
 	public boolean canEditReservation(int userId, Reservation reservation){
 		Optional<Integer> resUser = db.withExtension(ReservationDao.class,
