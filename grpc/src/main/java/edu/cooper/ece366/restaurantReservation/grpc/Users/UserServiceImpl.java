@@ -50,14 +50,25 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         catch (UserManager.NoIdException |
                 UserManager.InvalidUsernameException e) {
             e.printStackTrace();
-            throw new StatusRuntimeException(Status.NOT_FOUND.withDescription("Unable to find requested user"));
+            throw new StatusRuntimeException(Status.NOT_FOUND.withDescription("Unknown user error"));
         }
-        catch (UserManager.InvalidNameException |
-                ContactManager.InvalidContactIdException |
-                ContactManager.InvalidPhoneException |
-                ContactManager.InvalidEmailException e) {
+        catch (ContactManager.InvalidContactIdException e) {
             e.printStackTrace();
-            throw new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription("User details are invalid"));
+            throw new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription("Unknown contact error"));
+        }
+        catch (UserManager.InvalidNameException e) {
+            e.printStackTrace();
+            throw new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription("Name can only include alphabet " +
+                    "characters"));
+        }
+        catch (ContactManager.InvalidPhoneException e) {
+            e.printStackTrace();
+            throw new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription("Phone can only include numeric " +
+                    "characters"));
+        }
+        catch (ContactManager.InvalidEmailException e) {
+            e.printStackTrace();
+            throw new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription("Invalid email"));
         }
     }
 }

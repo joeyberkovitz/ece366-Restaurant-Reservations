@@ -103,7 +103,25 @@ public class ReservationManager {
 		});
 	}
 
-
+	/* Reservation Algorithm: First attempt to seat users at one table with capacity greater than or equal to the number
+	of participants of the reservation and less than or equal to the number of participants of the reservation divided
+	by the restaurant's table capacity factor. The smallest table capacity is preferred.
+	Next, if this is not possible, decrease the current target table capacity (initially set to the number of
+	participants of the reservation) by one and try again. Keep doing this until a table is found. When a table is
+	found, decrease the overall target table capacity (also initially set to the number of participants of the
+	reservation) by that table's capacity and recursively find all tables necessary for the reservation. If at any point
+	the target table capacity is less than or equal to zero, then that means all participants have been seated and those
+	tables are returned. If, however, the target table capacity is greater than zero but the current target table
+	capacity is zero, that means sufficient tables were not found.
+	Note the table capacity factor applies to the entire set of tables in a reservation, not each individual table. The
+	maxSize variable is used to either (1) limit table searching by the restaurant's table capacity factor or (2) limit
+	table searching because from a previous attempt it is known no tables exist.
+	Obviously some restaurants may have multiple tables with the same capacity. To choose from among these tables, the
+	table with the shortest "dead time" is chosen. A table's "dead time" is the time from the table's previous
+	reservation to this reservation's start time modulo the normal reservation length (set by the restaurant) plus the
+	time from the end of this reservation to the start of the next reservation modulo the normal reservation length.
+	This maximizes the amount of reservations a restaurant can serve.
+	 */
 	private List<Table> computeReservationTables(Reservation reservation, long endTime, int reservationTime){
 		int capFactor = db.withExtension(RestaurantDao.class,
 				dao -> dao.getRestaurantCapFactor(reservation.getRestaurant().getId()));

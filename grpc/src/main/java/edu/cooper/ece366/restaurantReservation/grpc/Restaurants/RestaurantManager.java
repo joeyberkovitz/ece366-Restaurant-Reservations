@@ -1,6 +1,7 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Restaurants;
 
 import edu.cooper.ece366.restaurantReservation.grpc.Addresses.AddressManager;
+import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthInterceptor;
 import edu.cooper.ece366.restaurantReservation.grpc.*;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserManager;
@@ -16,10 +17,12 @@ public class RestaurantManager {
 	}
 
 	public int checkAndInsertRestaurant(Restaurant restaurant)
-			throws InvalidRestNameException,
+			throws InvalidNameException,
 			ContactManager.InvalidPhoneException,
 			ContactManager.InvalidEmailException,
-			AddressManager.InvalidAddrFormException,
+			AddressManager.InvalidLine1Exception,
+			AddressManager.InvalidStateException,
+			AddressManager.InvalidCityException,
 			AddressManager.InvalidLatException,
 			AddressManager.InvalidLongException,
 			AddressManager.InvalidAddrNameException,
@@ -86,12 +89,14 @@ public class RestaurantManager {
 	}
 
 	public Restaurant setRestaurant(Restaurant target)
-			throws InvalidRestNameException,
+			throws InvalidNameException,
 			ContactManager.InvalidContactIdException,
 			ContactManager.InvalidPhoneException,
 			ContactManager.InvalidEmailException,
 			AddressManager.InvalidAddressIdException,
-			AddressManager.InvalidAddrFormException,
+			AddressManager.InvalidLine1Exception,
+			AddressManager.InvalidStateException,
+			AddressManager.InvalidCityException,
 			AddressManager.InvalidLatException,
 			AddressManager.InvalidLongException,
 			AddressManager.InvalidAddrNameException,
@@ -110,26 +115,52 @@ public class RestaurantManager {
 		});
 	}
 
-	public boolean canEditRestaurant(int userId, int restaurantId, boolean privileged){
+	public Restaurant checkRestaurantPermission(Restaurant rest, Table tab, boolean priv)
+			throws InvalidTableIdException,
+			InvalidRestException,
+			UnauthorizedException {
+		int userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
+		if (rest == null && tab != null && tab.getId() > 0) {
+			Optional<Restaurant> restaurant = getRestaurantByTable(tab.getId());
+			if (restaurant.isPresent())
+				rest = restaurant.get();
+			else
+				throw new InvalidTableIdException("Table not found");
+		}
+		// Check null first to ensure restaurant object exists
+		if (rest == null || rest.getId() <= 0)
+			throw new InvalidRestException("Restaurant not found");
+
+		if (!canEditRestaurant(userId, rest.getId(), priv)) {
+			throw new UnauthorizedException("Not authorized to edit restaurant");
+		}
+
+		return rest;
+	}
+
+	private boolean canEditRestaurant(int userId, int restaurantId, boolean privileged){
 		Optional<String> role = db.withExtension(
 			RestaurantDao.class,
 			dao -> dao.getRestaurantUserRole(userId, restaurantId)
 		);
-		if(privileged)
+		if (privileged)
 			return role.isPresent() && role.get().equals("Admin");
 		return role.isPresent() && (role.get().equals("Admin") || role.get().equals("Manager"));
 	}
 
 	public int checkAndInsertTable(Table table, Restaurant restaurant)
-		throws InvalidTableException {
-		//Todo: maybe validate table name?
+			throws InvalidTableNameException,
+			InvalidNameException {
+
+		checkName(table.getLabel());
+
 		Optional<Table> existingTable = db.withExtension(
 			RestaurantDao.class,
 			dao -> dao.getTableByName(table.getLabel(),
 			                          restaurant.getId())
 		);
 		if(existingTable.isPresent()){
-			throw new InvalidTableException("Table name already exists" +
+			throw new InvalidTableNameException("Table name already exists" +
 				" for given restaurant");
 		}
 
@@ -148,7 +179,7 @@ public class RestaurantManager {
 	}
 
 	public Table setTable(Table table, Restaurant restaurant)
-		throws InvalidTableException {
+		throws InvalidTableNameException {
 		Optional<Table> existingTable = db.withExtension(
 			RestaurantDao.class,
 			dao -> dao.getTableByName(table.getLabel(),
@@ -156,9 +187,7 @@ public class RestaurantManager {
 		);
 		if(existingTable.isPresent()
 			&& existingTable.get().getId() != table.getId()){
-			throw new InvalidTableException("Table name already " +
-			                                "exists for given " +
-			                                "restaurant");
+			throw new InvalidTableNameException("Table name already exists for given restaurant");
 		}
 
 		db.useExtension(RestaurantDao.class,
@@ -169,12 +198,6 @@ public class RestaurantManager {
 	public void deleteTableById(int table_id){
 		db.useExtension(RestaurantDao.class,
 		                dao -> dao.deleteTableById(table_id));
-	}
-
-	public static class InvalidTableException extends Exception {
-		public InvalidTableException(String message) {
-			super(message);
-		}
 	}
 
 	public void deleteRestaurant(int rest_id) throws AddressManager.InvalidAddressIdException, ContactManager.InvalidContactIdException {
@@ -210,15 +233,9 @@ public class RestaurantManager {
 		am.deleteAddress(rest.getAddress().getId());
 	}
 
-	public void checkName(String name) throws InvalidRestNameException {
+	public void checkName(String name) throws InvalidNameException {
 		if (!name.matches("([a-zA-Z0-9 \\\"\\;\\:\\'\\?\\/\\<\\>\\,\\{\\}\\[\\]\\(\\)\\!\\@\\#\\$\\%\\^\\&\\*\\-\\_=+])*$")) {
-			throw new InvalidRestNameException("Name must only include alphanumeric characters.");
-		}
-	}
-
-	public static class InvalidRestNameException extends Exception {
-		public InvalidRestNameException(String message) {
-			super(message);
+			throw new InvalidNameException("Invalid characters in name");
 		}
 	}
 
@@ -229,5 +246,35 @@ public class RestaurantManager {
 	public List<RestaurantSearchResponse> searchRestaurants(RestaurantSearchRequest request){
 		return db.withExtension(RestaurantDao.class,
 			dao -> dao.searchRestaurants(request));
+	}
+
+	public static class InvalidNameException extends Exception {
+		public InvalidNameException(String message) {
+			super(message);
+		}
+	}
+
+	public static class InvalidRestException extends Exception {
+		public InvalidRestException(String message) {
+			super(message);
+		}
+	}
+
+	public static class UnauthorizedException extends Exception {
+		public UnauthorizedException(String message) {
+			super(message);
+		}
+	}
+
+	public static class InvalidTableIdException extends Exception {
+		public InvalidTableIdException(String message) {
+			super(message);
+		}
+	}
+
+	public static class InvalidTableNameException extends Exception {
+		public InvalidTableNameException(String message) {
+			super(message);
+		}
 	}
 }

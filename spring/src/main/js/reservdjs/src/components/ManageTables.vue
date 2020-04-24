@@ -118,6 +118,7 @@
 			delTab: function(toDelete) {
 				const req = new Table();
 				req.setId(toDelete);
+				// todo: need to refresh page
 				this.client.client.deleteTable(req, {}, err => {
 					console.log(err);
 				});

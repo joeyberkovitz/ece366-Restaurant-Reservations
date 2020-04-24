@@ -13,7 +13,6 @@ import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 
 import java.util.List;
-import java.util.Optional;
 
 public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServiceImplBase {
 	private Jdbi db;
@@ -26,7 +25,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 	@Override
 	public void createRestaurant(Restaurant req, StreamObserver<Restaurant> responseObserver) {
 		int userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
-		System.out.println("User id is: " + userId);
+
 		try {
 			int restId = manager.checkAndInsertRestaurant(req);
 
@@ -41,16 +40,34 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			responseObserver.onNext(reply);
 			responseObserver.onCompleted();
 		}
-		catch (RestaurantManager.InvalidRestNameException |
-				ContactManager.InvalidPhoneException |
-				ContactManager.InvalidEmailException |
-				AddressManager.InvalidAddrFormException |
-				AddressManager.InvalidLatException |
+		catch (RestaurantManager.InvalidNameException | AddressManager.InvalidAddrNameException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Name is invalid")));
+		}
+		catch (ContactManager.InvalidPhoneException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Phone can only include numeric characters")));
+		}
+		catch (ContactManager.InvalidEmailException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Invalid email")));
+		}
+		catch (AddressManager.InvalidLine1Exception e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Line1 cannot be empty")));
+		}
+		catch (AddressManager.InvalidLatException |
 				AddressManager.InvalidLongException |
-				AddressManager.InvalidAddrNameException |
+				AddressManager.InvalidCityException |
+				AddressManager.InvalidStateException |
 				AddressManager.InvalidZipException e) {
 			e.printStackTrace();
-			throw new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription("Restaurant details are invalid"));
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Unable to extract location information from address")));
 		}
 		catch (UnableToExecuteStatementException ex){
 			// todo include StatusRuntimeException?
@@ -58,7 +75,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		}
 		catch (UserManager.InvalidUsernameException e) {
 			// should never occur
-			throw new StatusRuntimeException(Status.UNKNOWN.withDescription("Unknown error occurred."));
+			responseObserver.onError(new StatusRuntimeException(Status.UNKNOWN.withDescription("Unknown user error")));
 		}
 	}
 
@@ -66,8 +83,9 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 	public void getRestaurant(Restaurant req, StreamObserver<Restaurant> responseObserver) {
 		Restaurant restaurant = manager.getRestaurant(req.getId());
 		if(restaurant == null){
-			throw new StatusRuntimeException(Status.NOT_FOUND
-				.withDescription("Unable to find requested restaurant"));
+			responseObserver.onError(new StatusRuntimeException(Status.NOT_FOUND
+					.withDescription("Unable to find requested restaurant")));
+			return;
 		}
 
 		responseObserver.onNext(restaurant);
@@ -76,37 +94,79 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 	@Override
 	public void setRestaurant(Restaurant req, StreamObserver<Restaurant> responseObserver) {
-		checkRestaurantPermission(req, null, false);
+		try {
+			manager.checkRestaurantPermission(req, null, false);
+		} catch (RestaurantManager.InvalidTableIdException e) {
+			e.printStackTrace();
+		} catch (RestaurantManager.InvalidRestException e) {
+			e.printStackTrace();
+		} catch (RestaurantManager.UnauthorizedException e) {
+			e.printStackTrace();
+		}
 
 		try {
 			responseObserver.onNext(manager.setRestaurant(req));
 			responseObserver.onCompleted();
 		}
-		catch (RestaurantManager.InvalidRestNameException |
-				ContactManager.InvalidContactIdException |
-				ContactManager.InvalidPhoneException |
-				ContactManager.InvalidEmailException |
-				AddressManager.InvalidAddressIdException |
-				AddressManager.InvalidAddrFormException |
-				AddressManager.InvalidLatException |
+		catch (RestaurantManager.InvalidNameException | AddressManager.InvalidAddrNameException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Name is invalid")));
+		}
+		catch (ContactManager.InvalidPhoneException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Phone can only include numeric characters")));
+		}
+		catch (ContactManager.InvalidEmailException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Invalid email")));
+		}
+		catch (AddressManager.InvalidLine1Exception e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Line1 cannot be empty")));
+		}
+		catch (AddressManager.InvalidLatException |
 				AddressManager.InvalidLongException |
-				AddressManager.InvalidAddrNameException |
+				AddressManager.InvalidCityException |
+				AddressManager.InvalidStateException |
 				AddressManager.InvalidZipException e) {
 			e.printStackTrace();
-			throw new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription("Restaurant details are invalid"));
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Unable to extract location information from address")));
+		}
+		catch (ContactManager.InvalidContactIdException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Unknown contact error")));
+		}
+		catch (AddressManager.InvalidAddressIdException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Unknown address error")));
 		}
 	}
 
 	@Override
 	public void addRelationship(Relationship request, StreamObserver<RelationshipResponse> responseObserver) {
-		if(!request.hasRestaurant() || request.getRestaurant().getId() == 0
+		if (!request.hasRestaurant() || request.getRestaurant().getId() == 0
 			|| (request.getUser().getId() == 0 && request.getUser().getUsername().isBlank())) {
 			responseObserver.onError(new StatusRuntimeException(
-				Status.NOT_FOUND.withDescription("Invalid Restaurant")));
+				Status.NOT_FOUND.withDescription("Unknown restaurant or user error")));
 			return;
 		}
 
-		checkRestaurantPermission(request.getRestaurant(), null, true);
+		try {
+			manager.checkRestaurantPermission(request.getRestaurant(), null, true);
+		} catch (RestaurantManager.InvalidTableIdException e) {
+			e.printStackTrace();
+		} catch (RestaurantManager.InvalidRestException e) {
+			e.printStackTrace();
+		} catch (RestaurantManager.UnauthorizedException e) {
+			e.printStackTrace();
+		}
 
 		RoleManager rm = new RoleManager(db);
 		String roleName = request.getRole().getValueDescriptor().getName();
@@ -116,15 +176,15 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			manager.addRestaurantRelationship(request.getRestaurant().getId(),
 				request.getUser().getId(), request.getUser().getUsername(), roleId);
 		}
-		catch (UnableToExecuteStatementException ex){
+		catch (UnableToExecuteStatementException ex) {
 			ex.printStackTrace();
 			responseObserver.onError(new StatusRuntimeException(
 				Status.ALREADY_EXISTS
 				.withDescription("Relationship already exists or invalid key")));
 			return;
 		}
-		catch (UserManager.InvalidUsernameException ex){
-			ex.printStackTrace();
+		catch (UserManager.InvalidUsernameException e) {
+			e.printStackTrace();
 			responseObserver.onError(new StatusRuntimeException(
 					Status.NOT_FOUND
 					.withDescription("Invalid username")
@@ -139,14 +199,22 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 	@Override
 	public void deleteRelationship(Relationship request, StreamObserver<RelationshipResponse> responseObserver) {
-		if(!request.hasRestaurant() || request.getRestaurant().getId() == 0
+		if (!request.hasRestaurant() || request.getRestaurant().getId() == 0
 				|| request.getUser().getId() == 0) {
 			responseObserver.onError(new StatusRuntimeException(
 					Status.NOT_FOUND.withDescription("Invalid Restaurant")));
 			return;
 		}
 
-		checkRestaurantPermission(request.getRestaurant(), null, true);
+		try {
+			manager.checkRestaurantPermission(request.getRestaurant(), null, true);
+		} catch (RestaurantManager.InvalidTableIdException e) {
+			e.printStackTrace();
+		} catch (RestaurantManager.InvalidRestException e) {
+			e.printStackTrace();
+		} catch (RestaurantManager.UnauthorizedException e) {
+			e.printStackTrace();
+		}
 
 		manager.deleteRestaurantRelationship(request.getRestaurant().getId(), request.getUser().getId());
 
@@ -157,26 +225,45 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 	@Override
 	public void createTable(CreateTableRequest request, StreamObserver<Table> responseObserver) {
-		if(!request.hasTable() || !request.hasTarget() ||
+		if (!request.hasTable() ||
+			!request.hasTarget() ||
 			request.getTable().getCapacity() <= 0 ||
 			request.getTable().getLabel().isEmpty() ||
-			request.getTarget().getId() == 0){
+			request.getTarget().getId() == 0) {
 			responseObserver.onError(
 				new StatusRuntimeException(Status.INVALID_ARGUMENT
 					.withDescription("Missing restaurant or table details")));
 			return;
 		}
 
-		checkRestaurantPermission(request.getTarget(), null, false);
+		try {
+			manager.checkRestaurantPermission(request.getTarget(), null, false);
+		} catch (RestaurantManager.InvalidTableIdException e) {
+			e.printStackTrace();
+		} catch (RestaurantManager.InvalidRestException e) {
+			e.printStackTrace();
+		} catch (RestaurantManager.UnauthorizedException e) {
+			e.printStackTrace();
+		}
 
 		int tableId;
 		try {
 			tableId = manager.checkAndInsertTable(request.getTable(),
 				request.getTarget());
-		} catch (RestaurantManager.InvalidTableException e) {
+		}
+		catch (RestaurantManager.InvalidTableNameException e) {
+			e.printStackTrace();
 			responseObserver.onError(
 				new StatusRuntimeException(Status.INVALID_ARGUMENT
-					.withDescription("Invalid table name or table already exists"))
+					.withDescription("Table label already exists"))
+			);
+			return;
+		}
+		catch (RestaurantManager.InvalidNameException e) {
+			e.printStackTrace();
+			responseObserver.onError(
+					new StatusRuntimeException(Status.INVALID_ARGUMENT
+							.withDescription("Table label is invalid"))
 			);
 			return;
 		}
@@ -186,15 +273,24 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 	@Override
 	public void getTableById(Table request, StreamObserver<Table> responseObserver) {
-		//Todo: do we want to check if user has permission to restaurant associated with table
-		if(request.getId() == 0){
+		if (request.getId() == 0){
 			responseObserver.onError(
 				new StatusRuntimeException(Status.INVALID_ARGUMENT
 					.withDescription("Invalid table ID")));
 			return;
 		}
 
-		//Todo: do we want to handle invalid id with an Optional?
+		try {
+			manager.checkRestaurantPermission(null, request, false);
+		} catch (RestaurantManager.InvalidTableIdException e) {
+			e.printStackTrace();
+		} catch (RestaurantManager.InvalidRestException e) {
+			e.printStackTrace();
+		} catch (RestaurantManager.UnauthorizedException e) {
+			e.printStackTrace();
+		}
+
+		// Table has been already checked for in checkRestaurantPermission
 		Table table = this.manager.getTableById(request.getId());
 
 		responseObserver.onNext(table);
@@ -204,7 +300,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 	@Override
 	public void searchByCategory(Category request, StreamObserver<Restaurant> responseObserver) {
 		List<Restaurant> results = manager.searchByCategory(request);
-		for(Restaurant result: results) {
+		for (Restaurant result: results) {
 			responseObserver.onNext(result);
 		}
 		responseObserver.onCompleted();
@@ -213,7 +309,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 	@Override
 	public void getUsersByRestaurant(Restaurant request, StreamObserver<Relationship> responseObserver) {
 		List<Relationship> results = manager.getRelationshipByRestaurant(request);
-		for(Relationship result: results) {
+		for (Relationship result: results) {
 			responseObserver.onNext(result);
 		}
 		responseObserver.onCompleted();
@@ -222,7 +318,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 	@Override
 	public void getRestaurantsByUser(User request, StreamObserver<Relationship> responseObserver) {
 		List<Relationship> results = manager.getRelationshipByUser(request);
-		for(Relationship result: results) {
+		for (Relationship result: results) {
 			responseObserver.onNext(result);
 		}
 		responseObserver.onCompleted();
@@ -230,14 +326,22 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 	@Override
 	public void getTablesByRestaurant(Restaurant request, StreamObserver<Table> responseObserver) {
-		if(request.getId() == 0){
+		if (request.getId() == 0) {
 			responseObserver.onError(
 				new StatusRuntimeException(Status.INVALID_ARGUMENT
 					.withDescription("Missing restaurant id")));
 			return;
 		}
 
-		checkRestaurantPermission(request, null, false);
+		try {
+			manager.checkRestaurantPermission(request, null, false);
+		} catch (RestaurantManager.InvalidTableIdException e) {
+			e.printStackTrace();
+		} catch (RestaurantManager.InvalidRestException e) {
+			e.printStackTrace();
+		} catch (RestaurantManager.UnauthorizedException e) {
+			e.printStackTrace();
+		}
 
 		List<Table> tables = manager.getRestaurantTables(request.getId());
 		for (Table table: tables) {
@@ -248,12 +352,21 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 	@Override
 	public void setTable(Table request, StreamObserver<Table> responseObserver) {
-		Restaurant restaurant = checkRestaurantPermission(null, request, false);
+		Restaurant restaurant = null;
+		try {
+			restaurant = manager.checkRestaurantPermission(null, request, false);
+		} catch (RestaurantManager.InvalidTableIdException e) {
+			e.printStackTrace();
+		} catch (RestaurantManager.InvalidRestException e) {
+			e.printStackTrace();
+		} catch (RestaurantManager.UnauthorizedException e) {
+			e.printStackTrace();
+		}
 
 		Table retTable;
 		try{
 			retTable = manager.setTable(request, restaurant);
-		} catch (RestaurantManager.InvalidTableException e) {
+		} catch (RestaurantManager.InvalidTableNameException e) {
 			e.printStackTrace();
 			responseObserver.onError(
 				new StatusRuntimeException(Status.INVALID_ARGUMENT
@@ -269,7 +382,15 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 	@Override
 	public void deleteTable(Table request, StreamObserver<DeleteTableResponse> responseObserver) {
 		//todo lazy delete if there were reservations
-		checkRestaurantPermission(null, request, false);
+		try {
+			manager.checkRestaurantPermission(null, request, false);
+		} catch (RestaurantManager.InvalidTableIdException e) {
+			e.printStackTrace();
+		} catch (RestaurantManager.InvalidRestException e) {
+			e.printStackTrace();
+		} catch (RestaurantManager.UnauthorizedException e) {
+			e.printStackTrace();
+		}
 
 		DeleteTableResponse deleteTableResponse = DeleteTableResponse
 			.newBuilder().build();
@@ -280,36 +401,41 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		responseObserver.onCompleted();
 	}
 
-	private Restaurant checkRestaurantPermission(Restaurant rest, Table tab, boolean priv){
-		int userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
-		if(rest == null && tab != null && tab.getId() > 0) {
-			Optional<Restaurant> restaurant = manager.getRestaurantByTable(tab.getId());
-			if(restaurant.isPresent())
-				rest = restaurant.get();
-		}
-		if(rest == null || rest.getId() <= 0 || !manager.canEditRestaurant(userId,
-			rest.getId(), priv)) {
-			// Check null first to ensure restaurant object exists
-			throw new StatusRuntimeException(Status.PERMISSION_DENIED
-					.withDescription("Not authorized to edit restaurant"));
-		}
-
-		return rest;
-	}
-
 	@Override
 	public void deleteRestaurant(Restaurant rest, StreamObserver<DeleteRestaurantResponse> responseObserver){
 		//Deleting a restaurant should be a privileged operation
-		checkRestaurantPermission(rest, null, true);
+		try {
+			manager.checkRestaurantPermission(rest, null, true);
+		}
+		// should never occur
+		catch (RestaurantManager.InvalidTableIdException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.NOT_FOUND.withDescription("Unknown error occurred")));
+			return;
+		}
+		catch (RestaurantManager.InvalidRestException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(Status.NOT_FOUND.withDescription("An error occurred")));
+			return;
+		}
+		catch (RestaurantManager.UnauthorizedException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.PERMISSION_DENIED.withDescription("Not authorized to edit restaurant")));
+			return;
+		}
 
 		DeleteRestaurantResponse deleteRestaurantResponse = DeleteRestaurantResponse
 				.newBuilder().build();
 
 		try {
 			manager.deleteRestaurant(rest.getId());
-		} catch (AddressManager.InvalidAddressIdException | ContactManager.InvalidContactIdException e) {
+		}
+		catch (AddressManager.InvalidAddressIdException | ContactManager.InvalidContactIdException e) {
 			e.printStackTrace();
-			throw new StatusRuntimeException(Status.INTERNAL.withDescription("An error occurred."));
+			responseObserver.onError(new StatusRuntimeException(Status.NOT_FOUND.withDescription("An error occurred")));
+			return;
 		}
 
 		responseObserver.onNext(deleteRestaurantResponse);

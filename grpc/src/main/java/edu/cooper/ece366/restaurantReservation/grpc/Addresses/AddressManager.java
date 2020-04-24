@@ -16,7 +16,9 @@ public class AddressManager {
             throws InvalidAddrNameException,
             InvalidLatException,
             InvalidLongException,
-            InvalidAddrFormException,
+            InvalidLine1Exception,
+            InvalidCityException,
+            InvalidStateException,
             InvalidZipException {
         int addrId;
 
@@ -34,7 +36,9 @@ public class AddressManager {
             InvalidAddrNameException,
             InvalidLatException,
             InvalidLongException,
-            InvalidAddrFormException,
+            InvalidLine1Exception,
+            InvalidCityException,
+            InvalidStateException,
             InvalidZipException {
 
         int addrId = address.getId();
@@ -55,23 +59,24 @@ public class AddressManager {
             throws InvalidAddrNameException,
             InvalidLatException,
             InvalidLongException,
-            InvalidAddrFormException,
+            InvalidLine1Exception,
+            InvalidCityException,
+            InvalidStateException,
             InvalidZipException {
         checkName(address.getName());
         // todo are we using lat long?
         //checkLat(address.getLatitude());
         //checkLong(address.getLongitude());
 
-        checkEmpty(address.getLine1(), "Line 1");
-        checkEmpty(address.getCity(), "City");
-        checkEmpty(address.getState(), "State");
-
+        checkLine1(address.getLine1());
+        checkCity(address.getCity());
+        checkState(address.getState());
         checkZip(address.getZip());
     }
 
     public void checkName(String name) throws InvalidAddrNameException {
         if (!name.matches("([a-zA-Z0-9 \\\"\\;\\:\\'\\?\\/\\<\\>\\,\\{\\}\\[\\]\\(\\)\\!\\@\\#\\$\\%\\^\\&\\*\\-\\_=+])*$")) {
-            throw new InvalidAddrNameException("Name must only include alphanumeric characters.");
+            throw new InvalidAddrNameException("Invalid characters in address name");
         }
     }
 
@@ -87,9 +92,21 @@ public class AddressManager {
         }
     }
 
-    public void checkEmpty(String input, String type) throws InvalidAddrFormException {
+    public void checkLine1(String input) throws InvalidLine1Exception {
         if (input.equals("")) {
-            throw new InvalidAddrFormException(type + " cannot be empty");
+            throw new InvalidLine1Exception("Line1 cannot be empty");
+        }
+    }
+
+    public void checkCity(String input) throws InvalidCityException {
+        if (input.equals("")) {
+            throw new InvalidCityException("City cannot be empty");
+        }
+    }
+
+    public void checkState(String input) throws InvalidStateException {
+        if (input.equals("")) {
+            throw new InvalidStateException("State cannot be empty");
         }
     }
 
@@ -140,8 +157,20 @@ public class AddressManager {
         }
     }
 
-    public static class InvalidAddrFormException extends Exception {
-        public InvalidAddrFormException(String message) {
+    public static class InvalidLine1Exception extends Exception {
+        public InvalidLine1Exception(String message) {
+            super(message);
+        }
+    }
+
+    public static class InvalidCityException extends Exception {
+        public InvalidCityException(String message) {
+            super(message);
+        }
+    }
+
+    public static class InvalidStateException extends Exception {
+        public InvalidStateException(String message) {
             super(message);
         }
     }

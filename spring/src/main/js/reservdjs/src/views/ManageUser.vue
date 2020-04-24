@@ -183,6 +183,7 @@
                         console.log(err);
                         this.snackBarMessage = err.message;
                         this.showSnackBar = true;
+                        this.sending = false;
                     }
                 });
             }
