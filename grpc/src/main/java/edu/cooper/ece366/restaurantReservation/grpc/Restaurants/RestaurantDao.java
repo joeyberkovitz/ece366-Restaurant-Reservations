@@ -123,25 +123,34 @@ public interface RestaurantDao {
 	List<Category> getCategories();
 
 	//Todo: implement search for lat/long + miles
-	@SqlQuery("SELECT sum(t.capacity) as 'availableCapacity', restaurant.*," +
-		" address.*, contact.* FROM `table` t " +
+	@SqlQuery("SELECT dates.`Date` as 'reservationDate', sum(t.capacity) as 'availableCapacity', restaurant.*, " +
+		"address.*, contact.* " +
+		"FROM `table` t " +
+		"CROSS JOIN (WITH recursive Date_Ranges AS ( " +
+			"select FROM_UNIXTIME(:r.requestedDate) - interval 1 hour as Date " +
+			"union all " +
+			"select Date + interval 30 minute " +
+			"from Date_Ranges " +
+			"where Date < FROM_UNIXTIME(:r.requestedDate) + interval 1 hour " +
+			") SELECT * FROM Date_Ranges where Date >= NOW()) dates " +
 		"INNER JOIN restaurant ON restaurant.id = t.restaurant_id " +
 		"INNER JOIN address ON restaurant.address_id = address.id " +
 		"INNER JOIN contact ON restaurant.contact_id = contact.id " +
-		"WHERE t.id NOT IN (  " +
+		"WHERE t.id NOT IN ( " +
 			"SELECT rt.table_id " +
 			"FROM reservation r " +
 			"INNER JOIN reservation_table rt ON r.id = rt.reservation_id " +
-			"    INNER JOIN restaurant rest ON r.restaurant_id = rest.id " +
+			"INNER JOIN restaurant rest ON r.restaurant_id = rest.id " +
 			"INNER JOIN status st ON r.status_id = st.id " +
 			"WHERE r.restaurant_id = t.restaurant_id " +
 			"AND st.name != 'Cancelled' " +
-			"AND r.end_time > FROM_UNIXTIME(:r.requestedDate) " +
-			"AND r.start_time < DATE_ADD(FROM_UNIXTIME(:r.requestedDate), INTERVAL rest.reservation_time HOUR) " +
+			"AND r.end_time > dates.`Date` " +
+			"AND r.start_time < DATE_ADD(dates.`Date`, INTERVAL rest.reservation_time HOUR) " +
 		") " +
-		" AND (:r.category.category = 0 OR restaurant.category_id = :r.category.category)"+
-		"GROUP BY t.restaurant_id " +
-		"HAVING availableCapacity >= :r.numPeople")
+		"AND (:r.category.category = 0 OR restaurant.category_id = :r.category.category) " +
+		"GROUP BY t.restaurant_id, dates.`date` " +
+		"HAVING availableCapacity >= :r.numPeople " +
+		"order by t.restaurant_id, dates.date ")
 	@RegisterRowMapper(RestaurantSearchMapper.class)
 	List<RestaurantSearchResponse> searchRestaurants(@BindBean("r")
                                     RestaurantSearchRequest request);
@@ -153,6 +162,7 @@ public interface RestaurantDao {
 			RestaurantMapper restaurantMapper = new RestaurantMapper();
 			return RestaurantSearchResponse.newBuilder()
 				.setAvailableCapacity(rs.getInt("availableCapacity"))
+				.setAvailableDate(rs.getTimestamp("reservationDate").getTime() / 1000)
 				.setRestaurant(restaurantMapper.map(rs, ctx))
 				.build();
 		}

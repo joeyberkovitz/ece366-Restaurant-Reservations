@@ -52,15 +52,21 @@
 				</md-card-area>
 			<md-card-content>
 				<md-list class="md-triple-line">
-					<div v-for="(result) in results" :key="result.getRestaurant().getId()">
+					<div v-for="restId in rests" :key="restId">
 						<md-list-item>
 							<div class="md-list-item-text">
-								<span>{{result.getRestaurant().getName()}}</span>
-								<span>{{getCategory(result.getRestaurant().getCategory().getCategory())}}</span>
-								<span>Available Capacity: {{result.getAvailablecapacity()}}</span>
+								<span>{{results[restId][0].getRestaurant().getId()}} -
+									{{results[restId][0].getRestaurant().getName()}}</span>
+								<span>{{getCategory(results[restId][0].getRestaurant().getCategory().getCategory())
+									}}</span>
+								<div>
+									<md-button v-for="(time) in results[restId]" :key="time.getAvailabledate()"
+									           style="width:150px;color:#448aff;" class="bold md-primary"
+											v-on:click="createReservation(time.getRestaurant(), time.getAvailabledate())">
+										{{time.getAvailabledate() | formatDate}} ({{time.getAvailablecapacity()}})
+									</md-button>
+								</div>
 							</div>
-							<md-button class="bold md-primary" v-on:click="createReservation(result.getRestaurant())">Reserve
-							</md-button>
 						</md-list-item>
 						<md-divider></md-divider>
 					</div>
@@ -79,7 +85,8 @@
 	import {required, integer, minValue} from "vuelidate/lib/validators";
 	import {validationMixin} from "vuelidate";
 	import {Category, Reservation} from "../proto/RestaurantService_pb";
-	import {ReservationServiceClient, RestaurantServiceClient} from "../proto/RestaurantServiceServiceClientPb";
+	import moment from "moment";
+	//import {ReservationServiceClient, RestaurantServiceClient} from "../proto/RestaurantServiceServiceClientPb";
 
 	export default {
 		name: "Search",
@@ -118,18 +125,27 @@
 				category: null
 			},
 			menu2: false,
-			results: [],
+			results: {},
+			rests: [],
 			showSnackBar: false,
 			snackBarMessage: "",
 			snackBarDuration: 4000
 		}),
+		filters: {
+			formatDate: function(value) {
+				if (value) {
+					return moment(value*1000).format('LT')
+				}
+			}
+		},
 		methods: {
-			createReservation(restaurant){
+			createReservation(restaurant, time){
+				console.log(restaurant);
+				console.log(time);
 				const newReservation = new Reservation();
 				newReservation.setRestaurant(restaurant);
 				newReservation.setNumpeople(this.form.numPeople);
-				newReservation.setStarttime(this.form.date.getTime()/1000 +
-					this.timeToSeconds(this.form.time));
+				newReservation.setStarttime(time);
 				newReservation.setStatus(Reservation.ReservationStatus.OPENED);
 
 				this.reservationClient.client.createReservation(newReservation, {}, (err, response) => {
@@ -139,7 +155,7 @@
 					else
 						this.snackBarMessage = "Reservation created, go to my reservations to view it";
 					this.showSnackBar = true;
-					this.results = [];
+					this.results = {};
 					this.validateForm();
 				});
 			},
@@ -174,10 +190,16 @@
 						category.setCategory(this.form.category);
 						searchRequest.setCategory(category);
 					}
-					this.results = [];
+					this.results = {};
+					this.rests = [];
 					const search = this.client.client.searchRestaurants(searchRequest, {});
 					search.on('data', response => {
-						this.results.push(response);
+						const restId = response.getRestaurant().getId();
+						if(!this.results[restId]) {
+							this.results[restId] = [];
+							this.rests.push(restId);
+						}
+						this.results[restId].push(response);
 					});
 				}
 				else

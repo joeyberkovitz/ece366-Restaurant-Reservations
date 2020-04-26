@@ -202,4 +202,5 @@ message RestaurantSearchRequest {
 message RestaurantSearchResponse {
 	Restaurant restaurant = 1;
 	uint32 availableCapacity = 2;
+	uint64 availableDate = 3;
 }
