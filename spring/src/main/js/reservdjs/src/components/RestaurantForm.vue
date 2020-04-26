@@ -173,6 +173,7 @@
 						'md-invalid': field.$invalid && field.$dirty
 					};
 			},
+			// todo ?
 			test(){
 				const restaurant = new Restaurant();
 				restaurant.setId(1);
@@ -212,13 +213,17 @@
 					contact.setId(this.form.contId);
 					restaurant.setContact(contact);
 
-					if(this.manageBool == 0) {
+					if(this.manageBool === 0) {
 							console.log(restaurant)
 					        this.client.client.createRestaurant(restaurant, {}, (err, response) => {
 						        console.log(err, response);
 						        if(!err){
 							        this.$router.push("/restaurant/manage/" + response.getId());
 						        }
+						        if(err){
+									this.snackBarMessage = err.message;
+									this.showSnackBar = true;
+								}
 					        });
 					} else {
 						restaurant.setId(this.$route.params.id);
@@ -226,12 +231,18 @@
 						console.log(restaurant);
 						this.client.client.setRestaurant(restaurant, {}, (err, response) => {
 							console.log(err, response);
+							if(err){
+								this.snackBarMessage = err.message;
+								this.showSnackBar = true;
+							}
 						});
 					}
 
 				}
 				else{
 					console.log("INVALID");
+					this.snackBarMessage = "Invalid form";
+					this.showSnackBar = true;
 				}
 			},
 			populate: function(){
@@ -266,6 +277,12 @@
 						this.form.phone = contact.getPhone();
 						this.form.email = contact.getEmail();
 						this.form.contId = contact.getId();
+
+						if(err){
+							console.log(err);
+							this.snackBarMessage = err.message;
+							this.showSnackBar = true;
+						}
 					});
 				}
 			}

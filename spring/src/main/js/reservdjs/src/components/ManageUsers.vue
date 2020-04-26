@@ -12,8 +12,8 @@
 					        v-on:keyup.delete="delRel(toDelete)"
 					        v-model="toDelete">
 					        <option v-for="(user) in users"
-				        	        :key="user.getUser().getId()"
-	        			        	:value="user.getUser().getId()">{{user.getUser().getUsername()}}</option>
+				        	        :key="user.getId()"
+	        			        	:value="user.getId()">{{user.getUsername()}}</option>
 			        	</select>
 		        	</md-field>
 				<md-button v-on:click="delRel(toDelete)" class="button md-primary md-raised">Delete
@@ -24,6 +24,10 @@
 				</md-field>
 				<md-button v-on:click="addRel(toAdd)" class="button md-primary md-raised">Add
 					</md-button>
+				<md-snackbar md-position="center" :md-duration="snackBarDuration"
+							 :md-active.sync="showSnackBar" md-persistent>
+					<span>{{snackBarMessage}}</span>
+				</md-snackbar>
 			</md-card-content>
 		</md-card>
 
@@ -40,6 +44,9 @@
 			users: [],
 			toDelete: [],
 			toAdd: '',
+			showSnackBar: false,
+			snackBarMessage: "",
+			snackBarDuration: 4000
 		}),
 		methods: {
 			populate: function(){
@@ -47,19 +54,33 @@
 				const req = new Restaurant();
 				req.setId(this.$route.params.id);
 				const promise = this.client.client.getUsersByRestaurant(req, {}, err => {
-					console.log(err);
+					if(err) {
+						console.log(err);
+						this.snackBarMessage = err.message;
+						this.showSnackBar = true;
+					}
 				});
 				promise.on('data', (data) => {
-					this.users.push(data);
+					this.users.push(data.getUser())
 				});
 			},
 			delRel: function(toDelete) {
 				const req = new Relationship();
-				req.setId(toDelete);
+				const restaurant = new Restaurant();
+				restaurant.setId(this.$route.params.id);
+				req.setRestaurant(restaurant);
+				const user = new User();
+				user.setId(toDelete);
+				req.setUser(user);
 				this.client.client.deleteRelationship(req, {}, err => {
-					console.log(err);
+					if(err) {
+						console.log(err);
+						this.snackBarMessage = err.message;
+						this.showSnackBar = true;
+					}
+					else
+						delete this.users[this.users.indexOf(toDelete)];
 				});
-				delete this.users[this.users.indexOf(toDelete)];
 			},
 			addRel: function(toAdd) {
 				const req = new Relationship();
@@ -70,10 +91,15 @@
 				user.setUsername(toAdd);
 				req.setUser(user);
 				req.setRole(Relationship.UserRole.MANAGER);
-				this.client.client.setRelationship(req, {}, err => {
-					console.log(err);
+				this.client.client.addRelationship(req, {}, err => {
+					if(err) {
+						console.log(err);
+						this.snackBarMessage = err.message;
+						this.showSnackBar = true;
+					}
+					else
+						this.users.push(user);
 				});
-				this.users.push(user);
 			}
 		},
 		mounted() {

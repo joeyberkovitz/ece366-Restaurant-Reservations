@@ -42,7 +42,7 @@
                         <span>{{snackBarMessage}}</span>
                     </md-snackbar>
                     <md-button type="button" class="button md-dense md-raised md-primary" @click="cancel()"
-                               :disabled="sending" v-if="type !==	'View'">Cancel</md-button>
+                               :disabled="sending" v-if="type !== 'View'">Cancel</md-button>
                     <md-button type="submit" class="button md-dense md-raised md-primary" :disabled="sending"
                                v-if="type !== 'View'">Submit</md-button>
                 </form>
@@ -123,8 +123,6 @@
                     this.profile.phone = response.getContact().getPhone();
 
                     this.initialProfile = JSON.parse(JSON.stringify(this.profile));
-
-                    console.log(this.contId);
                 }
                 else{
                     console.log(err);
@@ -146,6 +144,7 @@
 
                 if(!this.$v.$invalid) {
                     this.sending = true;
+                    console.log("helel")
                     this.submit();
                 }
                 else {

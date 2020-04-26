@@ -39,7 +39,6 @@ public class ContactManager {
             throw new InvalidContactIdException("Contact ID does not exist.");
         }
 
-        //todo remove nonnumeric
         checkPhone(contact.getPhone());
         checkEmail(contact.getEmail());
 
@@ -58,13 +57,13 @@ public class ContactManager {
 
     private void checkPhone(String phone) throws InvalidPhoneException{
         if (phone.isBlank() || phone.matches("[a-zA-Z]")) {
-            throw new InvalidPhoneException("Phone number field must be filled.");
+            throw new InvalidPhoneException("Phone number field must be filled");
         }
     }
 
     private void checkEmail(String email) throws InvalidEmailException {
         if (!email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
-            throw new InvalidEmailException("Valid email must be provided.");
+            throw new InvalidEmailException("Valid email must be provided");
         }
     }
 

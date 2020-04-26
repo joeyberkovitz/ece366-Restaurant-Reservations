@@ -35,7 +35,7 @@
                             <span class="filter">{{ reservation.details.getStarttime() | momentStart(reservation.details.getRestaurant().getRtime()) }}</span>
                             <div class="user-entry"><span v-for="user in reservation.invites" :key="user.getId()"><span @click="invite(user.getId(), reservation, 0)" v-if="curUser != user.getId() && getStatus(reservation.details.getStatus()) == 'OPENED'">&#9940;</span>{{ user.getFname() }} {{ user.getLname() }}</span></div>
                             <form @submit.prevent="invite($event.target[0].value, reservation, 1)"
-                                  v-if="getStatus(reservation.details.getStatus()) == 'OPENED'">
+                                  v-if="getStatus(reservation.details.getStatus()) === 'OPENED'">
                             	<md-field>
                             	    <label :for="'invite-'+reservation.details.getId()">Invite user</label>
                             	    <md-input :id="'invite-'+reservation.details.getId()"/>
@@ -46,7 +46,7 @@
                             	<div v-for="table in reservation.tables" :key="table.getLabel()">Table(s): {{ table.getLabel() }} ({{ table.getCapacity() }})</div>
                             </div>
                         </div>
-                        <md-button v-if="getStatus(reservation.details.getStatus()) == 'OPENED'"
+                        <md-button v-if="getStatus(reservation.details.getStatus()) === 'OPENED'"
                                    class="bold md-primary"
                                    @click="cancel(reservation.details);">
                                    Cancel Reservation</md-button>
@@ -54,6 +54,10 @@
                     <md-divider></md-divider>
                 </div>
             </md-list>
+            <md-snackbar md-position="center" :md-duration="snackBarDuration"
+                         :md-active.sync="showSnackBar" md-persistent>
+                <span>{{snackBarMessage}}</span>
+            </md-snackbar>
         </md-card-content>
     </md-card>
   </div>
@@ -90,6 +94,9 @@
             },
             statuses: [],
             curUser: 0,
+            showSnackBar: false,
+            snackBarMessage: "",
+            snackBarDuration: 4000
         }),
         filters: {
             momentStart: function (date, Rtime) {
@@ -119,39 +126,53 @@
                 return "";
             },
             cancel(reservation) {
-		const resClient = new CustomRPCClient(ReservationServiceClient, this.$store.getters.config.host);
-		reservation.setStatus(Reservation.ReservationStatus.CANCELLED);
-		resClient.client.setReservation(reservation, {}, err => {
-		    console.log(err);
-		    this.load();
-		});
+                const resClient = new CustomRPCClient(ReservationServiceClient, this.$store.getters.config.host);
+                reservation.setStatus(Reservation.ReservationStatus.CANCELLED);
+                resClient.client.setReservation(reservation, {}, err => {
+                    if(err) {
+                        console.log(err);
+                        this.snackBarMessage = err.message;
+                        this.showSnackBar = true;
+                    }
+                    else
+                        this.load();
+                });
             },
             invite(username, reservationOrig, inviteBool) {
-		const resClient = new CustomRPCClient(ReservationServiceClient, this.$store.getters.config.host);
-		const request = new InviteMessage();
-		const reservation = new Reservation();
-		reservation.setId(reservationOrig.details.getId());
-		request.setReservation(reservation);
-		const user = new User();
-		if(inviteBool)
-			user.setUsername(username);
-		else
-			user.setId(username);
-		request.setUser(user);
-		const callback = err => {
+                const resClient = new CustomRPCClient(ReservationServiceClient, this.$store.getters.config.host);
+                const request = new InviteMessage();
+                const reservation = new Reservation();
+                reservation.setId(reservationOrig.details.getId());
+                request.setReservation(reservation);
+                const user = new User();
+                if(inviteBool)
+                    user.setUsername(username);
+                else
+                    user.setId(username);
+                request.setUser(user);
+                const callback = err => {
+                    if(err){
+                        console.log(err);
+                        this.snackBarMessage = err.message;
+                        this.showSnackBar = true;
+                    }
                     reservationOrig.invites = [];
                     const promise2 = resClient.client.listReservationUsers(reservation, {}, err => {
-                        console.log(err);
+                        if(err) {
+                            console.log(err);
+                            this.snackBarMessage = err.message;
+                            this.showSnackBar = true;
+                        }
                     });
                     promise2.on('data', (data) => {
                         reservationOrig.invites.push(data);
                     });
-		}
-		if(inviteBool)
-			resClient.client.inviteReservation(request, {}, callback);
-		else
-			resClient.client.removeReservationUser(request, {}, callback);
-            },
+                }
+                if(inviteBool)
+                    resClient.client.inviteReservation(request, {}, callback);
+                else
+                    resClient.client.removeReservationUser(request, {}, callback);
+            }
         }
     }
 </script>

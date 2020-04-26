@@ -81,7 +81,11 @@
 				const req = new Restaurant();
 				req.setId(this.$route.params.id);
 				const promise = this.client.client.getTablesByRestaurant(req, {}, err => {
-					console.log(err);
+					if(err) {
+						console.log(err);
+						this.snackBarMessage = err.message;
+						this.showSnackBar = true;
+					}
 				});
 				promise.on('data', (data) => {
 					this.tables.push(data);
@@ -109,6 +113,7 @@
 					if(!err)
 						this.tables.push(res);
 					else {
+						console.log(err);
 						this.showSnackBar = true;
 						this.snackBarMessage = err.message;
 					}
@@ -120,7 +125,11 @@
 				req.setId(toDelete);
 				// todo: need to refresh page
 				this.client.client.deleteTable(req, {}, err => {
-					console.log(err);
+					if(err) {
+						console.log(err);
+						this.snackBarMessage = err.message;
+						this.showSnackBar = true;
+					}
 				});
 				delete this.tables[this.tables.indexOf(toDelete)];
 			},

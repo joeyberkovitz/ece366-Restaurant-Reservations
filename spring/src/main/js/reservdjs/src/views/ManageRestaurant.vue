@@ -22,14 +22,18 @@
 		                :categories="this.categories"
 		                button="Set Restaurant"
 		                :canEdit="this.canEdit"/>
-                <ManageUsers :client="this.client"
-                             v-if="this.canEdit"/>
+		<ManageUsers :client="this.client"
+					 v-if="this.canEdit"/>
 		<ManageTables :client="this.client"
 		              v-if="this.canEdit"/>
-	        <ReservationList :reservations="this.reservations"
-	                         @load="load($event)"
-	                         v-if="this.canEdit"
-	                         showTables="true"/>
+		<ReservationList :reservations="this.reservations"
+						 @load="load($event)"
+						 v-if="this.canEdit"
+						 showTables="true"/>
+		<md-snackbar md-position="center" :md-duration="snackBarDuration"
+					 :md-active.sync="showSnackBar" md-persistent>
+			<span>{{snackBarMessage}}</span>
+		</md-snackbar>
 	</div>
 </template>
 
@@ -58,11 +62,18 @@ export default {
 		reservations: [],
 		canEdit: false,
 		userId: 0,
+		showSnackBar: false,
+		snackBarMessage: "",
+		snackBarDuration: 4000
 	}),
 	created() {
 		this.client = this.$store.getters.grpc.restaurantClient;
 		const promise = this.client.client.getCategoryList(new GetCategoryRequest(), {}, err => {
-			console.log(err);
+			if(err) {
+				console.log(err);
+				this.snackBarMessage = err.message;
+				this.showSnackBar = true;
+			}
 		});
 		promise.on('data', (data) => {
 			this.categories.push(data);
@@ -71,7 +82,12 @@ export default {
 		this.userId = JSON.parse(atob(this.$store.getters.user.authToken.split('.')[1])).sub;
 		user.setId(this.userId);
 		const promise2 = this.client.client.getRestaurantsByUser(user, {},
-		        err => { console.log(err); });
+		        err => { if(err) {
+					console.log(err);
+					this.snackBarMessage = err.message;
+					this.showSnackBar = true;
+				}
+		});
 	        promise2.on('data', (data) => {
 	                this.restaurants.push(data.getRestaurant());
 	        });
@@ -99,19 +115,31 @@ export default {
 	                restaurant.setId(this.$route.params.id);
 	                request.setRestaurant(restaurant);
 	                const promise1 = resClient.client.getReservationsByRestaurant(request,{}, err => {
-	                    console.log(err);
+						if(err) {
+							console.log(err);
+							this.snackBarMessage = err.message;
+							this.showSnackBar = true;
+						}
 	                });
 	                promise1.on('data', (data1) => {
 	                    const usersR = [];
 	                    const promise2 = resClient.client.listReservationUsers(data1, {}, err => {
-	                        console.log(err);
+							if(err) {
+								console.log(err);
+								this.snackBarMessage = err.message;
+								this.showSnackBar = true;
+							}
 	                    });
 	                    promise2.on('data', (data2) => {
 	                        usersR.push(data2);
 	                    });
 	                    const tables = [];
 	                    const promise3 = resClient.client.getReservationTables(data1, {}, err => {
-	                    	console.log(err);
+							if(err) {
+								console.log(err);
+								this.snackBarMessage = err.message;
+								this.showSnackBar = true;
+							}
 	                    });
 	                    promise3.on('data', (data3) => {
 	                        tables.push(data3);
@@ -124,13 +152,18 @@ export default {
 			const req = new Restaurant();
 			req.setId(this.$route.params.id);
 			const promise3 = this.client.client.getUsersByRestaurant(req, {}, err => {
-				console.log(err);
+				if(err) {
+					console.log(err);
+					this.snackBarMessage = err.message;
+					this.showSnackBar = true;
+				}
 			});
 			promise3.on('data', (data) => {
 				if(data.getUser().getId() == this.userId) {
 					this.canEdit = true;
 				}
 			});
+
                 }
 	},
 	watch: {

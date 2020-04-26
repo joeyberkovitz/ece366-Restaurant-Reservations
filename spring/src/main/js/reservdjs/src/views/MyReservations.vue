@@ -35,12 +35,20 @@
                 request.setFuturetime(filterData.futureDate.getTime()/1000);
                 request.setStatus(filterData.status);
                 const promise1 = this.client.client.getReservationsByUser(request,{}, err => {
-                    console.log(err);
+                    if(err) {
+                        console.log(err);
+                        this.snackBarMessage = err.message;
+                        this.showSnackBar = true;
+                    }
                 });
                 promise1.on('data', (data1) => {
                     const users = [];
                     const promise2 = this.client.client.listReservationUsers(data1, {}, err => {
-                        console.log(err);
+                        if(err) {
+                            console.log(err);
+                            this.snackBarMessage = err.message;
+                            this.showSnackBar = true;
+                        }
                     });
                     promise2.on('data', (data2) => {
                         users.push(data2);

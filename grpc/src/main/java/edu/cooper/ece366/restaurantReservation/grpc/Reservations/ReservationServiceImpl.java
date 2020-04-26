@@ -1,7 +1,7 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Reservations;
 
-import edu.cooper.ece366.restaurantReservation.grpc.*;
 import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthInterceptor;
+import edu.cooper.ece366.restaurantReservation.grpc.*;
 import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserManager;
 import io.grpc.Status;
@@ -9,6 +9,7 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import org.jdbi.v3.core.Jdbi;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationServiceImplBase {
@@ -37,14 +38,24 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 
 	@Override
 	public void inviteReservation(InviteMessage request, StreamObserver<InviteResponse> responseObserver) {
-		checkReservationPermission(request.getReservation());
+		try {
+			manager.checkReservationPermission(request.getReservation());
+		}
+		catch (ReservationManager.ReservationUnauthorizedException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(Status.PERMISSION_DENIED
+					.withDescription("Not authorized to edit reservation")));
+			return;
+		}
 
 		try {
 			manager.addReservationUser(request.getReservation().getId(),
 				request.getUser().getUsername());
-		} catch (UserManager.InvalidUsernameException e) {
+		}
+		catch (UserManager.InvalidUsernameException e) {
 			e.printStackTrace();
-			throw new StatusRuntimeException(Status.NOT_FOUND.withDescription("Invalid username."));
+			responseObserver.onError(new StatusRuntimeException(Status.NOT_FOUND.withDescription("Invalid username")));
+			return;
 		}
 
 		responseObserver.onNext(InviteResponse.newBuilder().build());
@@ -53,7 +64,15 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 
 	@Override
 	public void removeReservationUser(InviteMessage request, StreamObserver<InviteResponse> responseObserver) {
-		checkReservationPermission(request.getReservation());
+		try {
+			manager.checkReservationPermission(request.getReservation());
+		}
+		catch (ReservationManager.ReservationUnauthorizedException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(Status.PERMISSION_DENIED
+					.withDescription("Not authorized to edit reservation")));
+			return;
+		}
 
 		manager.removeReservationUser(request.getReservation().getId(),
 			request.getUser().getId());
@@ -64,7 +83,14 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 
 	@Override
 	public void listReservationUsers(Reservation request, StreamObserver<User> responseObserver) {
-		checkReservationPermission(request);
+		try {
+			manager.checkReservationPermission(request);
+		} catch (ReservationManager.ReservationUnauthorizedException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(Status.PERMISSION_DENIED
+					.withDescription("Not authorized to edit reservation")));
+			return;
+		}
 
 		List<User> users = manager.getReservationUsers(request.getId());
 
@@ -92,7 +118,15 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 	@Override
 	public void getReservation(Reservation request, StreamObserver<Reservation> responseObserver) {
 		//This function will guarantee that the reservation exists
-		checkReservationPermission(request);
+		try {
+			manager.checkReservationPermission(request);
+		}
+		catch (ReservationManager.ReservationUnauthorizedException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(Status.PERMISSION_DENIED
+					.withDescription("Not authorized to edit reservation")));
+			return;
+		}
 
 		List<Reservation> reservations = manager.searchReservations(request.getId(), null, null,
 				null, null, null);
@@ -103,16 +137,31 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 
 	@Override
 	public void getReservationsByRestaurant(ReservationRestaurantRequest request, StreamObserver<Reservation> responseObserver) {
-		RestaurantManager restaurantManager = new RestaurantManager(db);
-		int currUser = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
-		if(!restaurantManager.canEditRestaurant(currUser, request.getRestaurant().getId(), false)){
-			throw new StatusRuntimeException(Status.PERMISSION_DENIED
-				.withDescription("Not allowed to access restaurant"));
-		}
+		List<Reservation> reservations = new ArrayList<Reservation>();
 
-		List<Reservation> reservations = manager.searchReservations(null, null,
-				request.getRestaurant().getId(), request.getBeginTime(), request.getFutureTime(),
-				request.getStatus());
+		try {
+			reservations = manager.getReservationsByRestaurant(request.getRestaurant(),
+					request.getBeginTime(), request.getFutureTime(), request.getStatus());
+		}
+		catch (RestaurantManager.RestUnauthorizedException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(Status.PERMISSION_DENIED
+					.withDescription("Not authorized to view restaurant's reservations")));
+			return;
+		}
+		// should never occur
+		catch (RestaurantManager.InvalidTableIdException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.UNKNOWN.withDescription("Unknown error occurred")));
+			return;
+		}
+		catch (RestaurantManager.InvalidRestException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.NOT_FOUND.withDescription("Unknown restaurant error")));
+			return;
+		}
 
 		for (Reservation reservation: reservations) {
 			responseObserver.onNext(reservation);
@@ -122,7 +171,15 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 
 	@Override
 	public void getReservationTables(Reservation request, StreamObserver<Table> responseObserver) {
-		checkReservationPermission(request);
+		try {
+			manager.checkReservationPermission(request);
+		}
+		catch (ReservationManager.ReservationUnauthorizedException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(Status.PERMISSION_DENIED
+					.withDescription("Not authorized to edit reservation")));
+			return;
+		}
 
 		List<Table> tables = manager.getReservationTables(request.getId());
 
@@ -132,43 +189,51 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 		responseObserver.onCompleted();
 	}
 
-	private void checkReservationPermission(Reservation reservation){
-		int currUser = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
-		if(!manager.canEditReservation(currUser, reservation)){
-			throw new StatusRuntimeException(Status.PERMISSION_DENIED
-				.withDescription("User can't edit reservation"));
-		}
-	}
-
 	@Override
 	public void setReservation(Reservation request, StreamObserver<Reservation> responseObserver) {
 		//After calling this, reservation is guaranteed to exist
-		checkReservationPermission(request);
+		try {
+			manager.checkReservationPermission(request);
+		}
+		catch (ReservationManager.ReservationUnauthorizedException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(Status.PERMISSION_DENIED
+					.withDescription("Not authorized to edit reservation")));
+			return;
+		}
 
 		List<Reservation> reservationList = manager.searchReservations(request.getId(), null, null,
 				null, null, null);
 
 		Reservation originalReservation = reservationList.get(0);
 
-		if(request.getNumPeople() > originalReservation.getNumPeople())
-			throw new StatusRuntimeException(Status.INVALID_ARGUMENT
-				.withDescription("Increasing num people not supported"));
+		if(request.getNumPeople() > originalReservation.getNumPeople()) {
+			responseObserver.onError(new StatusRuntimeException(Status.INVALID_ARGUMENT
+					.withDescription("Increasing num people not supported")));
+			return;
+		}
 		else if(request.getNumPeople() < originalReservation.getNumPeople()){
 			//Todo: need to figure out if tables should be removed
 		}
 
-		if(request.getPoints() != originalReservation.getPoints())
-			throw new StatusRuntimeException(Status.INVALID_ARGUMENT
-				.withDescription("Not allowed to modify points"));
+		if(request.getPoints() != originalReservation.getPoints()) {
+			responseObserver.onError(new StatusRuntimeException(Status.INVALID_ARGUMENT
+					.withDescription("Not allowed to modify points")));
+			return;
+		}
 
-		if(request.getStartTime() != originalReservation.getStartTime())
-			throw new StatusRuntimeException(Status.INVALID_ARGUMENT
-				.withDescription("Not allowed to change start time"));
+		if(request.getStartTime() != originalReservation.getStartTime()) {
+			responseObserver.onError(new StatusRuntimeException(Status.INVALID_ARGUMENT
+					.withDescription("Not allowed to change start time")));
+			return;
+		}
 
 		if(request.getRestaurant().getId() !=
-			originalReservation.getRestaurant().getId())
-			throw new StatusRuntimeException(Status.INVALID_ARGUMENT
-				.withDescription("Not allowed to change restaurant"));
+			originalReservation.getRestaurant().getId()) {
+			responseObserver.onError(new StatusRuntimeException(Status.INVALID_ARGUMENT
+					.withDescription("Not allowed to change restaurant")));
+			return;
+		}
 
 		manager.updateReservation(request);
 

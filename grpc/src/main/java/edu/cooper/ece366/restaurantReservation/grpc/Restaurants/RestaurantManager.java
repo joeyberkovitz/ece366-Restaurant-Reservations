@@ -26,14 +26,18 @@ public class RestaurantManager {
 			AddressManager.InvalidLatException,
 			AddressManager.InvalidLongException,
 			AddressManager.InvalidAddrNameException,
-			AddressManager.InvalidZipException {
-		// TODO restaurant checks on category (and capacity factor and rTime?)
+			AddressManager.InvalidZipException,
+			InvalidCapFactorException,
+			InvalidRTimeException {
 		checkName(restaurant.getName());
 
 		ContactManager cm = new ContactManager(db);
 		int contId = cm.checkAndInsertContact(restaurant.getContact());
 		AddressManager am = new AddressManager(db);
 		int addrId = am.checkAndInsertAddress(restaurant.getAddress());
+
+		checkCapFactor(restaurant.getCapacity());
+		checkRTime(restaurant.getRtime());
 
 		return db.withExtension(RestaurantDao.class, dao -> {
 			return dao.insertRestaurant(addrId, contId, restaurant);
@@ -100,14 +104,18 @@ public class RestaurantManager {
 			AddressManager.InvalidLatException,
 			AddressManager.InvalidLongException,
 			AddressManager.InvalidAddrNameException,
-			AddressManager.InvalidZipException {
-		// TODO checks for category (and capacity factor and rTime?)
+			AddressManager.InvalidZipException,
+			InvalidCapFactorException,
+			InvalidRTimeException {
 		checkName(target.getName());
 
 		ContactManager cm = new ContactManager(db);
 		cm.setContact(target.getContact());
 		AddressManager am = new AddressManager(db);
 		am.setAddress(target.getAddress());
+
+		checkCapFactor(target.getCapacity());
+		checkRTime(target.getRtime());
 
 		return db.withExtension(RestaurantDao.class, dao -> {
 			dao.setRestaurant(target);
@@ -118,7 +126,7 @@ public class RestaurantManager {
 	public Restaurant checkRestaurantPermission(Restaurant rest, Table tab, boolean priv)
 			throws InvalidTableIdException,
 			InvalidRestException,
-			UnauthorizedException {
+			RestUnauthorizedException {
 		int userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
 		if (rest == null && tab != null && tab.getId() > 0) {
 			Optional<Restaurant> restaurant = getRestaurantByTable(tab.getId());
@@ -132,7 +140,7 @@ public class RestaurantManager {
 			throw new InvalidRestException("Restaurant not found");
 
 		if (!canEditRestaurant(userId, rest.getId(), priv)) {
-			throw new UnauthorizedException("Not authorized to edit restaurant");
+			throw new RestUnauthorizedException("Not authorized to edit restaurant");
 		}
 
 		return rest;
@@ -150,9 +158,11 @@ public class RestaurantManager {
 
 	public int checkAndInsertTable(Table table, Restaurant restaurant)
 			throws InvalidTableNameException,
-			InvalidNameException {
+			InvalidNameException,
+			InvalidCapacityException {
 
 		checkName(table.getLabel());
+		checkCapacity(table.getCapacity());
 
 		Optional<Table> existingTable = db.withExtension(
 			RestaurantDao.class,
@@ -239,6 +249,24 @@ public class RestaurantManager {
 		}
 	}
 
+	public void checkRTime(int rTime) throws InvalidRTimeException {
+		if (rTime <= 0) {
+			throw new InvalidRTimeException("Invalid reservation time");
+		}
+	}
+
+	public void checkCapFactor(int capFactor) throws InvalidCapFactorException {
+		if (capFactor < 0 || capFactor > 100) {
+			throw new InvalidCapFactorException("Invalid capacity factor");
+		}
+	}
+
+	public void checkCapacity(int capacity) throws InvalidCapacityException {
+		if (capacity <= 0) {
+			throw new InvalidCapacityException("Invalid table capacity");
+		}
+	}
+
 	public List<Category> getCategories(){
 		return db.withExtension(RestaurantDao.class, dao -> dao.getCategories());
 	}
@@ -254,14 +282,26 @@ public class RestaurantManager {
 		}
 	}
 
+	public static class InvalidRTimeException extends Exception {
+		public InvalidRTimeException(String message) {
+			super(message);
+		}
+	}
+
+	public static class InvalidCapFactorException extends Exception {
+		public InvalidCapFactorException(String message) {
+			super(message);
+		}
+	}
+
 	public static class InvalidRestException extends Exception {
 		public InvalidRestException(String message) {
 			super(message);
 		}
 	}
 
-	public static class UnauthorizedException extends Exception {
-		public UnauthorizedException(String message) {
+	public static class RestUnauthorizedException extends Exception {
+		public RestUnauthorizedException(String message) {
 			super(message);
 		}
 	}
@@ -274,6 +314,12 @@ public class RestaurantManager {
 
 	public static class InvalidTableNameException extends Exception {
 		public InvalidTableNameException(String message) {
+			super(message);
+		}
+	}
+
+	public static class InvalidCapacityException extends Exception {
+		public InvalidCapacityException(String message) {
 			super(message);
 		}
 	}

@@ -1,10 +1,9 @@
 package edu.cooper.ece366.restaurantReservation.grpc.Reservations;
 
-import edu.cooper.ece366.restaurantReservation.grpc.Reservation;
+import edu.cooper.ece366.restaurantReservation.grpc.*;
+import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthInterceptor;
 import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantDao;
-import edu.cooper.ece366.restaurantReservation.grpc.StatusDao;
-import edu.cooper.ece366.restaurantReservation.grpc.Table;
-import edu.cooper.ece366.restaurantReservation.grpc.User;
+import edu.cooper.ece366.restaurantReservation.grpc.Restaurants.RestaurantManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserManager;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -80,6 +79,19 @@ public class ReservationManager {
 		return db.withExtension(ReservationDao.class, dao -> {
 			return dao.getReservationTables(resId);
 		});
+	}
+
+	public List<Reservation> getReservationsByRestaurant(Restaurant rest,
+														 long beginTime, long futureTime, String status)
+			throws RestaurantManager.RestUnauthorizedException,
+			RestaurantManager.InvalidTableIdException,
+			RestaurantManager.InvalidRestException {
+		RestaurantManager rm = new RestaurantManager(db);
+
+		rm.checkRestaurantPermission(rest,null,false);
+
+		return searchReservations(null, null,
+				rest.getId(), beginTime, futureTime, status);
 	}
 
 	public List<Reservation> searchReservations(Integer resId,
@@ -166,7 +178,14 @@ public class ReservationManager {
 		getBestTable(reservation, target, currTarget, maxSize, overallMaxSize, endTime, reservationTime);
 	}
 
-	public boolean canEditReservation(int userId, Reservation reservation){
+	public void checkReservationPermission(Reservation reservation)
+			throws ReservationUnauthorizedException {
+		int currUser = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
+		if(!canEditReservation(currUser, reservation))
+			throw new ReservationUnauthorizedException("Not authorized to edit reservation");
+	}
+
+	private boolean canEditReservation(int userId, Reservation reservation){
 		Optional<Integer> resUser = db.withExtension(ReservationDao.class,
 			dao -> dao.getReservationUser(userId, reservation.getId()));
 
@@ -177,12 +196,17 @@ public class ReservationManager {
 			restaurantUser = db.withExtension(RestaurantDao.class,
 				dao -> dao.getRestaurantUserRole(userId,
 					reservation.getRestaurant().getId()));
-
 		}
 
 		return resUser.isPresent() || (restaurantUser.isPresent() && (
 			restaurantUser.get().equals("Admin") ||
 			restaurantUser.get().equals("Manager")
 		));
+	}
+
+	public static class ReservationUnauthorizedException extends Exception {
+		public ReservationUnauthorizedException(String message) {
+			super(message);
+		}
 	}
 }

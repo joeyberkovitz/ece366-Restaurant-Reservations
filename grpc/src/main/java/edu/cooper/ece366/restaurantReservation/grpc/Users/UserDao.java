@@ -33,9 +33,9 @@ public interface UserDao {
     @RegisterBeanMapper(DBHashResponse.class)
     Optional<DBHashResponse> getUserHash(String name);
 
-    @SqlQuery("SELECT u.id, u.username, u.fname, u.lname, u.rewards_points as points, c.id, c.phone, c.email, " +
-            "r.name as role"+
-            " FROM user u INNER JOIN contact c on c.id = u.contact_id INNER JOIN role r on r.id = u.role_id " +
+    @SqlQuery("SELECT u.id, u.username, u.fname, u.lname, u.rewards_points AS points, c.id, c.phone, c.email, " +
+            "r.name AS role"+
+            " FROM user u INNER JOIN contact c ON c.id = u.contact_id INNER JOIN role r ON r.id = u.role_id " +
             " WHERE u.id = :id")
     @RegisterRowMapper(UserMapper.class)
     User getUser(int id);

@@ -23,11 +23,11 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 	}
 
 	@Override
-	public void createRestaurant(Restaurant req, StreamObserver<Restaurant> responseObserver) {
+	public void createRestaurant(Restaurant request, StreamObserver<Restaurant> responseObserver) {
 		int userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
 
 		try {
-			int restId = manager.checkAndInsertRestaurant(req);
+			int restId = manager.checkAndInsertRestaurant(request);
 
 			// Insert current user as admin (owner) for new restaurant
 			RoleManager rm = new RoleManager(db);
@@ -69,6 +69,16 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			responseObserver.onError(new StatusRuntimeException(
 					Status.INVALID_ARGUMENT.withDescription("Unable to extract location information from address")));
 		}
+		catch (RestaurantManager.InvalidCapFactorException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Capacity factor must be integer between 0 and 100")));
+		}
+		catch (RestaurantManager.InvalidRTimeException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Reservation time must be positive integer")));
+		}
 		catch (UnableToExecuteStatementException ex){
 			// todo include StatusRuntimeException?
 			ex.printStackTrace();
@@ -80,12 +90,17 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 	}
 
 	@Override
-	public void getRestaurant(Restaurant req, StreamObserver<Restaurant> responseObserver) {
-		Restaurant restaurant = manager.getRestaurant(req.getId());
-		if(restaurant == null){
-			responseObserver.onError(new StatusRuntimeException(Status.NOT_FOUND
-					.withDescription("Unable to find requested restaurant")));
+	public void getRestaurant(Restaurant request, StreamObserver<Restaurant> responseObserver) {
+		if (request.getId() == 0) {
+			responseObserver.onError(new StatusRuntimeException(
+					Status.DATA_LOSS.withDescription("Unknown restaurant error")));
 			return;
+		}
+
+		Restaurant restaurant = manager.getRestaurant(request.getId());
+		if (restaurant == null){
+			responseObserver.onError(new StatusRuntimeException(
+					Status.NOT_FOUND.withDescription("Unable to find requested restaurant")));
 		}
 
 		responseObserver.onNext(restaurant);
@@ -93,19 +108,32 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 	}
 
 	@Override
-	public void setRestaurant(Restaurant req, StreamObserver<Restaurant> responseObserver) {
+	public void setRestaurant(Restaurant request, StreamObserver<Restaurant> responseObserver) {
 		try {
-			manager.checkRestaurantPermission(req, null, false);
-		} catch (RestaurantManager.InvalidTableIdException e) {
+			manager.checkRestaurantPermission(request, null, false);
+		}
+		// should not occur
+		catch (RestaurantManager.InvalidTableIdException e) {
 			e.printStackTrace();
-		} catch (RestaurantManager.InvalidRestException e) {
+			responseObserver.onError(new StatusRuntimeException(
+					Status.UNKNOWN.withDescription("Unknown error occurred")));
+			return;
+		}
+		catch (RestaurantManager.InvalidRestException e) {
 			e.printStackTrace();
-		} catch (RestaurantManager.UnauthorizedException e) {
+			responseObserver.onError(new StatusRuntimeException(
+					Status.NOT_FOUND.withDescription("Unknown restaurant error")));
+			return;
+		}
+		catch (RestaurantManager.RestUnauthorizedException e) {
 			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.PERMISSION_DENIED.withDescription("Not authorized to edit restaurant")));
+			return;
 		}
 
 		try {
-			responseObserver.onNext(manager.setRestaurant(req));
+			responseObserver.onNext(manager.setRestaurant(request));
 			responseObserver.onCompleted();
 		}
 		catch (RestaurantManager.InvalidNameException | AddressManager.InvalidAddrNameException e) {
@@ -137,15 +165,25 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			responseObserver.onError(new StatusRuntimeException(
 					Status.INVALID_ARGUMENT.withDescription("Unable to extract location information from address")));
 		}
+		catch (RestaurantManager.InvalidCapFactorException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Capacity factor must be integer between 0 and 100")));
+		}
+		catch (RestaurantManager.InvalidRTimeException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Reservation time must be positive integer")));
+		}
 		catch (ContactManager.InvalidContactIdException e) {
 			e.printStackTrace();
 			responseObserver.onError(new StatusRuntimeException(
-					Status.INVALID_ARGUMENT.withDescription("Unknown contact error")));
+					Status.NOT_FOUND.withDescription("Unknown contact error")));
 		}
 		catch (AddressManager.InvalidAddressIdException e) {
 			e.printStackTrace();
 			responseObserver.onError(new StatusRuntimeException(
-					Status.INVALID_ARGUMENT.withDescription("Unknown address error")));
+					Status.NOT_FOUND.withDescription("Unknown address error")));
 		}
 	}
 
@@ -154,18 +192,31 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		if (!request.hasRestaurant() || request.getRestaurant().getId() == 0
 			|| (request.getUser().getId() == 0 && request.getUser().getUsername().isBlank())) {
 			responseObserver.onError(new StatusRuntimeException(
-				Status.NOT_FOUND.withDescription("Unknown restaurant or user error")));
+				Status.DATA_LOSS.withDescription("Unknown restaurant or user error")));
 			return;
 		}
 
 		try {
 			manager.checkRestaurantPermission(request.getRestaurant(), null, true);
-		} catch (RestaurantManager.InvalidTableIdException e) {
+		}
+		// should never occur
+		catch (RestaurantManager.InvalidTableIdException e) {
 			e.printStackTrace();
-		} catch (RestaurantManager.InvalidRestException e) {
+			responseObserver.onError(new StatusRuntimeException(
+					Status.UNKNOWN.withDescription("Unknown error occurred")));
+			return;
+		}
+		catch (RestaurantManager.InvalidRestException e) {
 			e.printStackTrace();
-		} catch (RestaurantManager.UnauthorizedException e) {
+			responseObserver.onError(new StatusRuntimeException(
+					Status.NOT_FOUND.withDescription("Unknown restaurant error")));
+			return;
+		}
+		catch (RestaurantManager.RestUnauthorizedException e) {
 			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.PERMISSION_DENIED.withDescription("Not authorized to add relationship")));
+			return;
 		}
 
 		RoleManager rm = new RoleManager(db);
@@ -179,16 +230,12 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		catch (UnableToExecuteStatementException ex) {
 			ex.printStackTrace();
 			responseObserver.onError(new StatusRuntimeException(
-				Status.ALREADY_EXISTS
-				.withDescription("Relationship already exists or invalid key")));
+				Status.ALREADY_EXISTS.withDescription("Relationship already exists or invalid key")));
 			return;
 		}
 		catch (UserManager.InvalidUsernameException e) {
 			e.printStackTrace();
-			responseObserver.onError(new StatusRuntimeException(
-					Status.NOT_FOUND
-					.withDescription("Invalid username")
-			));
+			responseObserver.onError(new StatusRuntimeException(Status.NOT_FOUND.withDescription("Invalid username")));
 			return;
 		}
 
@@ -199,21 +246,35 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 	@Override
 	public void deleteRelationship(Relationship request, StreamObserver<RelationshipResponse> responseObserver) {
-		if (!request.hasRestaurant() || request.getRestaurant().getId() == 0
-				|| request.getUser().getId() == 0) {
+		if (!request.hasRestaurant() ||
+			request.getRestaurant().getId() == 0 ||
+			request.getUser().getId() == 0) {
 			responseObserver.onError(new StatusRuntimeException(
-					Status.NOT_FOUND.withDescription("Invalid Restaurant")));
+					Status.DATA_LOSS.withDescription("Unknown restaurant or user error")));
 			return;
 		}
 
 		try {
 			manager.checkRestaurantPermission(request.getRestaurant(), null, true);
-		} catch (RestaurantManager.InvalidTableIdException e) {
+		}
+		// should not occur
+		catch (RestaurantManager.InvalidTableIdException e) {
 			e.printStackTrace();
-		} catch (RestaurantManager.InvalidRestException e) {
+			responseObserver.onError(new StatusRuntimeException(
+					Status.UNKNOWN.withDescription("Unknown error occurred")));
+			return;
+		}
+		catch (RestaurantManager.InvalidRestException e) {
 			e.printStackTrace();
-		} catch (RestaurantManager.UnauthorizedException e) {
+			responseObserver.onError(new StatusRuntimeException(
+					Status.NOT_FOUND.withDescription("Unknown restaurant error")));
+			return;
+		}
+		catch (RestaurantManager.RestUnauthorizedException e) {
 			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.PERMISSION_DENIED.withDescription("Not authorized to delete relationship")));
+			return;
 		}
 
 		manager.deleteRestaurantRelationship(request.getRestaurant().getId(), request.getUser().getId());
@@ -230,20 +291,32 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			request.getTable().getCapacity() <= 0 ||
 			request.getTable().getLabel().isEmpty() ||
 			request.getTarget().getId() == 0) {
-			responseObserver.onError(
-				new StatusRuntimeException(Status.INVALID_ARGUMENT
-					.withDescription("Missing restaurant or table details")));
+			responseObserver.onError(new StatusRuntimeException(
+						Status.DATA_LOSS.withDescription("Missing restaurant or table details")));
 			return;
 		}
 
 		try {
 			manager.checkRestaurantPermission(request.getTarget(), null, false);
-		} catch (RestaurantManager.InvalidTableIdException e) {
+		}
+		// should not occur
+		catch (RestaurantManager.InvalidTableIdException e) {
 			e.printStackTrace();
-		} catch (RestaurantManager.InvalidRestException e) {
+			responseObserver.onError(new StatusRuntimeException(
+					Status.UNKNOWN.withDescription("Unknown error occurred")));
+			return;
+		}
+		catch (RestaurantManager.InvalidRestException e) {
 			e.printStackTrace();
-		} catch (RestaurantManager.UnauthorizedException e) {
+			responseObserver.onError(new StatusRuntimeException(
+					Status.NOT_FOUND.withDescription("Unknown restaurant error")));
+			return;
+		}
+		catch (RestaurantManager.RestUnauthorizedException e) {
 			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.PERMISSION_DENIED.withDescription("Not authorized to add table at this restaurant")));
+			return;
 		}
 
 		int tableId;
@@ -253,18 +326,22 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		}
 		catch (RestaurantManager.InvalidTableNameException e) {
 			e.printStackTrace();
-			responseObserver.onError(
-				new StatusRuntimeException(Status.INVALID_ARGUMENT
-					.withDescription("Table label already exists"))
+			responseObserver.onError(new StatusRuntimeException(
+						Status.ALREADY_EXISTS.withDescription("Table label already exists"))
 			);
 			return;
 		}
 		catch (RestaurantManager.InvalidNameException e) {
 			e.printStackTrace();
-			responseObserver.onError(
-					new StatusRuntimeException(Status.INVALID_ARGUMENT
-							.withDescription("Table label is invalid"))
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Table label is invalid"))
 			);
+			return;
+		}
+		catch (RestaurantManager.InvalidCapacityException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Table capacity must be greater than 0")));
 			return;
 		}
 		responseObserver.onNext(this.manager.getTableById(tableId));
@@ -274,20 +351,26 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 	@Override
 	public void getTableById(Table request, StreamObserver<Table> responseObserver) {
 		if (request.getId() == 0){
-			responseObserver.onError(
-				new StatusRuntimeException(Status.INVALID_ARGUMENT
-					.withDescription("Invalid table ID")));
+			responseObserver.onError(new StatusRuntimeException(
+					Status.DATA_LOSS.withDescription("Unknown table error")));
 			return;
 		}
 
 		try {
 			manager.checkRestaurantPermission(null, request, false);
-		} catch (RestaurantManager.InvalidTableIdException e) {
+		}
+		catch (RestaurantManager.InvalidTableIdException |
+				RestaurantManager.InvalidRestException e) {
 			e.printStackTrace();
-		} catch (RestaurantManager.InvalidRestException e) {
+			responseObserver.onError(new StatusRuntimeException(
+					Status.NOT_FOUND.withDescription("Unknown table error")));
+			return;
+		}
+		catch (RestaurantManager.RestUnauthorizedException e) {
 			e.printStackTrace();
-		} catch (RestaurantManager.UnauthorizedException e) {
-			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.PERMISSION_DENIED.withDescription("Not authorized to view table")));
+			return;
 		}
 
 		// Table has been already checked for in checkRestaurantPermission
@@ -328,19 +411,31 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 	public void getTablesByRestaurant(Restaurant request, StreamObserver<Table> responseObserver) {
 		if (request.getId() == 0) {
 			responseObserver.onError(
-				new StatusRuntimeException(Status.INVALID_ARGUMENT
-					.withDescription("Missing restaurant id")));
+				new StatusRuntimeException(Status.DATA_LOSS.withDescription("Unknown restaurant error")));
 			return;
 		}
 
 		try {
 			manager.checkRestaurantPermission(request, null, false);
-		} catch (RestaurantManager.InvalidTableIdException e) {
+		}
+		// should never occur
+		catch (RestaurantManager.InvalidTableIdException e) {
 			e.printStackTrace();
-		} catch (RestaurantManager.InvalidRestException e) {
+			responseObserver.onError(new StatusRuntimeException(
+					Status.UNKNOWN.withDescription("Unknown error occurred")));
+			return;
+		}
+		catch (RestaurantManager.InvalidRestException e) {
 			e.printStackTrace();
-		} catch (RestaurantManager.UnauthorizedException e) {
+			responseObserver.onError(new StatusRuntimeException(
+					Status.NOT_FOUND.withDescription("Unknown restaurant error")));
+			return;
+		}
+		catch (RestaurantManager.RestUnauthorizedException e) {
 			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.PERMISSION_DENIED.withDescription("Not authorized to view tables for this restaurant")));
+			return;
 		}
 
 		List<Table> tables = manager.getRestaurantTables(request.getId());
@@ -352,26 +447,32 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 
 	@Override
 	public void setTable(Table request, StreamObserver<Table> responseObserver) {
-		Restaurant restaurant = null;
+		Restaurant restaurant;
 		try {
 			restaurant = manager.checkRestaurantPermission(null, request, false);
-		} catch (RestaurantManager.InvalidTableIdException e) {
+		}
+		catch (RestaurantManager.InvalidTableIdException |
+				RestaurantManager.InvalidRestException e) {
 			e.printStackTrace();
-		} catch (RestaurantManager.InvalidRestException e) {
+			responseObserver.onError(new StatusRuntimeException(
+					Status.NOT_FOUND.withDescription("Unknown table error")));
+			return;
+		}
+		catch (RestaurantManager.RestUnauthorizedException e) {
 			e.printStackTrace();
-		} catch (RestaurantManager.UnauthorizedException e) {
-			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.PERMISSION_DENIED.withDescription("Unauthorized to edit this table")));
+			return;
 		}
 
 		Table retTable;
-		try{
+		try {
 			retTable = manager.setTable(request, restaurant);
-		} catch (RestaurantManager.InvalidTableNameException e) {
+		}
+		catch (RestaurantManager.InvalidTableNameException e) {
 			e.printStackTrace();
-			responseObserver.onError(
-				new StatusRuntimeException(Status.INVALID_ARGUMENT
-					.withDescription("Invalid table parameters received"))
-			);
+			responseObserver.onError(new StatusRuntimeException(
+					Status.ALREADY_EXISTS.withDescription("Table name already exists for this restaurant")));
 			return;
 		}
 
@@ -384,12 +485,19 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 		//todo lazy delete if there were reservations
 		try {
 			manager.checkRestaurantPermission(null, request, false);
-		} catch (RestaurantManager.InvalidTableIdException e) {
+		}
+		catch (RestaurantManager.InvalidTableIdException |
+				RestaurantManager.InvalidRestException e) {
 			e.printStackTrace();
-		} catch (RestaurantManager.InvalidRestException e) {
+			responseObserver.onError(new StatusRuntimeException(
+					Status.NOT_FOUND.withDescription("Unknown table error")));
+			return;
+		}
+		catch (RestaurantManager.RestUnauthorizedException e) {
 			e.printStackTrace();
-		} catch (RestaurantManager.UnauthorizedException e) {
-			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.PERMISSION_DENIED.withDescription("Not authorized to edit tables")));
+			return;
 		}
 
 		DeleteTableResponse deleteTableResponse = DeleteTableResponse
@@ -402,16 +510,16 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 	}
 
 	@Override
-	public void deleteRestaurant(Restaurant rest, StreamObserver<DeleteRestaurantResponse> responseObserver){
+	public void deleteRestaurant(Restaurant restaurant, StreamObserver<DeleteRestaurantResponse> responseObserver){
 		//Deleting a restaurant should be a privileged operation
 		try {
-			manager.checkRestaurantPermission(rest, null, true);
+			manager.checkRestaurantPermission(restaurant, null, true);
 		}
 		// should never occur
 		catch (RestaurantManager.InvalidTableIdException e) {
 			e.printStackTrace();
 			responseObserver.onError(new StatusRuntimeException(
-					Status.NOT_FOUND.withDescription("Unknown error occurred")));
+					Status.UNKNOWN.withDescription("Unknown error occurred")));
 			return;
 		}
 		catch (RestaurantManager.InvalidRestException e) {
@@ -419,7 +527,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 			responseObserver.onError(new StatusRuntimeException(Status.NOT_FOUND.withDescription("An error occurred")));
 			return;
 		}
-		catch (RestaurantManager.UnauthorizedException e) {
+		catch (RestaurantManager.RestUnauthorizedException e) {
 			e.printStackTrace();
 			responseObserver.onError(new StatusRuntimeException(
 					Status.PERMISSION_DENIED.withDescription("Not authorized to edit restaurant")));
@@ -430,7 +538,7 @@ public class RestaurantServiceImpl extends RestaurantServiceGrpc.RestaurantServi
 				.newBuilder().build();
 
 		try {
-			manager.deleteRestaurant(rest.getId());
+			manager.deleteRestaurant(restaurant.getId());
 		}
 		catch (AddressManager.InvalidAddressIdException | ContactManager.InvalidContactIdException e) {
 			e.printStackTrace();

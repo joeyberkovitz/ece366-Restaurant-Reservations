@@ -75,7 +75,7 @@ public class UserManager {
             return dao.getIdByUsername(username);
         });
         if (userId.isPresent())
-            return userId.get().intValue();
+            return userId.get();
         else
             throw new InvalidUsernameException("Username does not exist.");
     }

@@ -23,7 +23,11 @@ export default {
 	created() {
 		this.client = this.$store.getters.grpc.restaurantClient;
 		const promise = this.client.client.getCategoryList(new GetCategoryRequest(), {}, err => {
-			console.log(err);
+			if(err) {
+				console.log(err);
+				this.snackBarMessage = err.message;
+				this.showSnackBar = true;
+			}
 		});
 		promise.on('data', (data) => {
 			this.categories.push(data);

@@ -26,9 +26,9 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
 
         User user = manager.getUser(userId);
-        if(user == null){
-            throw new StatusRuntimeException(Status.NOT_FOUND
-                    .withDescription("Unable to find requested user"));
+        if (user == null) {
+            responseObserver.onError(new StatusRuntimeException(
+                    Status.NOT_FOUND.withDescription("Unable to find requested user")));
         }
 
         responseObserver.onNext(user);
@@ -39,8 +39,9 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
     public void setUser(User req, StreamObserver<User> responseObserver) {
         if (req.getId() != Integer.parseInt(AuthInterceptor.CURRENT_USER.get())) {
             // todo add permissions for admin
-            throw new StatusRuntimeException(Status.PERMISSION_DENIED.withDescription("Not authorized to change this " +
-                    "user"));
+            responseObserver.onError(new StatusRuntimeException(Status.PERMISSION_DENIED.withDescription("Not authorized to change this " +
+                    "user")));
+            return;
         }
 
         try {
