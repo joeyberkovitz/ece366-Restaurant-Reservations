@@ -5,6 +5,7 @@
 npm run build-grpc
 npm install
 ```
+- Create `.env` file in `reservdjs` directory with key: VUE_APP_GRPC_HOST and value = `http://hostname:GRPC_PROXY_PORT`
 
 ### Running Project
 ```

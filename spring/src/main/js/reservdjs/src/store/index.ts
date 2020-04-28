@@ -14,7 +14,7 @@ export class UserState {
 }
 
 export class ConfigState {
-    public host = "http://localhost:8080";
+    public host = process.env.VUE_APP_GRPC_HOST;
 }
 
 export class GrpcState {
