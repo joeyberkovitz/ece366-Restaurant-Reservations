@@ -16,7 +16,7 @@ public class StaticResourceProvider implements WebMvcConfigurer {
 
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry){
-		registry.addResourceHandler("/file/**")
+		registry.addResourceHandler("/**")
 				.addResourceLocations(uploadPath)
 				.setCachePeriod(0);
 	}
