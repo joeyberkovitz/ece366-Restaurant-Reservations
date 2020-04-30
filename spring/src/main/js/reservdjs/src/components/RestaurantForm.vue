@@ -13,7 +13,7 @@
 					<span class="md-error" v-if="!$v.form.name.required">Restaurant name is
 						required</span>
 				</md-field>
-				<md-field :class="getValidationClass('rtime')">
+				<md-field :class="getValidationClass('rtime')" v-if="canEdit">
 					<label for="rtime">Default Reservation Time (Hours)</label>
 					<md-input name="rtime" id="rtime" type="number" v-model="form.rtime" :disabled="!this.canEdit"/>
 					<span class="md-error" v-if="!$v.form.rtime.required">Default reservation time is
@@ -31,7 +31,7 @@
 					<span class="md-error" v-if="!$v.form.category.required">Category is
 						required</span>
 				</md-field>
-				<md-field :class="getValidationClass('capacity')">
+				<md-field :class="getValidationClass('capacity')" v-if="canEdit">
 					<label for="capacity">Minimum Table Capacity (%)</label>
 					<md-input name="capacity" id="capacity" type="number" v-model="form.capacity" :disabled="!this.canEdit"/>
 					<span class="md-error" v-if="!$v.form.capacity.required">Minimum table capacity is

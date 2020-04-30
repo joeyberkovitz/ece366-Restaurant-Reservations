@@ -19,16 +19,20 @@ import java.util.Optional;
 public interface ReservationDao {
 		@SqlQuery("SELECT t.* FROM `table` t " +
 			"LEFT JOIN (" +
-				"SELECT rt.table_id AS tid, MAX(r.end_time) AS maxEnd " +
+				"SELECT rt.table_id AS tid, GREATEST(MAX(r.end_time), CURRENT_TIMESTAMP()) AS maxEnd " +
 				"FROM reservation_table rt " +
 				"INNER JOIN reservation r ON rt.reservation_id = r.id " +
+				"INNER JOIN status st ON r.status_id = st.id " +
 				"WHERE r.end_time < FROM_UNIXTIME(:r.startTime) " +
+				"AND st.name != 'Cancelled' " +
 				"GROUP BY tid) a ON t.id = a.tid " +
 			"LEFT JOIN (" +
 				"SELECT rt.table_id AS tid, MIN(r.start_time) AS minStart " +
 				"FROM reservation_table rt " +
 				"INNER JOIN reservation r ON rt.reservation_id = r.id " +
+				"INNER JOIN status st ON r.status_id = st.id " +
 				"WHERE r.start_time > FROM_UNIXTIME(:endTime) " +
+				"AND st.name != 'Cancelled' " +
 				"GROUP BY tid) b ON t.id = b.tid " +
 			"WHERE t.restaurant_id = :r.restaurant.id AND t.deleted IS FALSE " +
 			"AND t.id NOT IN (" +
