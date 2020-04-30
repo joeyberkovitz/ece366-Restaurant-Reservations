@@ -4,7 +4,7 @@
 		                :categories="this.categories"
 						:create="true"
 		                button="Create Restaurant"
-		                canEdit="true"/>
+		                :canEdit="true"/>
 	</div>
 </template>
 

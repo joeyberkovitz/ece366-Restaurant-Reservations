@@ -59,6 +59,7 @@
 									{{results[restId][0].getRestaurant().getName()}}</span>
 								<span>{{getCategory(results[restId][0].getRestaurant().getCategory().getCategory())
 									}}</span>
+								<md-button style="width:150px;color:#448aff;" class="bold md-primary" v-on:click="view(restId)">View Restaurant</md-button>
 								<div>
 									<md-button v-for="(time) in results[restId]" :key="time.getAvailabledate()"
 									           style="width:150px;color:#448aff;" class="bold md-primary"
@@ -204,6 +205,9 @@
 				}
 				else
 					console.log('invalid')
+			},
+			view(restId) {
+				this.$router.push("/restaurant/view/" + restId);
 			}
 		}
 	}

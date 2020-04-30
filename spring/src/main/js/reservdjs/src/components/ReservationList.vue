@@ -53,11 +53,14 @@
                             	<div v-for="table in reservation.tables" :key="table.getLabel()">Table(s): {{ table.getLabel() }} ({{ table.getCapacity() }})</div>
                             </div>
                         </div>
-                        <md-button v-if="getStatus(reservation.details.getStatus()) === 'OPENED'"
-                                   class="bold md-primary"
-                                   @click="cancel(reservation.details);">
-                                   Cancel Reservation</md-button>
+
                     </md-list-item>
+                    <md-button v-if="!restView" style="width:150px;color:#448aff;" class="bold md-primary"
+                               v-on:click="view(reservation.details.getRestaurant().getId())">View Restaurant</md-button>
+                    <md-button v-if="getStatus(reservation.details.getStatus()) === 'OPENED'"
+                               class="bold md-primary"
+                               @click="cancel(reservation.details)">
+                        Cancel Reservation</md-button>
                     <md-divider></md-divider>
                 </div>
             </md-list>
@@ -179,6 +182,9 @@
                     resClient.client.inviteReservation(request, {}, callback);
                 else
                     resClient.client.removeReservationUser(request, {}, callback);
+            },
+            view(restId) {
+                this.$router.push("/restaurant/view/" + restId);
             }
         }
     }
