@@ -33,7 +33,14 @@
                         <div class="md-list-item-text">
                             <span>{{ reservation.details.getRestaurant().getName() }} - {{ getStatus(reservation.details.getStatus()) }}</span>
                             <span class="filter">{{ reservation.details.getStarttime() | momentStart(reservation.details.getRestaurant().getRtime()) }}</span>
-                            <div class="user-entry"><span v-for="user in reservation.invites" :key="user.getId()"><span @click="invite(user.getId(), reservation, 0)" v-if="curUser != user.getId() && getStatus(reservation.details.getStatus()) == 'OPENED'">&#9940;</span>{{ user.getFname() }} {{ user.getLname() }}</span></div>
+                            <div class="user-entry">
+                                <span v-for="user in reservation.invites" :key="user.getId()">
+                                    <span @click="invite(user.getId(), reservation, 0)" v-if="curUser != user.getId() && getStatus(reservation.details.getStatus()) == 'OPENED'">
+                                        &#9940;</span>
+                                    {{ user.getFname() }} {{ user.getLname() }}
+                                    <span v-if="restView">({{ user.getContact().getEmail() }})</span>
+                                </span>
+                            </div>
                             <form @submit.prevent="invite($event.target[0].value, reservation, 1)"
                                   v-if="getStatus(reservation.details.getStatus()) === 'OPENED'">
                             	<md-field>
@@ -42,7 +49,7 @@
                             	</md-field>
                             	<md-button type="submit" class="button md-primary">Go</md-button>
                             </form>
-                            <div v-if="showTables">
+                            <div v-if="restView">
                             	<div v-for="table in reservation.tables" :key="table.getLabel()">Table(s): {{ table.getLabel() }} ({{ table.getCapacity() }})</div>
                             </div>
                         </div>
@@ -71,7 +78,7 @@
 
     export default {
         name: "ReservationList",
-        props: ['reservations', 'showTables'],
+        props: ['reservations', 'restView'],
         created() {
             this.curUser = JSON.parse(atob(this.$store.getters.user.authToken.split('.')[1])).sub;
             this.filterData.date = new Date();

@@ -18,7 +18,7 @@
 		        	</md-field>
 				<md-button v-on:click="delRel(toDelete)" class="button md-primary md-raised">Delete
 					</md-button>
-		        	<md-field>
+				<md-field>
 					<label for="add">Username to add</label>
 					<md-input name="add" id="add" type="text" v-model="toAdd"/>
 				</md-field>
@@ -65,6 +65,7 @@
 				});
 			},
 			delRel: function(toDelete) {
+				console.log(toDelete);
 				const req = new Relationship();
 				const restaurant = new Restaurant();
 				restaurant.setId(this.$route.params.id);
@@ -78,8 +79,10 @@
 						this.snackBarMessage = err.message;
 						this.showSnackBar = true;
 					}
-					else
+					else {
 						delete this.users[this.users.indexOf(toDelete)];
+						this.populate();
+					}
 				});
 			},
 			addRel: function(toAdd) {
@@ -97,8 +100,10 @@
 						this.snackBarMessage = err.message;
 						this.showSnackBar = true;
 					}
-					else
+					else {
 						this.users.push(user);
+						this.populate();
+					}
 				});
 			}
 		},

@@ -4,6 +4,7 @@ import edu.cooper.ece366.restaurantReservation.grpc.Addresses.AddressManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Auth.AuthInterceptor;
 import edu.cooper.ece366.restaurantReservation.grpc.*;
 import edu.cooper.ece366.restaurantReservation.grpc.Contacts.ContactManager;
+import edu.cooper.ece366.restaurantReservation.grpc.Reservations.ReservationManager;
 import edu.cooper.ece366.restaurantReservation.grpc.Users.UserManager;
 import org.jdbi.v3.core.Jdbi;
 
@@ -206,15 +207,32 @@ public class RestaurantManager {
 	}
 
 	public void deleteTableById(int table_id){
-		db.useExtension(RestaurantDao.class,
+		ReservationManager rm = new ReservationManager(db);
+
+		List<Reservation> reservations = rm.searchReservations(null, null, null,
+				table_id, null, null, null);
+
+		if (reservations.isEmpty())
+			db.useExtension(RestaurantDao.class,
 		                dao -> dao.deleteTableById(table_id));
+		else {
+			for (Reservation reservation : reservations)
+				rm.updateReservation(reservation, "Cancelled");
+
+			db.useExtension(RestaurantDao.class,
+					dao -> dao.lazyDeleteTableById(table_id));
+		}
 	}
 
 	public void deleteRestaurant(int rest_id) throws AddressManager.InvalidAddressIdException, ContactManager.InvalidContactIdException {
 		ContactManager cm = new ContactManager(db);
 		AddressManager am = new AddressManager(db);
+		ReservationManager rm = new ReservationManager(db);
 
 		Restaurant rest = getRestaurant(rest_id);
+
+		cm.deleteContact(rest.getContact().getId());
+		am.deleteAddress(rest.getAddress().getId());
 
 		//Delete Users
 		List<Relationship> restUsers = db.withExtension(RestaurantDao.class, dao -> {
@@ -235,12 +253,20 @@ public class RestaurantManager {
 			deleteTableById(table.getId());
 		}
 
-		db.useExtension(RestaurantDao.class, dao -> {
-			dao.deleteRestaurant(rest_id);
-		});
+		List<Reservation> reservations = rm.searchReservations(null, null, rest_id, null,
+				null, null, null);
 
-		cm.deleteContact(rest.getContact().getId());
-		am.deleteAddress(rest.getAddress().getId());
+		if (reservations.isEmpty())
+			db.useExtension(RestaurantDao.class, dao -> {
+				dao.deleteRestaurant(rest_id);
+			});
+		else {
+			for (Reservation reservation : reservations)
+				rm.updateReservation(reservation, "Cancelled");
+
+			db.useExtension(RestaurantDao.class,
+					dao -> dao.lazyDeleteRestaurantById(rest_id));
+		}
 	}
 
 	public void checkName(String name) throws InvalidNameException {

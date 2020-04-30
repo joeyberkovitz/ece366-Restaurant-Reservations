@@ -17,9 +17,9 @@ import java.util.Optional;
 
 public interface RestaurantDao {
 	@SqlUpdate("INSERT INTO " +
-			"restaurant(name, address_id,contact_id, category_id, capacity_factor, reservation_time) " +
+			"restaurant(name, address_id,contact_id, category_id, capacity_factor, reservation_time, deleted) " +
 			"VALUES(:restaurant.name,:address_id, :contact_id," +
-			":restaurant.category.category, :restaurant.capacity, :restaurant.rtime)")
+			":restaurant.category.category, :restaurant.capacity, :restaurant.rtime, FALSE)")
 	@GetGeneratedKeys("id")
 	int insertRestaurant(int address_id, int contact_id,
 	                     @BindBean("restaurant") Restaurant restaurant);
@@ -31,34 +31,37 @@ public interface RestaurantDao {
 
 	@SqlQuery("SELECT r.name FROM restaurant_user ru " +
 			"INNER JOIN role r ON r.id = ru.role_id " +
-			"WHERE user_id = :user_id AND restaurant_id = :restaurant_id")
+			"INNER JOIN restaurant re ON re.id = ru.restaurant_id " +
+			"WHERE user_id = :user_id AND restaurant_id = :restaurant_id AND re.deleted IS FALSE")
 	Optional<String> getRestaurantUserRole(int user_id, int restaurant_id);
 
 	@SqlQuery("SELECT restaurant.*,address.*,contact.* FROM restaurant " +
 	          "INNER JOIN address ON restaurant.address_id = address.id " +
 	          "INNER JOIN contact ON restaurant.contact_id = contact.id " +
-	          "WHERE restaurant.id=:id")
+	          "WHERE restaurant.id=:id AND " +
+			  "restaurant.deleted IS FALSE")
 	@RegisterRowMapper(RestaurantMapper.class)
 	Restaurant getRestaurant(int id);
 
-	@SqlQuery("SELECT capacity_factor FROM restaurant WHERE id = :id")
+	@SqlQuery("SELECT capacity_factor FROM restaurant WHERE id = :id AND deleted IS FALSE")
 	int getRestaurantCapFactor(int id);
 
-	@SqlQuery("SELECT reservation_time FROM restaurant WHERE id = :id")
-	int getRestaurantReservationTime(int id);
+	@SqlQuery("SELECT reservation_time FROM restaurant WHERE id = :id AND deleted IS FALSE")
+	Optional<Integer> getRestaurantReservationTime(int id);
 
 	@SqlUpdate("UPDATE restaurant SET name = :restaurant.name," +
 			"category_id = :restaurant.category.category, "+
 			"capacity_factor = :restaurant.capacity, "+
 			"reservation_time = :restaurant.rtime "+
-			"WHERE restaurant.id = :restaurant.id")
+			"WHERE restaurant.id = :restaurant.id AND " +
+			"restaurant.deleted IS FALSE")
 	void setRestaurant(@BindBean("restaurant") Restaurant restaurant);
 	// TODO figure out why this complains when category is unset
 
 	@SqlQuery("SELECT restaurant.*,address.*,contact.* FROM restaurant " +
 	          "INNER JOIN address ON restaurant.address_id = address.id " +
 	          "INNER JOIN contact ON restaurant.contact_id = contact.id " +
-	          "WHERE restaurant.category_id=:id")
+	          "WHERE restaurant.category_id=:id AND restaurant.deleted IS FALSE")
 	@RegisterRowMapper(RestaurantMapper.class)
 	List<Restaurant> searchByCategory(int id);
 
@@ -70,13 +73,14 @@ public interface RestaurantDao {
 	"INNER JOIN contact rscon ON restaurant.contact_id = rscon.id " +
 	"INNER JOIN user ON rel.user_id = user.id " +
 	"INNER JOIN contact uscon ON user.contact_id = uscon.id " +
-	"INNER JOIN role ON rel.role_id = role.id ";
-	// TODO merge those two functions
-	@SqlQuery(RELSQL + "WHERE rel.restaurant_id=:id")
+	"INNER JOIN role ON rel.role_id = role.id " +
+	"WHERE restaurant.deleted IS FALSE AND ";
+
+	@SqlQuery(RELSQL + "rel.restaurant_id=:id")
 	@RegisterRowMapper(RelationshipMapper.class)
 	List<Relationship> getRelationshipByRestaurant(int id);
 
-	@SqlQuery(RELSQL + "WHERE rel.user_id=:id")
+	@SqlQuery(RELSQL + "rel.user_id=:id")
 	@RegisterRowMapper(RelationshipMapper.class)
 	List<Relationship> getRelationshipByUser(int id);
 
@@ -85,54 +89,62 @@ public interface RestaurantDao {
 	void deleteRelationship(int userId, int restaurantId);
 
 
-	@SqlQuery("SELECT * FROM `table` WHERE label = :name AND restaurant_id = :rest")
+	@SqlQuery("SELECT * FROM `table` WHERE label = :name AND restaurant_id = :rest AND deleted IS FALSE")
 	Optional<Table> getTableByName(String name, int rest);
 
-	@SqlQuery("SELECT * FROM `table` WHERE id = :table_id")
+	@SqlQuery("SELECT * FROM `table` WHERE id = :table_id AND deleted IS FALSE")
 	Table getTableById(int table_id);
 
-	@SqlQuery("SELECT * FROM `table` WHERE restaurant_id = :restaurant_id")
+	@SqlQuery("SELECT * FROM `table` WHERE restaurant_id = :restaurant_id AND deleted IS FALSE")
 	List<Table> getRestaurantTables(int restaurant_id);
 
 	@SqlQuery("SELECT restaurant.*, address.*, contact.* FROM restaurant " +
 		"INNER JOIN `table` t ON t.restaurant_id = restaurant.id " +
 		"INNER JOIN address ON restaurant.address_id = address.id " +
 		"INNER JOIN contact ON restaurant.contact_id = contact.id " +
-		"WHERE t.id = :table_id")
+		"WHERE t.id = :table_id AND t.deleted = 0 AND restaurant.deleted IS FALSE")
 	@RegisterRowMapper(RestaurantMapper.class)
 	Optional<Restaurant> getRestaurantByTable(int table_id);
 
 	@SqlUpdate("INSERT INTO " +
-		"`table`(label, capacity, restaurant_id) " +
-		"VALUES(:table.label,:table.capacity, :restaurant.id)")
+		"`table`(label, capacity, restaurant_id, deleted) " +
+		"VALUES(:table.label,:table.capacity, :restaurant.id, FALSE)")
 	@GetGeneratedKeys("id")
 	int insertTable(@BindBean("table") Table table,
 	                     @BindBean("restaurant") Restaurant restaurant);
 
-	@SqlUpdate("UPDATE `table` SET label = :tab.label," +
-		" capacity = :tab.capacity WHERE id = :tab.id")
-	void setTable(@BindBean("tab") Table table);
+	@SqlUpdate("UPDATE `table` SET label = :table.label, " +
+		"capacity = :table.capacity WHERE id = :table.id")
+	void setTable(@BindBean("table") Table table);
 
 	@SqlUpdate("DELETE FROM `table` WHERE id = :table_id")
 	void deleteTableById(int table_id);
 
+	@SqlUpdate("UPDATE `table` SET deleted = TRUE " +
+			"WHERE id = :table_id")
+	void lazyDeleteTableById(int table_id);
+
 	@SqlUpdate("DELETE FROM restaurant WHERE id = :id")
 	void deleteRestaurant(int id);
+
+	@SqlUpdate("UPDATE restaurant SET deleted = TRUE" +
+			"WHERE id = :id")
+	void lazyDeleteRestaurantById(int id);
 
 	@SqlQuery("SELECT id AS category, name FROM category")
 	List<Category> getCategories();
 
 	//Todo: implement search for lat/long + miles
-	@SqlQuery("SELECT dates.`Date` as 'reservationDate', sum(t.capacity) as 'availableCapacity', restaurant.*, " +
+	@SqlQuery("SELECT dates.`Date` AS 'reservationDate', sum(t.capacity) AS 'availableCapacity', restaurant.*, " +
 		"address.*, contact.* " +
 		"FROM `table` t " +
 		"CROSS JOIN (WITH recursive Date_Ranges AS ( " +
-			"select FROM_UNIXTIME(:r.requestedDate) - interval 1 hour as Date " +
-			"union all " +
-			"select Date + interval 30 minute " +
-			"from Date_Ranges " +
-			"where Date < FROM_UNIXTIME(:r.requestedDate) + interval 1 hour " +
-			") SELECT * FROM Date_Ranges where Date >= NOW()) dates " +
+			"SELECT FROM_UNIXTIME(:r.requestedDate) - INTERVAL 1 HOUR AS Date " +
+			"UNION ALL " +
+			"SELECT Date + INTERVAL 30 MINUTE " +
+			"FROM Date_Ranges " +
+			"WHERE Date < FROM_UNIXTIME(:r.requestedDate) + INTERVAL 1 HOUR " +
+			") SELECT * FROM Date_Ranges WHERE Date >= NOW()) dates " +
 		"INNER JOIN restaurant ON restaurant.id = t.restaurant_id " +
 		"INNER JOIN address ON restaurant.address_id = address.id " +
 		"INNER JOIN contact ON restaurant.contact_id = contact.id " +
@@ -147,10 +159,11 @@ public interface RestaurantDao {
 			"AND r.end_time > dates.`Date` " +
 			"AND r.start_time < DATE_ADD(dates.`Date`, INTERVAL rest.reservation_time HOUR) " +
 		") " +
-		"AND (:r.category.category = 0 OR restaurant.category_id = :r.category.category) " +
+		"AND (:r.category.category = 0 OR restaurant.category_id = :r.category.category) AND " +
+		"restaurant.deleted IS FALSE AND t.deleted IS FALSE " +
 		"GROUP BY t.restaurant_id, dates.`date` " +
 		"HAVING availableCapacity >= :r.numPeople " +
-		"order by t.restaurant_id, dates.date ")
+		"ORDER BY t.restaurant_id, dates.date ")
 	@RegisterRowMapper(RestaurantSearchMapper.class)
 	List<RestaurantSearchResponse> searchRestaurants(@BindBean("r")
                                     RestaurantSearchRequest request);

@@ -2,7 +2,7 @@
     <div class="centered">
         <ReservationList :reservations="this.reservations"
                          @load="load($event)"
-                         showTables="false"/>
+                         :restView="false"/>
 
     </div>
 </template>

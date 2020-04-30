@@ -18,7 +18,8 @@ import java.util.Date;
 import java.util.Optional;
 
 public interface UserDao {
-    @SqlUpdate("INSERT INTO user(username, password, fname, lname, contact_id, role_id) VALUES (:username, :password, :fname, :lname, :contact_id, :role_id)")
+    @SqlUpdate("INSERT INTO user(username, password, fname, lname, contact_id, role_id) " +
+            "VALUES (:username, :password, :fname, :lname, :contact_id, :role_id)")
     @GetGeneratedKeys("id")
     int insertUser(String password, int contact_id, @BindBean User user, int role_id);
 

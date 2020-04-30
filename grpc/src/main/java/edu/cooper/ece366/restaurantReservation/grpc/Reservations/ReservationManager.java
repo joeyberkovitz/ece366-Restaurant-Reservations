@@ -21,16 +21,33 @@ public class ReservationManager {
 		this.db = db;
 	}
 
-	public Reservation createReservation(Reservation reservation, int userId){
-		int reservationTime = db.withExtension(
+	public Reservation createReservation(Reservation reservation, int userId)
+			throws InvalidReservationException,
+			InvalidRestaurantException,
+			InvalidNumPeopleException,
+			InvalidStartTimeException {
+		if (!reservation.hasRestaurant() || reservation.getStartTime() == 0 || reservation.getNumPeople() == 0)
+			throw new InvalidReservationException("Restaurant, start time or number of people missing");
+
+		Optional<Integer> reservationTime = db.withExtension(
 			RestaurantDao.class,
 			dao -> dao.getRestaurantReservationTime(reservation.getRestaurant().getId()));
-		long endTime = reservation.getStartTime() + reservationTime*3600;
+
+		if (reservationTime.isEmpty())
+			throw new InvalidRestaurantException("Restaurant cannot be found");
+
+		if (reservation.getNumPeople() <= 0)
+			throw new InvalidNumPeopleException("Number of people is not positive");
+
+		if (reservation.getStartTime() < System.currentTimeMillis() / 1000)
+			throw new InvalidStartTimeException("Start time is earlier than current time");
+
+		long endTime = reservation.getStartTime() + reservationTime.get()*3600;
 		int statusId = db.withExtension(StatusDao.class,
 			dao -> dao.getStatusIdByName("Opened"));
 
 		//This will throw a runtime exception if tables unavailable
-		List<Table> tables = computeReservationTables(reservation, endTime, reservationTime);
+		List<Table> tables = computeReservationTables(reservation, endTime, reservationTime.get());
 
 		//Todo: do we want to put all inserts in a transaction?
 		int reservationId = db.withExtension(ReservationDao.class,
@@ -47,9 +64,9 @@ public class ReservationManager {
 		return Reservation.newBuilder().setId(reservationId).build();
 	}
 
-	public void updateReservation(Reservation reservation){
+	public void updateReservation(Reservation reservation, String status){
 		int statusId = db.withExtension(StatusDao.class,
-			dao -> dao.getStatusIdByName(reservation.getStatus().name()));
+			dao -> dao.getStatusIdByName(status));
 
 		db.useExtension(ReservationDao.class,
 			dao -> dao.updateReservation(reservation, statusId));
@@ -91,12 +108,13 @@ public class ReservationManager {
 		rm.checkRestaurantPermission(rest,null,false);
 
 		return searchReservations(null, null,
-				rest.getId(), beginTime, futureTime, status);
+				rest.getId(), null, beginTime, futureTime, status);
 	}
 
 	public List<Reservation> searchReservations(Integer resId,
 	                                            Integer userId,
 	                                            Integer restId,
+	                                            Integer tableId,
 	                                            Long beginTime,
 	                                            Long futureTime,
 	                                            String status) {
@@ -111,7 +129,7 @@ public class ReservationManager {
 		else
 			statusId = null;
 		return db.withExtension(ReservationDao.class, dao -> {
-			return dao.searchReservations(resId, userId, restId, beginTime, futureTime, statusId);
+			return dao.searchReservations(resId, userId, restId, tableId, beginTime, futureTime, statusId);
 		});
 	}
 
@@ -139,17 +157,24 @@ public class ReservationManager {
 				dao -> dao.getRestaurantCapFactor(reservation.getRestaurant().getId()));
 
 		int requestCap = reservation.getNumPeople();
-		int maxSize = requestCap*100/capFactor;
+		int maxSize = 0;
+		boolean cap;
+		if (capFactor != 0) {
+			maxSize = requestCap * 100 / capFactor;
+			cap = true;
+		}
+		else
+			cap = false;
 
 		retTables = new ArrayList<Table>();
 
-		getBestTable(reservation, requestCap, requestCap, maxSize, maxSize, endTime, reservationTime);
+		getBestTable(reservation, requestCap, requestCap, maxSize, maxSize, cap, endTime, reservationTime);
 
 		return retTables;
 	}
 
-	private void getBestTable(Reservation reservation, int target, int currTarget, int maxSize, int overallMaxSize,
-							  long endTime, int reservationTime){
+	private void getBestTable(Reservation reservation, int target, int currTarget, int maxSize,
+							  int overallMaxSize, boolean cap, long endTime, int reservationTime){
 		if (target <= 0)
 			return;
 
@@ -160,7 +185,7 @@ public class ReservationManager {
 		int finalCurrTarget = currTarget;
 		int finalMaxSize = maxSize;
 		Optional<Table> table = db.withExtension(ReservationDao.class,
-				dao -> dao.getBestTable(reservation, endTime, finalCurrTarget, finalMaxSize, reservationTime));
+				dao -> dao.getBestTable(reservation, endTime, finalCurrTarget, finalMaxSize, cap, reservationTime));
 
 		if (table.isPresent()) {
 			retTables.add(table.get());
@@ -175,7 +200,7 @@ public class ReservationManager {
 			maxSize = currTarget;
 		}
 
-		getBestTable(reservation, target, currTarget, maxSize, overallMaxSize, endTime, reservationTime);
+		getBestTable(reservation, target, currTarget, maxSize, overallMaxSize, cap, endTime, reservationTime);
 	}
 
 	public void checkReservationPermission(Reservation reservation)
@@ -202,6 +227,30 @@ public class ReservationManager {
 			restaurantUser.get().equals("Admin") ||
 			restaurantUser.get().equals("Manager")
 		));
+	}
+
+	public static class InvalidReservationException extends Exception {
+		public InvalidReservationException(String message) {
+			super(message);
+		}
+	}
+
+	public static class InvalidRestaurantException extends Exception {
+		public InvalidRestaurantException(String message) {
+			super(message);
+		}
+	}
+
+	public static class InvalidNumPeopleException extends Exception {
+		public InvalidNumPeopleException(String message) {
+			super(message);
+		}
+	}
+
+	public static class InvalidStartTimeException extends Exception {
+		public InvalidStartTimeException(String message) {
+			super(message);
+		}
 	}
 
 	public static class ReservationUnauthorizedException extends Exception {

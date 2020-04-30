@@ -24,13 +24,38 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 
 	@Override
 	public void createReservation(Reservation request, StreamObserver<Reservation> responseObserver) {
-		//Todo: maybe do some validation here
-
 		//Need user ID to associate reservation to user
 		int userId = Integer.parseInt(AuthInterceptor.CURRENT_USER.get());
 
 		//Manager will only create reservation if tables are available
-		Reservation createdRes = manager.createReservation(request, userId);
+		Reservation createdRes;
+		try {
+			createdRes = manager.createReservation(request, userId);
+		}
+		catch (ReservationManager.InvalidReservationException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.DATA_LOSS.withDescription("Unknown reservation error")));
+			return;
+		}
+		catch (ReservationManager.InvalidStartTimeException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Start time cannot be earlier than current time")));
+			return;
+		}
+		catch (ReservationManager.InvalidRestaurantException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Unknown restaurant error")));
+			return;
+		}
+		catch (ReservationManager.InvalidNumPeopleException e) {
+			e.printStackTrace();
+			responseObserver.onError(new StatusRuntimeException(
+					Status.INVALID_ARGUMENT.withDescription("Number of participants must be positive")));
+			return;
+		}
 
 		responseObserver.onNext(createdRes);
 		responseObserver.onCompleted();
@@ -106,7 +131,7 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 		//No need for auth check because only getting reservations for currUser
 		// TODO do we need to allow admins to request reservation lists
 		// of arbitrary users from the frontend?
-		List<Reservation> reservations = manager.searchReservations(null, currUser, null,
+		List<Reservation> reservations = manager.searchReservations(null, currUser, null, null,
 				request.getBeginTime(), request.getFutureTime(), request.getStatus());
 
 		for (Reservation reservation: reservations) {
@@ -129,7 +154,7 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 		}
 
 		List<Reservation> reservations = manager.searchReservations(request.getId(), null, null,
-				null, null, null);
+				null, null, null, null);
 
 		responseObserver.onNext(reservations.get(0));
 		responseObserver.onCompleted();
@@ -203,17 +228,14 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 		}
 
 		List<Reservation> reservationList = manager.searchReservations(request.getId(), null, null,
-				null, null, null);
+				null, null, null, null);
 
 		Reservation originalReservation = reservationList.get(0);
 
-		if(request.getNumPeople() > originalReservation.getNumPeople()) {
+		if(request.getNumPeople() != originalReservation.getNumPeople()) {
 			responseObserver.onError(new StatusRuntimeException(Status.INVALID_ARGUMENT
-					.withDescription("Increasing num people not supported")));
+					.withDescription("Changing the number of people not supported")));
 			return;
-		}
-		else if(request.getNumPeople() < originalReservation.getNumPeople()){
-			//Todo: need to figure out if tables should be removed
 		}
 
 		if(request.getPoints() != originalReservation.getPoints()) {
@@ -235,10 +257,10 @@ public class ReservationServiceImpl extends ReservationServiceGrpc.ReservationSe
 			return;
 		}
 
-		manager.updateReservation(request);
+		manager.updateReservation(request, request.getStatus().name());
 
 		List<Reservation> reservation = manager.searchReservations(request.getId(), null, null,
-				null, null, null);
+				null, null, null, null);
 
 		responseObserver.onNext(reservation.get(0));
 		responseObserver.onCompleted();
