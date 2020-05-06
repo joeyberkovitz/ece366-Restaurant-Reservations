@@ -67,13 +67,12 @@
 						<md-list-item>
 							<div class="md-list-item-text">
 								<span>{{results[restId][0].getRestaurant().getId()}} -
-									{{results[restId][0].getRestaurant().getName()}}</span>
+									{{results[restId][0].getRestaurant().getName()}} - <span style="color: slategray;"
+									                                                         v-if="gotLocation">
+									{{compDist(results[restId][0].getRestaurant())}} miles</span></span>
 								<span>{{getCategory(results[restId][0].getRestaurant().getCategory().getCategory())
 									}}</span>
 								<md-button style="width:150px;color:#448aff;" class="bold md-primary" v-on:click="view(restId)">View Restaurant</md-button>
-								<span
-										v-if="gotLocation">
-									{{compDist(results[restId][0].getRestaurant())}} miles</span>
 								<div>
 									<md-button v-for="(time) in results[restId]" :key="time.getAvailabledate()"
 									           style="width:150px;color:#448aff;" class="bold md-primary"
