@@ -118,20 +118,22 @@
 						this.snackBarMessage = err.message;
 					}
 				});
-				//this.tables.push(table);
 			},
 			delTab: function(toDelete) {
 				const req = new Table();
 				req.setId(toDelete);
-				// todo: need to refresh page
 				this.client.client.deleteTable(req, {}, err => {
 					if(err) {
 						console.log(err);
 						this.snackBarMessage = err.message;
 						this.showSnackBar = true;
 					}
+					else {
+						delete this.tables[this.tables.indexOf(toDelete)];
+						this.populate();
+						this.$emit('load');
+					}
 				});
-				delete this.tables[this.tables.indexOf(toDelete)];
 			},
 		},
 		mounted() {

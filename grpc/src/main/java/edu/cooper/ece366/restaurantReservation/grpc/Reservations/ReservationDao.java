@@ -19,18 +19,22 @@ import java.util.Optional;
 public interface ReservationDao {
 		@SqlQuery("SELECT t.* FROM `table` t " +
 			"LEFT JOIN (" +
-				"SELECT rt.table_id AS tid, MAX(r.end_time) AS maxEnd " +
+				"SELECT rt.table_id AS tid, GREATEST(MAX(r.end_time), CURRENT_TIMESTAMP()) AS maxEnd " +
 				"FROM reservation_table rt " +
 				"INNER JOIN reservation r ON rt.reservation_id = r.id " +
+				"INNER JOIN status st ON r.status_id = st.id " +
 				"WHERE r.end_time < FROM_UNIXTIME(:r.startTime) " +
+				"AND st.name != 'Cancelled' " +
 				"GROUP BY tid) a ON t.id = a.tid " +
 			"LEFT JOIN (" +
 				"SELECT rt.table_id AS tid, MIN(r.start_time) AS minStart " +
 				"FROM reservation_table rt " +
 				"INNER JOIN reservation r ON rt.reservation_id = r.id " +
+				"INNER JOIN status st ON r.status_id = st.id " +
 				"WHERE r.start_time > FROM_UNIXTIME(:endTime) " +
+				"AND st.name != 'Cancelled' " +
 				"GROUP BY tid) b ON t.id = b.tid " +
-			"WHERE t.restaurant_id = :r.restaurant.id  " +
+			"WHERE t.restaurant_id = :r.restaurant.id AND t.deleted IS FALSE " +
 			"AND t.id NOT IN (" +
 				"SELECT rt.table_id " +
 				"FROM reservation r " +
@@ -41,7 +45,7 @@ public interface ReservationDao {
 				"AND r.end_time > FROM_UNIXTIME(:r.startTime) " +
 				"AND r.start_time < FROM_UNIXTIME(:endTime)) " +
 			"AND t.capacity >= :requestCap " +
-			"AND t.capacity <= :maxSize " +
+			"AND (t.capacity <= :maxSize OR :cap IS FALSE) " +
 			"ORDER BY t.capacity ASC," +
 				"COALESCE(TIMESTAMPDIFF(MINUTE, a.maxEnd, FROM_UNIXTIME(:r.startTime)),0) " +
 				"% (:reservationTime*60) " +
@@ -49,7 +53,7 @@ public interface ReservationDao {
 				"% (:reservationTime*60) ASC " +
 			"LIMIT 1")
 	Optional<Table> getBestTable(@BindBean("r") Reservation reservation,
-								   long endTime, int requestCap, int maxSize, int reservationTime);
+								   long endTime, int requestCap, int maxSize, boolean cap, int reservationTime);
 
 
 	//Reservation always starts with 0 points
@@ -110,6 +114,10 @@ public interface ReservationDao {
 			"SELECT ru.reservation_id FROM reservation_user ru " +
 			"WHERE ru.reservation_id = r.id AND " +
 			"ru.user_id = :userId)) AND " +
+			"(:tableId IS NULL OR r.id IN (" +
+			"SELECT rt.reservation_id FROM reservation_table rt " +
+			"WHERE rt.reservation_id = r.id AND " +
+			"rt.table_id = :tableId)) AND " +
 			"(:beginTime IS NULL OR (r.start_time >= FROM_UNIXTIME(:beginTime) AND " +
 			"r.start_time <= DATE_ADD(FROM_UNIXTIME(:futureTime), INTERVAL 1 DAY))) AND " +
 			"(:statusId IS NULL OR r.status_id = :statusId) " +
@@ -118,6 +126,7 @@ public interface ReservationDao {
 	List<Reservation> searchReservations(Integer reservationId,
 	                                     Integer userId,
 	                                     Integer restaurantId,
+	                                     Integer tableId,
 	                                     Long beginTime,
 	                                     Long futureTime,
 	                                     Integer statusId);
@@ -126,7 +135,7 @@ public interface ReservationDao {
 			"FROM reservation r " +
 			"INNER JOIN reservation_table rt ON r.id = rt.reservation_id " +
 			"INNER JOIN `table` t ON rt.table_id = t.id " +
-			"WHERE r.id = :reservationId")
+			"WHERE r.id = :reservationId AND t.deleted IS FALSE")
 	List<Table> getReservationTables(int reservationId);
 
 	class ReservationMapper implements RowMapper<Reservation> {

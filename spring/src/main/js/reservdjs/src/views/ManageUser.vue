@@ -144,7 +144,6 @@
 
                 if(!this.$v.$invalid) {
                     this.sending = true;
-                    console.log("helel")
                     this.submit();
                 }
                 else {

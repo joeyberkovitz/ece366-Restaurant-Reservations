@@ -13,7 +13,7 @@
 					<span class="md-error" v-if="!$v.form.name.required">Restaurant name is
 						required</span>
 				</md-field>
-				<md-field :class="getValidationClass('rtime')">
+				<md-field :class="getValidationClass('rtime')" v-if="canEdit">
 					<label for="rtime">Default Reservation Time (Hours)</label>
 					<md-input name="rtime" id="rtime" type="number" v-model="form.rtime" :disabled="!this.canEdit"/>
 					<span class="md-error" v-if="!$v.form.rtime.required">Default reservation time is
@@ -31,7 +31,7 @@
 					<span class="md-error" v-if="!$v.form.category.required">Category is
 						required</span>
 				</md-field>
-				<md-field :class="getValidationClass('capacity')">
+				<md-field :class="getValidationClass('capacity')" v-if="canEdit">
 					<label for="capacity">Minimum Table Capacity (%)</label>
 					<md-input name="capacity" id="capacity" type="number" v-model="form.capacity" :disabled="!this.canEdit"/>
 					<span class="md-error" v-if="!$v.form.capacity.required">Minimum table capacity is
@@ -97,7 +97,7 @@
 
 	export default {
 		name: 'RestaurantForm',
-		props: ['client', 'categories', 'button', 'canEdit'],
+		props: ['client', 'categories', 'button', 'canEdit', 'create'],
 		mixins: [validationMixin],
 		data: () => ({
 		        manageBool: 0,
@@ -168,10 +168,11 @@
 			},
 			getValidationClass(elem){
 				const field = this.$v.form[elem];
-				if(field)
+				if(field) {
 					return {
 						'md-invalid': field.$invalid && field.$dirty
 					};
+				}
 			},
 			// todo ?
 			test(){
@@ -185,6 +186,7 @@
 				console.log(this.form);
 				this.$v.$touch();
 				if(!this.$v.$invalid){
+					this.sending = true;
 					console.log("VALID");
 					const restaurant = new Restaurant();
 					restaurant.setCapacity(this.form.capacity);
@@ -213,13 +215,12 @@
 					contact.setId(this.form.contId);
 					restaurant.setContact(contact);
 
-					if(this.manageBool === 0) {
+					if(this.create) {
 							console.log(restaurant)
 					        this.client.client.createRestaurant(restaurant, {}, (err, response) => {
 						        console.log(err, response);
-						        if(!err){
+						        if(!err)
 							        this.$router.push("/restaurant/manage/" + response.getId());
-						        }
 						        if(err){
 									this.snackBarMessage = err.message;
 									this.showSnackBar = true;
@@ -227,16 +228,17 @@
 					        });
 					} else {
 						restaurant.setId(this.$route.params.id);
-						console.log(this.$route.params.id);
-						console.log(restaurant);
 						this.client.client.setRestaurant(restaurant, {}, (err, response) => {
 							console.log(err, response);
 							if(err){
 								this.snackBarMessage = err.message;
 								this.showSnackBar = true;
 							}
+							else
+								this.$emit('set');
 						});
 					}
+					this.sending = false;
 
 				}
 				else{
@@ -246,14 +248,13 @@
 				}
 			},
 			populate: function(){
-				if(this.$route.params.id) {
+				if(this.$route.params.id != "0") {
 					this.manageBool = 1;
 					const req = new Restaurant();
 					req.setId(this.$route.params.id);
 					this.client.client.getRestaurant(req, {}, (err, response) => {
 						this.form.name = response.getName();
 						this.form.capacity = response.getCapacity();
-						this.form.name = response.getName();
 						this.form.rtime = response.getRtime();
 
 						const category = response.getCategory();
@@ -278,12 +279,33 @@
 						this.form.email = contact.getEmail();
 						this.form.contId = contact.getId();
 
-						if(err){
+						if (err) {
 							console.log(err);
 							this.snackBarMessage = err.message;
 							this.showSnackBar = true;
 						}
 					});
+				}
+				else {
+					this.form.name = null;
+					this.form.capacity = null;
+					this.form.rtime = null;
+					this.form.category = null;
+					this.form.address.data = {};
+					this.form.address.data.city = null;
+					this.form.address.data.latlng = {};
+					this.form.address.data.latlng.lat = null;
+					this.form.address.data.latlng.lng = null;
+					this.form.address.data.name = null;
+					this.form.address.label = null;
+					this.form.address2 = null;
+					this.form.address.data.administrative = null;
+					this.form.address.data.postcode = null;
+					this.form.addrId = null;
+					this.form.phone = null;
+					this.form.email = null;
+					this.form.contId = null;
+					this.$v.$reset();
 				}
 			}
 		},
