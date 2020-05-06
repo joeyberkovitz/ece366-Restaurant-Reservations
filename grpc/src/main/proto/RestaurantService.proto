@@ -69,8 +69,8 @@ message Category {
 message Address {
 	uint32 id = 1;
 	string name = 2;
-	float latitude = 3;
-	float longitude = 4;
+	double latitude = 3;
+	double longitude = 4;
 	string line1 = 5;
 	string line2 = 6;
 	string city = 7;
@@ -193,8 +193,8 @@ message GetCategoryRequest {
 message RestaurantSearchRequest {
 	uint64 requestedDate = 1;
 	uint32 numPeople = 2;
-	float lat = 3;
-	float long = 4;
+	double lat = 3;
+	double long = 4;
 	uint32 numMiles = 5;
 	Category category = 6;
 }

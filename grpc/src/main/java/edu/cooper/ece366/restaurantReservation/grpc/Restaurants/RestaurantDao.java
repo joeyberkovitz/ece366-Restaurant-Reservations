@@ -123,6 +123,7 @@ public interface RestaurantDao {
 	List<Category> getCategories();
 
 	//Todo: implement search for lat/long + miles
+	// Rough location calculation based on https://gis.stackexchange.com/questions/15545/calculating-coordinates-of-square-x-miles-from-center-point
 	@SqlQuery("SELECT dates.`Date` as 'reservationDate', sum(t.capacity) as 'availableCapacity', restaurant.*, " +
 		"address.*, contact.* " +
 		"FROM `table` t " +
@@ -148,6 +149,12 @@ public interface RestaurantDao {
 			"AND r.start_time < DATE_ADD(dates.`Date`, INTERVAL rest.reservation_time HOUR) " +
 		") " +
 		"AND (:r.category.category = 0 OR restaurant.category_id = :r.category.category) " +
+		"AND (:r.numMiles = 0 OR ( " +
+			"address.latitude >= :r.lat - :r.numMiles/69 " +
+			"AND address.latitude <= :r.lat + :r.numMiles/69 " +
+			"AND address.longitude >= :r.long - :r.numMiles/DEGREES(COS(RADIANS(:r.lat))) " +
+			"AND address.longitude <= :r.long + :r.numMiles/DEGREES(COS(RADIANS(:r.lat))) " +
+		")) " +
 		"GROUP BY t.restaurant_id, dates.`date` " +
 		"HAVING availableCapacity >= :r.numPeople " +
 		"order by t.restaurant_id, dates.date ")

@@ -64,9 +64,8 @@ public class AddressManager {
             InvalidStateException,
             InvalidZipException {
         checkName(address.getName());
-        // todo are we using lat long?
-        //checkLat(address.getLatitude());
-        //checkLong(address.getLongitude());
+        checkLat(address.getLatitude());
+        checkLong(address.getLongitude());
 
         checkLine1(address.getLine1());
         checkCity(address.getCity());
@@ -80,13 +79,13 @@ public class AddressManager {
         }
     }
 
-    public void checkLat(float latitude) throws InvalidLatException {
+    public void checkLat(double latitude) throws InvalidLatException {
         if (!(-90 <= latitude && latitude <= 90)) {
             throw new InvalidLatException("Invalid latitude");
         }
     }
 
-    public void checkLong(float longitude) throws InvalidLongException {
+    public void checkLong(double longitude) throws InvalidLongException {
         if (!(-180 <= longitude && longitude <= 180)) {
             throw new InvalidLongException("Invalid longitude");
         }

@@ -45,6 +45,17 @@
 									           :value="category.getCategory()">{{category.getName()}}</md-option>
 								</md-select>
 							</md-field>
+							<md-field class="md-layout-item padLeft" v-if="gotLocation">
+								<label for="radius">Search Radius</label>
+								<md-select name="radius" id="radius" v-model="form.radius">
+									<md-option value="0">Any</md-option>
+									<md-option value="1">1 mile</md-option>
+									<md-option value="5">5 miles</md-option>
+									<md-option value="10">10 miles</md-option>
+									<md-option value="50">50 miles</md-option>
+									<md-option value="100">100 miles</md-option>
+								</md-select>
+							</md-field>
 					</div>
 					<md-button type="submit">Search</md-button>
 				</form>
@@ -59,6 +70,9 @@
 									{{results[restId][0].getRestaurant().getName()}}</span>
 								<span>{{getCategory(results[restId][0].getRestaurant().getCategory().getCategory())
 									}}</span>
+								<span
+										v-if="gotLocation">
+									{{compDist(results[restId][0].getRestaurant())}} miles</span>
 								<div>
 									<md-button v-for="(time) in results[restId]" :key="time.getAvailabledate()"
 									           style="width:150px;color:#448aff;" class="bold md-primary"
@@ -82,7 +96,7 @@
 
 <script>
 	import {GetCategoryRequest, RestaurantSearchRequest} from "@/proto/RestaurantService_pb";
-	import {required, integer, minValue} from "vuelidate/lib/validators";
+	import {integer, minValue, required} from "vuelidate/lib/validators";
 	import {validationMixin} from "vuelidate";
 	import {Category, Reservation} from "../proto/RestaurantService_pb";
 	import moment from "moment";
@@ -97,6 +111,14 @@
 			const promise = this.client.client.getCategoryList(new GetCategoryRequest(), {});
 			promise.on('data', (data) => {
 				this.categories.push(data);
+			});
+
+			navigator.geolocation.getCurrentPosition(data => {
+				if(data && data.coords && data.coords.latitude) {
+					this.gotLocation = true;
+					this.form.lat = data.coords.latitude;
+					this.form.long = data.coords.longitude;
+				}
 			});
 		},
 		validations: {
@@ -115,6 +137,7 @@
 			}
 		},
 		data: () => ({
+			gotLocation: false,
 			client: null,
 			reservationClient: null,
 			categories: [],
@@ -122,7 +145,10 @@
 				date: null,
 				time: null,
 				numPeople: 1,
-				category: null
+				category: null,
+				lat: 0,
+				long: 0,
+				radius: 0
 			},
 			menu2: false,
 			results: {},
@@ -159,6 +185,20 @@
 					this.validateForm();
 				});
 			},
+			compDist(restaurant){
+				if(restaurant.dist)
+					return restaurant.dist;
+
+				const address = restaurant.getAddress();
+				const l1 = this.form.lat * Math.PI/180, l2 = address.getLatitude() * Math.PI/180, d1 =
+					(address.getLongitude() - this.form.long) * Math.PI/180, R = 3961;
+				const dist = Math.round(
+					Math.acos(Math.sin(l1) * Math.sin(l2) + Math.cos(l1) * Math.cos(l2) * Math.cos(d1)) * R
+				);
+
+				restaurant.dist = dist;
+				return dist;
+			},
 			getCategory(categoryId){
 				for(let i = 0; i < this.categories.length; i++){
 					if(this.categories[i].getCategory() === categoryId)
@@ -190,6 +230,9 @@
 						category.setCategory(this.form.category);
 						searchRequest.setCategory(category);
 					}
+					searchRequest.setLat(this.form.lat);
+					searchRequest.setLong(this.form.long);
+					searchRequest.setNummiles(this.form.radius);
 					this.results = {};
 					this.rests = [];
 					const search = this.client.client.searchRestaurants(searchRequest, {});
@@ -200,6 +243,13 @@
 							this.rests.push(restId);
 						}
 						this.results[restId].push(response);
+						this.rests.sort((a, b) => {
+							const da = this.compDist(this.results[a][0].getRestaurant());
+							const db = this.compDist(this.results[b][0].getRestaurant());
+							if(da < db) return -1;
+							else if(da > db) return 1;
+							else return 0;
+						});
 					});
 				}
 				else
