@@ -74,7 +74,7 @@ export default {
 	created() {
 		this.client = this.$store.getters.grpc.restaurantClient;
 		this.userId = JSON.parse(atob(this.$store.getters.user.authToken.split('.')[1])).sub;
-		const promise = this.client.client.getCategoryList(new GetCategoryRequest(), {}, err => {
+		const promise = this.client.getCategoryList(new GetCategoryRequest(), {}, err => {
 			if(err) {
 				console.log(err);
 				this.snackBarMessage = err.message;
@@ -101,7 +101,7 @@ export default {
 			this.restaurants = [];
 			const user = new User();
 			user.setId(this.userId);
-			const promise2 = this.client.client.getRestaurantsByUser(user, {},
+			const promise2 = this.client.getRestaurantsByUser(user, {},
 					err => { if(err) {
 						console.log(err);
 						this.snackBarMessage = err.message;
@@ -115,7 +115,7 @@ export default {
 		load(filterData) {
 			this.filterData = filterData;
 			this.reservations = [];
-			const resClient = new CustomRPCClient(ReservationServiceClient, this.$store.getters.config.host);
+			const resClient = this.$store.getters.grpc.reservationClient;
 			const request = new ReservationRestaurantRequest();
 			request.setBegintime(filterData.date.getTime()/1000);
 			request.setFuturetime(filterData.futureDate.getTime()/1000);
@@ -123,7 +123,7 @@ export default {
 			const restaurant = new Restaurant();
 			restaurant.setId(this.$route.params.id);
 			request.setRestaurant(restaurant);
-			const promise1 = resClient.client.getReservationsByRestaurant(request,{}, err => {
+			const promise1 = resClient.getReservationsByRestaurant(request,{}, err => {
 				if(err) {
 					console.log(err);
 					this.snackBarMessage = err.message;
@@ -132,7 +132,7 @@ export default {
 			});
 			promise1.on('data', (data1) => {
 				const usersR = [];
-				const promise2 = resClient.client.listReservationUsers(data1, {}, err => {
+				const promise2 = resClient.listReservationUsers(data1, {}, err => {
 					if(err) {
 						console.log(err);
 						this.snackBarMessage = err.message;
@@ -143,7 +143,7 @@ export default {
 					usersR.push(data2);
 				});
 				const tables = [];
-				const promise3 = resClient.client.getReservationTables(data1, {}, err => {
+				const promise3 = resClient.getReservationTables(data1, {}, err => {
 					if(err) {
 						console.log(err);
 						this.snackBarMessage = err.message;
@@ -163,7 +163,7 @@ export default {
 			if (this.$route.params.id != 0) {
 				const req = new Restaurant();
 				req.setId(this.$route.params.id);
-				const promise3 = this.client.client.getUsersByRestaurant(req, {}, err => {
+				const promise3 = this.client.getUsersByRestaurant(req, {}, err => {
 					if(err) {
 						console.log(err);
 						this.snackBarMessage = err.message;

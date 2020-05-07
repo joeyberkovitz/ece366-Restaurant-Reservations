@@ -53,7 +53,7 @@
 				this.users = [];
 				const req = new Restaurant();
 				req.setId(this.$route.params.id);
-				const promise = this.client.client.getUsersByRestaurant(req, {}, err => {
+				const promise = this.client.getUsersByRestaurant(req, {}, err => {
 					if(err) {
 						console.log(err);
 						this.snackBarMessage = err.message;
@@ -73,7 +73,7 @@
 				const user = new User();
 				user.setId(toDelete);
 				req.setUser(user);
-				this.client.client.deleteRelationship(req, {}, err => {
+				this.client.deleteRelationship(req, {}, err => {
 					if(err) {
 						console.log(err);
 						this.snackBarMessage = err.message;
@@ -94,7 +94,7 @@
 				user.setUsername(toAdd);
 				req.setUser(user);
 				req.setRole(Relationship.UserRole.MANAGER);
-				this.client.client.addRelationship(req, {}, err => {
+				this.client.addRelationship(req, {}, err => {
 					if(err) {
 						console.log(err);
 						this.snackBarMessage = err.message;

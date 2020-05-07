@@ -178,7 +178,7 @@
 			test(){
 				const restaurant = new Restaurant();
 				restaurant.setId(1);
-				this.client.client.getRestaurant(restaurant, {}, (err, response) => {
+				this.client.getRestaurant(restaurant, {}, (err, response) => {
 					console.log(err, response);
 				});
 			},
@@ -217,7 +217,7 @@
 
 					if(this.create) {
 							console.log(restaurant)
-					        this.client.client.createRestaurant(restaurant, {}, (err, response) => {
+					        this.client.createRestaurant(restaurant, {}, (err, response) => {
 						        console.log(err, response);
 						        if(!err)
 							        this.$router.push("/restaurant/manage/" + response.getId());
@@ -228,7 +228,7 @@
 					        });
 					} else {
 						restaurant.setId(this.$route.params.id);
-						this.client.client.setRestaurant(restaurant, {}, (err, response) => {
+						this.client.setRestaurant(restaurant, {}, (err, response) => {
 							console.log(err, response);
 							if(err){
 								this.snackBarMessage = err.message;
@@ -252,7 +252,7 @@
 					this.manageBool = 1;
 					const req = new Restaurant();
 					req.setId(this.$route.params.id);
-					this.client.client.getRestaurant(req, {}, (err, response) => {
+					this.client.getRestaurant(req, {}, (err, response) => {
 						this.form.name = response.getName();
 						this.form.capacity = response.getCapacity();
 						this.form.rtime = response.getRtime();

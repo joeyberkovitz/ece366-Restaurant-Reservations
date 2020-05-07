@@ -108,7 +108,7 @@
 		created() {
 			this.client = this.$store.getters.grpc.restaurantClient;
 			this.reservationClient = this.$store.getters.grpc.reservationClient;
-			const promise = this.client.client.getCategoryList(new GetCategoryRequest(), {});
+			const promise = this.client.getCategoryList(new GetCategoryRequest(), {});
 			promise.on('data', (data) => {
 				this.categories.push(data);
 			});
@@ -174,7 +174,7 @@
 				newReservation.setStarttime(time);
 				newReservation.setStatus(Reservation.ReservationStatus.OPENED);
 
-				this.reservationClient.client.createReservation(newReservation, {}, (err, response) => {
+				this.reservationClient.createReservation(newReservation, {}, (err, response) => {
 					console.log(err, response);
 					if(err)
 						this.snackBarMessage = err.message;
@@ -235,7 +235,7 @@
 					searchRequest.setNummiles(this.form.radius);
 					this.results = {};
 					this.rests = [];
-					const search = this.client.client.searchRestaurants(searchRequest, {});
+					const search = this.client.searchRestaurants(searchRequest, {});
 					search.on('data', response => {
 						const restId = response.getRestaurant().getId();
 						if(!this.results[restId]) {

@@ -23,7 +23,7 @@
         }),
         created() {
             this.client = this.$store.getters.grpc.restaurantClient;
-            const promise = this.client.client.getCategoryList(new GetCategoryRequest(), {}, err => {
+            const promise = this.client.getCategoryList(new GetCategoryRequest(), {}, err => {
                 if(err) {
                     console.log(err);
                     this.snackBarMessage = err.message;

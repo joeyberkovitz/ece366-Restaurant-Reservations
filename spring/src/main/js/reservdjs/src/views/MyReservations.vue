@@ -24,7 +24,7 @@
             reservations: []
         }),
         created() {
-            this.client = new CustomRPCClient(ReservationServiceClient, this.$store.getters.config.host);
+            this.client = this.$store.getters.grpc.reservationClient;
         },
         methods: {
             load(filterData) {
@@ -34,7 +34,7 @@
                 request.setBegintime(filterData.date.getTime()/1000);
                 request.setFuturetime(filterData.futureDate.getTime()/1000);
                 request.setStatus(filterData.status);
-                const promise1 = this.client.client.getReservationsByUser(request,{}, err => {
+                const promise1 = this.client.getReservationsByUser(request,{}, err => {
                     if(err) {
                         console.log(err);
                         this.snackBarMessage = err.message;
@@ -43,7 +43,7 @@
                 });
                 promise1.on('data', (data1) => {
                     const users = [];
-                    const promise2 = this.client.client.listReservationUsers(data1, {}, err => {
+                    const promise2 = this.client.listReservationUsers(data1, {}, err => {
                         if(err) {
                             console.log(err);
                             this.snackBarMessage = err.message;

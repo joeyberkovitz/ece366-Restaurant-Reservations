@@ -136,9 +136,9 @@
                 return "";
             },
             cancel(reservation) {
-                const resClient = new CustomRPCClient(ReservationServiceClient, this.$store.getters.config.host);
+                this.resClient = this.$store.getters.grpc.reservationClient;
                 reservation.setStatus(Reservation.ReservationStatus.CANCELLED);
-                resClient.client.setReservation(reservation, {}, err => {
+                this.resClient.setReservation(reservation, {}, err => {
                     if(err) {
                         console.log(err);
                         this.snackBarMessage = err.message;
@@ -149,7 +149,6 @@
                 });
             },
             invite(username, reservationOrig, inviteBool) {
-                const resClient = new CustomRPCClient(ReservationServiceClient, this.$store.getters.config.host);
                 const request = new InviteMessage();
                 const reservation = new Reservation();
                 reservation.setId(reservationOrig.details.getId());
@@ -167,7 +166,7 @@
                         this.showSnackBar = true;
                     }
                     reservationOrig.invites = [];
-                    const promise2 = resClient.client.listReservationUsers(reservation, {}, err => {
+                    const promise2 = this.resClient.listReservationUsers(reservation, {}, err => {
                         if(err) {
                             console.log(err);
                             this.snackBarMessage = err.message;
@@ -179,9 +178,9 @@
                     });
                 }
                 if(inviteBool)
-                    resClient.client.inviteReservation(request, {}, callback);
+                    this.resClient.inviteReservation(request, {}, callback);
                 else
-                    resClient.client.removeReservationUser(request, {}, callback);
+                    this.resClient.removeReservationUser(request, {}, callback);
             },
             view(restId) {
                 this.$router.push("/restaurant/view/" + restId);

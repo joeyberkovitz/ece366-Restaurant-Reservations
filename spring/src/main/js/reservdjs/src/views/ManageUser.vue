@@ -109,9 +109,12 @@
             return ret;
         },
         created() {
-            const client = new CustomRPCClient(UserServiceClient, this.$store.getters.config.host);
+            this.client = this.$store.getters.grpc.userClient;
             const user = new User();
-            client.client.getUser(user, {}, (err, response) => {
+            this.client.getUser(user, {}, (err, response) => {
+                console.log("Response received in GETUSER");
+                console.log(err)
+                console.log(response);
                 if (!err){
                     console.log(response);
                     this.id = response.getId();
@@ -156,8 +159,6 @@
                 this.profile = JSON.parse(JSON.stringify(this.initialProfile));
             },
             submit() {
-                const client = new CustomRPCClient(UserServiceClient, this.$store.getters.config.host);
-
                 const user = new User();
                 const contact = new Contact();
                 user.setId(this.id);
@@ -169,7 +170,7 @@
                 contact.setPhone(this.profile.phone);
                 user.setContact(contact);
 
-                client.client.setUser(user,{},(err, response) => {
+                this.client.setUser(user,{},(err, response) => {
                     if (!err){
                         console.log(response);
 

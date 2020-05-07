@@ -87,7 +87,7 @@ public class AuthManager {
 		User user = db.withExtension(UserDao.class, d->d.getUser(userID));
 
 		Date issueDate = new Date();
-		Date expDate = Date.from(issueDate.toInstant().plus(Duration.ofHours(1)));
+		Date expDate = Date.from(issueDate.toInstant().plus(Duration.ofSeconds(10)));
 		Date refreshExp = Date.from(issueDate.toInstant().plus(Duration.ofDays(1)));
 		Date notBefore = Date.from(issueDate.toInstant().minus(Duration.ofMinutes(5)));
 		String authToken = Jwts.builder()

@@ -80,7 +80,7 @@
 				this.tables = [];
 				const req = new Restaurant();
 				req.setId(this.$route.params.id);
-				const promise = this.client.client.getTablesByRestaurant(req, {}, err => {
+				const promise = this.client.getTablesByRestaurant(req, {}, err => {
 					if(err) {
 						console.log(err);
 						this.snackBarMessage = err.message;
@@ -108,7 +108,7 @@
 				table.setLabel(this.form.label);
 				table.setCapacity(this.form.capacity);
 				req.setTable(table);
-				this.client.client.createTable(req, {}, (err, res) => {
+				this.client.createTable(req, {}, (err, res) => {
 					console.log(res, err);
 					if(!err)
 						this.tables.push(res);
@@ -122,7 +122,7 @@
 			delTab: function(toDelete) {
 				const req = new Table();
 				req.setId(toDelete);
-				this.client.client.deleteTable(req, {}, err => {
+				this.client.deleteTable(req, {}, err => {
 					if(err) {
 						console.log(err);
 						this.snackBarMessage = err.message;
