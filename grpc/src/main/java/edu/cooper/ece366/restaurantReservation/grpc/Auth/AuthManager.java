@@ -11,7 +11,6 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import org.jdbi.v3.core.Jdbi;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyFactory;
@@ -87,7 +86,7 @@ public class AuthManager {
 		User user = db.withExtension(UserDao.class, d->d.getUser(userID));
 
 		Date issueDate = new Date();
-		Date expDate = Date.from(issueDate.toInstant().plus(Duration.ofSeconds(10)));
+		Date expDate = Date.from(issueDate.toInstant().plus(Duration.ofHours(1)));
 		Date refreshExp = Date.from(issueDate.toInstant().plus(Duration.ofDays(1)));
 		Date notBefore = Date.from(issueDate.toInstant().minus(Duration.ofMinutes(5)));
 		String authToken = Jwts.builder()
@@ -103,10 +102,14 @@ public class AuthManager {
 				.setIssuedAt(issueDate)
 				.setNotBefore(notBefore)
 				.setSubject(Integer.toString(userID))
+				.setId(String.valueOf(UUID.randomUUID()))
 				.signWith(privateKey, SignatureAlgorithm.RS256)
 				.compact();
 
-		db.useExtension(UserDao.class, dao ->
+		// Only insert token into DB if not already there
+		// Duplicates occur on occasion if refresh request is duplicated within a second
+		if(this.checkRefreshToken(refreshToken).isEmpty())
+			db.useExtension(UserDao.class, dao ->
 				dao.insertUserToken(userID, refreshToken, userAgent, refreshExp));
 
 		ArrayList<String> res = new ArrayList<String>();
