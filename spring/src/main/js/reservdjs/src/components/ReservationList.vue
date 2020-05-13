@@ -83,6 +83,7 @@
         name: "ReservationList",
         props: ['reservations', 'restView'],
         created() {
+            this.resClient = this.$store.getters.grpc.reservationClient;
             this.curUser = JSON.parse(atob(this.$store.getters.user.authToken.split('.')[1])).sub;
             this.filterData.date = new Date();
             this.filterData.date.setHours(0);
@@ -136,7 +137,6 @@
                 return "";
             },
             cancel(reservation) {
-                this.resClient = this.$store.getters.grpc.reservationClient;
                 reservation.setStatus(Reservation.ReservationStatus.CANCELLED);
                 this.resClient.setReservation(reservation, {}, err => {
                     if(err) {
